@@ -554,7 +554,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script>
-let modalDayId = null, modalItemId = null, editingExpenseId = null, saveTimer = null;
+let modalDayId = null, modalItemId = null, editingExpenseId = null;
 let currentTripId = null;
 
 /* ===== V2: SCREEN SHELL ===== */
@@ -836,8 +836,24 @@ async function flushCloud(){
 async function forceFlush(){
   if(flushTimer || (cacheRead() && cacheRead().dirty)) await flushCloud();
 }
-function startUnsyncedTicker(){}   // Task 16
-function stopUnsyncedTicker(){}    // Task 16
+let unsyncedTimer = null;
+const UNSYNCED_MSGS = ['클라우드 저장 안됨', '인터넷 연결 확인'];
+function startUnsyncedTicker(){
+  const el = document.getElementById('syncStatus');
+  if(!el) return;
+  if(unsyncedTimer) return;                 // 이미 돌고 있음
+  let i = 0;
+  el.textContent = UNSYNCED_MSGS[0];
+  unsyncedTimer = setInterval(() => {
+    i = (i + 1) % UNSYNCED_MSGS.length;
+    el.textContent = UNSYNCED_MSGS[i];
+  }, 2000);
+}
+function stopUnsyncedTicker(){
+  if(unsyncedTimer){ clearInterval(unsyncedTimer); unsyncedTimer = null; }
+  const el = document.getElementById('syncStatus');
+  if(el) el.textContent = '';
+}
 
 async function openTrip(tripId){
   const cached = cacheRead();
