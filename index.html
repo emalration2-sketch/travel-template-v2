@@ -582,23 +582,24 @@ function initFirebase(){
     fbAuth.onAuthStateChanged(handleAuthChange);
   }catch(e){ console.error('Firebase 초기화 실패', e); }
 }
+/* ===== V2: PROFILE STORE (임시, Task 6에서 구현) ===== */
+let profile = { avatarId: 'default', tripOrder: [] };
+async function loadProfile(){ return profile; }
+/* ===== V2: MYPAGE (임시, Task 7/9에서 구현) ===== */
+async function refreshTripList(){ /* Task 7 */ }
+function renderMypage(){ /* Task 9 */ }
+
 async function handleAuthChange(user){
   currentUser = user;
-  const loginBtn = document.getElementById('loginBtn');
-  const userInfo = document.getElementById('userInfo');
-  const statusEl = document.getElementById('syncStatus');
   if(user){
-    loginBtn.style.display = 'none';
-    userInfo.style.display = 'flex';
-    document.getElementById('userAvatar').src = user.photoURL || '';
-    document.getElementById('userName').textContent = user.displayName || user.email || '내 계정';
-    statusEl.textContent = '동기화 중...';
-    await loadFromCloud();
-    statusEl.textContent = '✓ 동기화됨';
+    try{
+      await loadProfile();
+      await refreshTripList();
+    }catch(e){ console.error('프로필/여행 로드 실패', e); }
+    renderMypage();
+    showScreen('mypage');
   } else {
-    loginBtn.style.display = '';
-    userInfo.style.display = 'none';
-    statusEl.textContent = '';
+    showScreen('landing');
   }
 }
 async function loadFromCloud(){
@@ -1232,7 +1233,6 @@ document.addEventListener('change', e => { handleFieldChange(e); handleAuxChange
 /* ---------- INIT ---------- */
 rebuildAll();
 setMode(currentMode);
-showScreen('editor'); // TEMP: Task 4 에서 handleAuthChange 라우팅으로 대체
 initFirebase();
 </script>
 </body>
