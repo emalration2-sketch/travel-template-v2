@@ -9,6 +9,7 @@
     return {
       path,
       async get() {
+        if (offline) throw new Error('offline');
         const d = store[path];
         return { exists: !!d, id: path.split('/').pop(), data: () => clone(d) };
       },
