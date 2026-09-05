@@ -379,13 +379,31 @@
   section[data-screen]{display:block;}
   section[data-screen][hidden]{display:none !important;}
   .v2-wrap{max-width:640px; margin:0 auto; padding:0 16px;}
+
+  /* ===== V2 LANDING ===== */
+  .landing{padding-top:64px; text-align:center; min-height:100vh;}
+  .landing-icon{width:76px; height:76px; border-radius:18px; box-shadow:0 8px 24px rgba(27,35,64,.14);}
+  .landing-title{font-family:'Fraunces',serif; font-size:28px; font-weight:700; color:var(--ink); margin:18px 0 6px;}
+  .landing-sub{font-size:13.5px; color:var(--ink-soft); margin:0 0 28px;}
+  .landing-feats{list-style:none; padding:0; margin:0 auto 32px; max-width:300px; text-align:left;}
+  .landing-feats li{font-size:12.5px; color:var(--ink-soft); padding:9px 0 9px 22px; position:relative; border-bottom:1px solid var(--line);}
+  .landing-feats li::before{content:"·"; position:absolute; left:8px; color:var(--teal); font-weight:700;}
+  .landing-login{border:2px solid var(--ink); background:var(--ink); color:#fff; border-radius:999px; padding:12px 26px; font-size:14px; font-weight:700; cursor:pointer;}
 </style>
 </head>
 <body>
 
 <section data-screen="landing" hidden>
-  <div class="v2-wrap"><!-- Task 5 에서 채움 -->
-    <p class="v2-placeholder">landing</p>
+  <div class="v2-wrap landing">
+    <img class="landing-icon" src="icon.png" alt="Travel Template">
+    <h1 class="landing-title">Travel Template</h1>
+    <p class="landing-sub">여행 일정·지출·메모를 한 곳에서</p>
+    <ul class="landing-feats">
+      <li>날짜별 일정과 장소·메모를 정리</li>
+      <li>항목별 지출을 여러 화폐로 기록</li>
+      <li>완성한 계획을 PDF로 저장하거나 공유</li>
+    </ul>
+    <button id="landingLoginBtn" class="landing-login" data-action="login">Google로 계속하기</button>
   </div>
 </section>
 
