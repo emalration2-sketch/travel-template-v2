@@ -499,6 +499,17 @@ function defaultState(){
     notes:[], links:[]
   };
 }
+/* ===== V2: META ===== */
+function deriveTripMeta(tripState){
+  const days = Array.isArray(tripState.days) ? tripState.days : [];
+  const dates = days.map(d => (d && d.date) || '').filter(Boolean).sort();
+  return {
+    title: (tripState.title || '').trim(),
+    startDate: dates[0] || '',
+    endDate: dates[dates.length - 1] || '',
+    dayCount: days.length,
+  };
+}
 function loadState(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
