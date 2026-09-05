@@ -753,6 +753,18 @@ function renderMypage(){
     </div>`).join('');
 }
 
+function currentOrder(){ return orderedTrips().map(t => t.id); }
+async function moveTrip(tripId, dir){
+  const order = currentOrder();
+  const i = order.indexOf(tripId);
+  const j = i + dir;
+  if(i < 0 || j < 0 || j >= order.length) return;
+  order.splice(i, 1);
+  order.splice(j, 0, tripId);
+  await saveProfile({ tripOrder: order });
+  renderMypage();
+}
+
 function v2ModalOpen(bodyText, actionsHtml){
   document.getElementById('v2ModalBody').textContent = bodyText;
   document.getElementById('v2ModalActions').innerHTML = actionsHtml;
@@ -1385,6 +1397,8 @@ document.addEventListener('click', e => {
   else if(a === 'delete-trip') showDeleteModal(btn.dataset.tripId);
   else if(a === 'confirm-delete-trip') confirmDeleteTrip(btn.dataset.tripId);
   else if(a === 'open-trip') openTrip(btn.dataset.tripId);
+  else if(a === 'move-up') moveTrip(btn.dataset.tripId, -1);
+  else if(a === 'move-down') moveTrip(btn.dataset.tripId, 1);
   else if(a === 'back-to-mypage') goBackToMypage();
   else if(a === 'v2modal-close') v2ModalClose();
   else if(a === 'logout') logoutUser();
