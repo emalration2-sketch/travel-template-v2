@@ -374,9 +374,34 @@
     .note-card, .exp-row{break-inside:avoid;}
     a.tab{display:none;}
   }
+
+  /* ===== V2 SHELL ===== */
+  section[data-screen]{display:block;}
+  section[data-screen][hidden]{display:none !important;}
+  .v2-wrap{max-width:640px; margin:0 auto; padding:0 16px;}
 </style>
 </head>
 <body>
+
+<section data-screen="landing" hidden>
+  <div class="v2-wrap"><!-- Task 5 에서 채움 -->
+    <p class="v2-placeholder">landing</p>
+  </div>
+</section>
+
+<section data-screen="mypage" hidden>
+  <div class="v2-wrap"><!-- Task 9 에서 채움 -->
+    <p class="v2-placeholder">mypage</p>
+  </div>
+</section>
+
+<section data-screen="settings" hidden>
+  <div class="v2-wrap"><!-- Task 17 에서 채움 -->
+    <p class="v2-placeholder">settings</p>
+  </div>
+</section>
+
+<section data-screen="editor" hidden>
 
 <nav class="tabs">
   <div class="wrap nav-title">
@@ -446,6 +471,8 @@
   <div class="foot-note">모든 내용은 이 기기의 브라우저에 자동 저장됩니다</div>
 </footer>
 
+</section>
+
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal-sheet">
     <div class="modal-context" id="modalContext"></div>
@@ -473,6 +500,15 @@
 <script>
 const STORAGE_KEY = 'travel-template-data-v1';
 let modalDayId = null, modalItemId = null, editingExpenseId = null, saveTimer = null;
+
+/* ===== V2: SCREEN SHELL ===== */
+let currentScreen = 'editor';
+function showScreen(name){
+  currentScreen = name;
+  document.querySelectorAll('section[data-screen]').forEach(s => {
+    s.hidden = (s.getAttribute('data-screen') !== name);
+  });
+}
 
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 function escapeHTML(s){ return (s==null?'':String(s)).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
@@ -1196,6 +1232,7 @@ document.addEventListener('change', e => { handleFieldChange(e); handleAuxChange
 /* ---------- INIT ---------- */
 rebuildAll();
 setMode(currentMode);
+showScreen('editor'); // TEMP: Task 4 에서 handleAuthChange 라우팅으로 대체
 initFirebase();
 </script>
 </body>
