@@ -600,9 +600,25 @@ function initFirebase(){
     fbAuth.onAuthStateChanged(handleAuthChange);
   }catch(e){ console.error('Firebase 초기화 실패', e); }
 }
-/* ===== V2: PROFILE STORE (임시, Task 6에서 구현) ===== */
+/* ===== V2: PROFILE STORE ===== */
 let profile = { avatarId: 'default', tripOrder: [] };
-async function loadProfile(){ return profile; }
+function profileDoc(){ return fbDb.collection('users').doc(currentUser.uid); }
+async function loadProfile(){
+  const snap = await profileDoc().get();
+  const d = snap.exists ? snap.data() : {};
+  profile = {
+    avatarId: d.avatarId || 'default',
+    tripOrder: Array.isArray(d.tripOrder) ? d.tripOrder.slice() : [],
+  };
+  return profile;
+}
+async function saveProfile(patch){
+  Object.assign(profile, patch);
+  await profileDoc().set(
+    { avatarId: profile.avatarId, tripOrder: profile.tripOrder },
+    { merge: true }
+  );
+}
 /* ===== V2: MYPAGE (임시, Task 7/9에서 구현) ===== */
 async function refreshTripList(){ /* Task 7 */ }
 function renderMypage(){ /* Task 9 */ }
