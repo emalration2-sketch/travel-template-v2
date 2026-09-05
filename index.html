@@ -408,6 +408,17 @@
   .mp-card.dragging{transform:scale(1.03); box-shadow:0 14px 30px rgba(27,35,64,.22); opacity:.95;}
   .mp-new{width:100%; border:1px dashed var(--teal); background:#fff; color:var(--teal); border-radius:14px; padding:13px; font-size:13px; font-weight:700; cursor:pointer; margin-top:2px;}
   .mp-settings-row{margin-top:12px; text-align:center; font-size:12.5px; color:var(--teal); font-weight:600; padding:10px; border-top:1px solid var(--line); cursor:pointer;}
+
+  /* ===== V2 MODAL ===== */
+  .v2-modal-overlay{position:fixed; inset:0; background:rgba(27,35,64,.45); z-index:120; display:flex; align-items:center; justify-content:center; padding:24px;}
+  .v2-modal-overlay[hidden]{display:none;}
+  .v2-modal{background:#fff; border-radius:18px; padding:20px 18px; max-width:340px; width:100%; box-shadow:0 18px 44px rgba(27,35,64,.3);}
+  .v2-modal-body{font-size:13px; color:var(--ink); line-height:1.6; text-align:center; white-space:pre-line;}
+  .v2-modal-actions{display:flex; gap:8px; margin-top:16px;}
+  .v2-modal-actions button{flex:1; padding:10px; border-radius:12px; font-size:13px; font-weight:700; cursor:pointer;}
+  .v2-btn-ghost{border:1px solid var(--line); background:#fff; color:var(--ink-soft);}
+  .v2-btn-solid{border:none; background:var(--ink); color:#fff;}
+  .v2-btn-danger{border:none; background:var(--red); color:#fff;}
 </style>
 </head>
 <body>
@@ -539,12 +550,20 @@
   </div>
 </div>
 
+<div class="v2-modal-overlay" id="v2Modal" hidden>
+  <div class="v2-modal">
+    <div class="v2-modal-body" id="v2ModalBody"></div>
+    <div class="v2-modal-actions" id="v2ModalActions"></div>
+  </div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script>
 const STORAGE_KEY = 'travel-template-data-v1';
 let modalDayId = null, modalItemId = null, editingExpenseId = null, saveTimer = null;
+let currentTripId = null;
 
 /* ===== V2: SCREEN SHELL ===== */
 let currentScreen = 'editor';
@@ -739,6 +758,36 @@ function renderMypage(){
       <div class="mp-dates">${escapeHTML(tripDatesLabel(t))}</div>
       <button class="mp-del" data-action="delete-trip" data-trip-id="${escapeAttr(t.id)}">✕</button>
     </div>`).join('');
+}
+
+function v2ModalOpen(bodyText, actionsHtml){
+  document.getElementById('v2ModalBody').textContent = bodyText;
+  document.getElementById('v2ModalActions').innerHTML = actionsHtml;
+  document.getElementById('v2Modal').hidden = false;
+}
+function v2ModalClose(){ document.getElementById('v2Modal').hidden = true; }
+
+function showLimitModal(){
+  v2ModalOpen(
+    '여행계획은 최대 5개까지 저장할 수 있어요.\n멤버십을 변경하여 여행계획을 더 늘려보세요.',
+    '<button class="v2-btn-solid" data-action="v2modal-close">확인</button>'
+  );
+}
+async function handleNewTrip(){
+  if(trips.length >= 5){ showLimitModal(); return; }
+  try{
+    const id = await createTrip();
+    await refreshTripList();
+    await openTrip(id);
+  }catch(e){ console.error('새 여행 생성 실패', e); }
+}
+
+/* 임시 openTrip — Task 11 이 실제 구현으로 대체 */
+async function openTrip(tripId){
+  currentTripId = tripId;
+  state = await loadTrip(tripId);
+  rebuildAll(); setMode(currentMode);
+  showScreen('editor');
 }
 
 async function handleAuthChange(user){
@@ -1300,6 +1349,8 @@ document.addEventListener('click', e => {
   else if(a === 'reset') resetAll();
   else if(a === 'toggle-mode') setMode(currentMode === 'view' ? 'edit' : 'view');
   else if(a === 'login') loginWithGoogle();
+  else if(a === 'new-trip') handleNewTrip();
+  else if(a === 'v2modal-close') v2ModalClose();
   else if(a === 'logout') logoutUser();
   else if(a === 'print-pdf') exportPDF();
   else if(a === 'share') shareGuide();
