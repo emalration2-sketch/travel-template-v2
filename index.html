@@ -775,6 +775,24 @@ async function handleNewTrip(){
   }catch(e){ console.error('새 여행 생성 실패', e); }
 }
 
+function showDeleteModal(tripId){
+  v2ModalOpen(
+    '이 여행을 삭제할까요?\n되돌릴 수 없습니다.',
+    '<button class="v2-btn-ghost" data-action="v2modal-close">취소</button>' +
+    '<button class="v2-btn-danger" data-action="confirm-delete-trip" data-trip-id="' + escapeAttr(tripId) + '">삭제</button>'
+  );
+}
+async function confirmDeleteTrip(tripId){
+  v2ModalClose();
+  try{
+    await deleteTrip(tripId);
+    const c = cacheRead();
+    if(c && c.tripId === tripId) cacheClear();
+    await refreshTripList();
+    renderMypage();
+  }catch(e){ console.error('삭제 실패', e); }
+}
+
 /* ===== V2: SYNC ===== */
 let flushTimer = null;
 
@@ -1354,6 +1372,8 @@ document.addEventListener('click', e => {
   else if(a === 'toggle-mode') setMode(currentMode === 'view' ? 'edit' : 'view');
   else if(a === 'login') loginWithGoogle();
   else if(a === 'new-trip') handleNewTrip();
+  else if(a === 'delete-trip') showDeleteModal(btn.dataset.tripId);
+  else if(a === 'confirm-delete-trip') confirmDeleteTrip(btn.dataset.tripId);
   else if(a === 'open-trip') openTrip(btn.dataset.tripId);
   else if(a === 'back-to-mypage') goBackToMypage();
   else if(a === 'v2modal-close') v2ModalClose();
