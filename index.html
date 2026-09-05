@@ -389,6 +389,25 @@
   .landing-feats li{font-size:12.5px; color:var(--ink-soft); padding:9px 0 9px 22px; position:relative; border-bottom:1px solid var(--line);}
   .landing-feats li::before{content:"·"; position:absolute; left:8px; color:var(--teal); font-weight:700;}
   .landing-login{border:2px solid var(--ink); background:var(--ink); color:#fff; border-radius:999px; padding:12px 26px; font-size:14px; font-weight:700; cursor:pointer;}
+
+  /* ===== V2 MYPAGE ===== */
+  .mp{padding-top:16px; min-height:100vh;}
+  .mp-top{display:flex; align-items:center; gap:9px; padding-bottom:11px; border-bottom:1px solid var(--line); cursor:pointer;}
+  .mp-avatar{width:30px; height:30px; border-radius:50%; background:linear-gradient(135deg,#1B2340,#243057); color:#fff; display:flex; align-items:center; justify-content:center; font-size:15px; flex:none;}
+  .mp-avatar.emoji{background:var(--paper-2);}
+  .mp-name{font-size:13.5px; font-weight:700; color:var(--ink);}
+  .mp-h{font-family:'Fraunces',serif; font-size:20px; font-weight:700; color:var(--ink); margin:14px 0 3px;}
+  .mp-count{font-size:11.5px; color:var(--ink-faint); margin-bottom:12px;}
+  .mp-card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px 12px 12px 40px; margin-bottom:9px; position:relative; cursor:pointer;}
+  .mp-card .mp-title{font-size:14px; font-weight:700; color:var(--ink);}
+  .mp-card .mp-dates{font-family:'Space Mono',monospace; font-size:10.5px; color:var(--ink-faint); margin-top:3px;}
+  .mp-card .mp-arrows{position:absolute; left:8px; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; gap:2px;}
+  .mp-card .mp-arrows button{border:none; background:transparent; color:var(--ink-faint); font-size:11px; line-height:1; cursor:pointer; padding:2px;}
+  .mp-card .mp-arrows button:disabled{opacity:.25; cursor:default;}
+  .mp-card .mp-del{position:absolute; top:9px; right:10px; border:none; background:transparent; color:#C9CBD8; font-size:12px; cursor:pointer;}
+  .mp-card.dragging{transform:scale(1.03); box-shadow:0 14px 30px rgba(27,35,64,.22); opacity:.95;}
+  .mp-new{width:100%; border:1px dashed var(--teal); background:#fff; color:var(--teal); border-radius:14px; padding:13px; font-size:13px; font-weight:700; cursor:pointer; margin-top:2px;}
+  .mp-settings-row{margin-top:12px; text-align:center; font-size:12.5px; color:var(--teal); font-weight:600; padding:10px; border-top:1px solid var(--line); cursor:pointer;}
 </style>
 </head>
 <body>
@@ -408,8 +427,16 @@
 </section>
 
 <section data-screen="mypage" hidden>
-  <div class="v2-wrap"><!-- Task 9 에서 채움 -->
-    <p class="v2-placeholder">mypage</p>
+  <div class="v2-wrap mp">
+    <div class="mp-top" id="mpTop" data-action="go-settings">
+      <span class="mp-avatar" id="mpAvatar">✈</span>
+      <span class="mp-name" id="mpName"></span>
+    </div>
+    <h2 class="mp-h">내 여행</h2>
+    <div class="mp-count" id="mpCount">0 / 5</div>
+    <div id="mpList"></div>
+    <button class="mp-new" id="mpNewBtn" data-action="new-trip">＋ 새 여행 만들기</button>
+    <div class="mp-settings-row" id="mpSettingsRow" data-action="go-settings">⚙ 내 정보 및 옵션</div>
   </div>
 </section>
 
@@ -676,8 +703,43 @@ async function deleteTrip(tripId){
   await saveProfile({ tripOrder: profile.tripOrder.filter(id => id !== tripId) });
 }
 
-/* ===== V2: MYPAGE (임시, Task 9에서 구현) ===== */
-function renderMypage(){ /* Task 9 */ }
+/* 임시 avatarEmoji — Task 17 이 AVATARS 기반 구현으로 대체 */
+function avatarEmoji(id){ return id === 'default' || !id ? '✈' : ({dog:'🐶',cat:'🐱',rabbit:'🐰',tiger:'🐯',fox:'🦊',bear:'🐻',panda:'🐼',lion:'🦁'}[id] || '✈'); }
+
+/* ===== V2: MYPAGE ===== */
+function orderedTrips(){
+  const byId = {};
+  trips.forEach(t => { byId[t.id] = t; });
+  const seen = {};
+  const out = [];
+  profile.tripOrder.forEach(id => { if(byId[id]){ out.push(byId[id]); seen[id] = 1; } });
+  trips.forEach(t => { if(!seen[t.id]) out.push(t); });  // tripOrder 누락분 뒤에 붙임
+  return out;
+}
+function tripDatesLabel(t){
+  if(!t.startDate) return '날짜 미정 · ' + t.dayCount + '일';
+  const end = t.endDate && t.endDate !== t.startDate ? ' → ' + t.endDate.slice(5) : '';
+  return t.startDate + end + ' · ' + t.dayCount + '일';
+}
+function renderMypage(){
+  const av = document.getElementById('mpAvatar');
+  av.textContent = avatarEmoji(profile.avatarId);
+  av.classList.toggle('emoji', profile.avatarId && profile.avatarId !== 'default');
+  document.getElementById('mpName').textContent =
+    (currentUser && (currentUser.displayName || currentUser.email)) || '내 계정';
+  const list = orderedTrips();
+  document.getElementById('mpCount').textContent = list.length + ' / 5';
+  document.getElementById('mpList').innerHTML = list.map((t, i) => `
+    <div class="mp-card" data-trip-id="${escapeAttr(t.id)}" data-action="open-trip">
+      <span class="mp-arrows">
+        <button data-action="move-up" data-trip-id="${escapeAttr(t.id)}" ${i === 0 ? 'disabled' : ''}>▲</button>
+        <button data-action="move-down" data-trip-id="${escapeAttr(t.id)}" ${i === list.length - 1 ? 'disabled' : ''}>▼</button>
+      </span>
+      <div class="mp-title">${t.title ? escapeHTML(t.title) : '제목 없는 여행'}</div>
+      <div class="mp-dates">${escapeHTML(tripDatesLabel(t))}</div>
+      <button class="mp-del" data-action="delete-trip" data-trip-id="${escapeAttr(t.id)}">✕</button>
+    </div>`).join('');
+}
 
 async function handleAuthChange(user){
   currentUser = user;
