@@ -417,6 +417,26 @@
   .v2-btn-ghost{border:1px solid var(--line); background:#fff; color:var(--ink-soft);}
   .v2-btn-solid{border:none; background:var(--ink); color:#fff;}
   .v2-btn-danger{border:none; background:var(--red); color:#fff;}
+
+  /* ===== V2 SETTINGS ===== */
+  .set{padding-top:16px; min-height:100vh;}
+  .set-back{border:none; background:transparent; color:var(--teal); font-size:11.5px; font-weight:700; cursor:pointer; padding:0 0 14px;}
+  .set-account{display:flex; align-items:center; gap:12px; padding:4px 2px 18px; border-bottom:1px solid var(--line);}
+  .set-avatar-big{width:52px; height:52px; border-radius:50%; background:linear-gradient(135deg,#1B2340,#243057); color:#fff; display:flex; align-items:center; justify-content:center; font-size:24px; flex:none;}
+  .set-avatar-big.emoji{background:var(--paper-2);}
+  .set-name{font-size:14px; font-weight:700; color:var(--ink);}
+  .set-email{font-size:11.5px; color:var(--ink-faint); margin-top:2px;}
+  .set-row{display:flex; justify-content:space-between; align-items:center; padding:13px 2px; font-size:12.5px; color:var(--ink-soft); border-bottom:1px solid var(--line); cursor:pointer;}
+  .set-row.set-disabled{cursor:default; color:var(--ink-faint);}
+  .set-chev{color:#C9CBD8;}
+  .set-soon{font-size:10px; color:#B4B8C8; background:var(--paper-2); padding:2px 7px; border-radius:999px;}
+  .set-logout{margin-top:16px; width:100%; border:1px solid #F1C9D3; background:#fff; color:var(--red); border-radius:999px; padding:10px; font-size:12.5px; font-weight:700; cursor:pointer;}
+  /* 아바타 팝업 그리드 */
+  .av-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px 8px; margin:6px 0 4px;}
+  .av-cell{width:100%; aspect-ratio:1; border-radius:50%; background:var(--paper-2); display:flex; align-items:center; justify-content:center; font-size:22px; cursor:pointer;}
+  .av-cell.default-glyph{background:linear-gradient(135deg,#1B2340,#243057); color:#fff;}
+  .av-cell.sel{outline:2.5px solid var(--teal); outline-offset:2px;}
+  .av-reset{font-size:10.5px; color:var(--ink-faint); text-decoration:underline; background:none; border:none; cursor:pointer;}
 </style>
 </head>
 <body>
@@ -450,8 +470,19 @@
 </section>
 
 <section data-screen="settings" hidden>
-  <div class="v2-wrap"><!-- Task 17 에서 채움 -->
-    <p class="v2-placeholder">settings</p>
+  <div class="v2-wrap set">
+    <button class="set-back" id="setBack" data-action="go-mypage">← 내 여행</button>
+    <div class="set-account">
+      <span class="set-avatar-big" id="setAvatarBig">✈</span>
+      <div>
+        <div class="set-name" id="setName"></div>
+        <div class="set-email" id="setEmail"></div>
+      </div>
+    </div>
+    <div class="set-row" id="setAvatarRow" data-action="open-avatar"><span>아바타 변경</span><span class="set-chev">›</span></div>
+    <div class="set-row set-disabled" id="setLang"><span>언어</span><span class="set-soon">준비 중</span></div>
+    <div class="set-row set-disabled" id="setTheme"><span>컬러 테마</span><span class="set-soon">준비 중</span></div>
+    <button class="set-logout" id="setLogout" data-action="logout">로그아웃</button>
   </div>
 </section>
 
@@ -715,8 +746,49 @@ async function deleteTrip(tripId){
   await saveProfile({ tripOrder: profile.tripOrder.filter(id => id !== tripId) });
 }
 
-/* 임시 avatarEmoji — Task 17 이 AVATARS 기반 구현으로 대체 */
-function avatarEmoji(id){ return id === 'default' || !id ? '✈' : ({dog:'🐶',cat:'🐱',rabbit:'🐰',tiger:'🐯',fox:'🦊',bear:'🐻',panda:'🐼',lion:'🦁'}[id] || '✈'); }
+/* ===== V2: SETTINGS ===== */
+const AVATARS = [
+  { id: 'default', glyph: '✈' }, { id: 'dog', glyph: '🐶' }, { id: 'cat', glyph: '🐱' },
+  { id: 'rabbit', glyph: '🐰' }, { id: 'tiger', glyph: '🐯' }, { id: 'fox', glyph: '🦊' },
+  { id: 'bear', glyph: '🐻' }, { id: 'panda', glyph: '🐼' }, { id: 'lion', glyph: '🦁' },
+];
+function avatarEmoji(id){
+  const a = AVATARS.find(x => x.id === id);
+  return a ? a.glyph : '✈';
+}
+function renderSettings(){
+  const big = document.getElementById('setAvatarBig');
+  big.textContent = avatarEmoji(profile.avatarId);
+  big.classList.toggle('emoji', profile.avatarId && profile.avatarId !== 'default');
+  document.getElementById('setName').textContent = (currentUser && currentUser.displayName) || '내 계정';
+  document.getElementById('setEmail').textContent = (currentUser && currentUser.email) || '';
+}
+let pendingAvatar = null;
+function openAvatarModal(){
+  pendingAvatar = profile.avatarId || 'default';
+  const grid = AVATARS.filter(a => a.id !== 'default').map(a =>
+    `<div class="av-cell${pendingAvatar === a.id ? ' sel' : ''}" data-avatar="${a.id}">${a.glyph}</div>`
+  ).join('');
+  document.getElementById('v2ModalBody').innerHTML =
+    '<div style="font-weight:700;font-size:13px;margin-bottom:4px">아바타 선택</div>' +
+    '<div style="font-size:10.5px;color:#8A90AE;margin-bottom:8px">기본값은 ✈ Travel Template 아이콘</div>' +
+    '<div class="av-grid">' + grid + '</div>';
+  document.getElementById('v2ModalActions').innerHTML =
+    '<button class="av-reset" data-action="avatar-reset">기본(✈)으로</button>' +
+    '<button class="v2-btn-solid" data-action="avatar-save" style="flex:0 0 auto;padding:8px 18px">저장</button>';
+  document.getElementById('v2Modal').hidden = false;
+}
+function pickPendingAvatar(id){
+  pendingAvatar = id;
+  document.querySelectorAll('#v2Modal .av-cell').forEach(c =>
+    c.classList.toggle('sel', c.dataset.avatar === id));
+}
+async function saveAvatar(){
+  document.getElementById('v2Modal').hidden = true;
+  await saveProfile({ avatarId: pendingAvatar || 'default' });
+  renderSettings();
+  renderMypage();
+}
 
 /* ===== V2: MYPAGE ===== */
 function orderedTrips(){
@@ -1389,6 +1461,8 @@ function resetAll(){
 /* ---------- EVENT DELEGATION ---------- */
 document.addEventListener('click', e => {
   const btn = e.target.closest('[data-action]');
+  const avCell = e.target.closest('#v2Modal .av-cell');
+  if(avCell){ pickPendingAvatar(avCell.dataset.avatar); return; }
   if(!btn) return;
   const a = btn.dataset.action;
   if(a === 'add-day') addDay();
@@ -1416,6 +1490,11 @@ document.addEventListener('click', e => {
   else if(a === 'move-up') moveTrip(btn.dataset.tripId, -1);
   else if(a === 'move-down') moveTrip(btn.dataset.tripId, 1);
   else if(a === 'back-to-mypage') goBackToMypage();
+  else if(a === 'go-settings'){ renderSettings(); showScreen('settings'); }
+  else if(a === 'go-mypage'){ renderMypage(); showScreen('mypage'); }
+  else if(a === 'open-avatar') openAvatarModal();
+  else if(a === 'avatar-reset') pickPendingAvatar('default');
+  else if(a === 'avatar-save') saveAvatar();
   else if(a === 'v2modal-close') v2ModalClose();
   else if(a === 'logout') logoutUser();
   else if(a === 'print-pdf') exportPDF();
