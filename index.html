@@ -619,8 +619,51 @@ async function saveProfile(patch){
     { merge: true }
   );
 }
-/* ===== V2: MYPAGE (임시, Task 7/9에서 구현) ===== */
-async function refreshTripList(){ /* Task 7 */ }
+/* ===== V2: TRIP STORE ===== */
+let trips = [];            // 마지막 listTrips() 결과 (메타만)
+function tripsCol(){ return fbDb.collection('users').doc(currentUser.uid).collection('trips'); }
+
+async function listTrips(){
+  const snap = await tripsCol().get();
+  const out = [];
+  snap.forEach(doc => {
+    const d = doc.data() || {};
+    out.push({
+      id: doc.id,
+      title: d.title || '',
+      startDate: d.startDate || '',
+      endDate: d.endDate || '',
+      dayCount: d.dayCount || 0,
+      updatedAt: d.updatedAt || null,
+    });
+  });
+  return out;
+}
+async function refreshTripList(){ trips = await listTrips(); return trips; }
+
+async function loadTrip(tripId){
+  const snap = await tripsCol().doc(tripId).get();
+  if(!snap.exists) throw new Error('trip 없음: ' + tripId);
+  const st = JSON.parse(snap.data().data);
+  if(!Array.isArray(st.links)) st.links = [];
+  if(!Array.isArray(st.notes)) st.notes = [];
+  if(!Array.isArray(st.travelers)) st.travelers = ['나'];
+  return st;
+}
+
+async function createTrip(){
+  const st = defaultState();
+  const meta = deriveTripMeta(st);
+  const ref = await tripsCol().add({
+    data: JSON.stringify(st),
+    title: meta.title, startDate: meta.startDate, endDate: meta.endDate, dayCount: meta.dayCount,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+  });
+  await saveProfile({ tripOrder: profile.tripOrder.concat(ref.path.split('/').pop()) });
+  return ref.path.split('/').pop();
+}
+
+/* ===== V2: MYPAGE (임시, Task 9에서 구현) ===== */
 function renderMypage(){ /* Task 9 */ }
 
 async function handleAuthChange(user){
