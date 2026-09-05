@@ -1,0 +1,40 @@
+const { test, expect } = require('./support/fixtures');
+async function signedIn(page){
+  await page.goto('/');
+  await page.evaluate(() => window.__test.signIn({ uid: 'u1', displayName: '김진', email: 'a@b.com' }));
+  await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
+}
+
+test('카드 탭 → 편집기에 해당 여행 로드', async ({ page }) => {
+  await signedIn(page);
+  await page.evaluate(() => {
+    window.__test.seed('users/u1', { avatarId: 'default', tripOrder: ['t1'] });
+    window.__test.seed('users/u1/trips/t1', {
+      data: JSON.stringify({ title: '교토 여행', travelers: ['나'], days: [{ id: 'd1', date: '', label: '', items: [] }], notes: [], links: [] }),
+      title: '교토 여행', dayCount: 1,
+    });
+  });
+  await page.evaluate(async () => { await loadProfile(); await refreshTripList(); renderMypage(); });
+  await page.locator('.mp-card[data-trip-id="t1"] .mp-title').click();
+  await expect(page.locator('section[data-screen="editor"]')).toBeVisible();
+  await expect(page.locator('#inputTitle')).toHaveValue('교토 여행');
+  await expect(page.locator('#backToMypage')).toBeVisible();
+});
+
+test('← 마이페이지 → 목록 복귀', async ({ page }) => {
+  await signedIn(page);
+  await page.evaluate(() => {
+    window.__test.seed('users/u1', { avatarId: 'default', tripOrder: ['t1'] });
+    window.__test.seed('users/u1/trips/t1', { data: JSON.stringify({ title: 'X', travelers:['나'], days:[{id:'d1',date:'',label:'',items:[]}], notes:[], links:[] }), title: 'X', dayCount: 1 });
+  });
+  await page.evaluate(async () => { await loadProfile(); await refreshTripList(); renderMypage(); });
+  await page.locator('.mp-card[data-trip-id="t1"] .mp-title').click();
+  await page.locator('#backToMypage').click();
+  await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
+});
+
+test('편집기 nav 에 로그인/유저 UI 없음', async ({ page }) => {
+  await page.goto('/');
+  expect(await page.locator('#loginBtn').count()).toBe(0);
+  expect(await page.locator('#userInfo').count()).toBe(0);
+});

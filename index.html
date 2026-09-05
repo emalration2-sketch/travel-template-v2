@@ -51,10 +51,8 @@
   .nav-left .mode-btn{padding:7px 14px; font-size:12.5px;}
   .nav-sync{display:flex; align-items:center; gap:5px; flex-wrap:nowrap; justify-content:flex-end; min-width:0;}
   .nav-sync .sync-btn{padding:5px 10px; font-size:11px; white-space:nowrap;}
-  .nav-sync .sync-status{display:none;}
-  .nav-sync .user-info{min-width:0; gap:4px;}
-  .nav-sync #userName{max-width:44px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
-  .nav-sync .sync-btn-small{padding:3px 8px; font-size:10px;}
+  .nav-sync .sync-status{font-size:10.5px; color:var(--red); font-weight:600; white-space:nowrap;}
+  .nav-sync .sync-status:empty{display:none;}
   .mode-btn{
     flex:none; border:2px solid var(--teal); background:var(--teal); color:#fff;
     border-radius:999px; padding:8px 18px; font-size:13.5px; font-weight:700; cursor:pointer;
@@ -466,13 +464,8 @@
       <button class="mode-btn" id="modeBtn" data-action="toggle-mode">완료</button>
     </div>
     <div class="nav-sync" id="navSync">
-      <button class="sync-btn" id="loginBtn" data-action="login">☁️ 로그인해서 동기화</button>
-      <div class="user-info" id="userInfo" style="display:none;">
-        <img class="user-avatar" id="userAvatar" src="" alt="">
-        <span id="userName"></span>
-        <button class="sync-btn-small" data-action="logout">로그아웃</button>
-      </div>
       <span class="sync-status" id="syncStatus"></span>
+      <button class="sync-btn" id="backToMypage" data-action="back-to-mypage">← 마이페이지</button>
     </div>
   </div>
   <div class="tabs-scroll" id="tabScroll">
@@ -782,12 +775,25 @@ async function handleNewTrip(){
   }catch(e){ console.error('새 여행 생성 실패', e); }
 }
 
-/* 임시 openTrip — Task 11 이 실제 구현으로 대체 */
+/* ===== V2: SYNC (임시, Task 12/16에서 구현) ===== */
+async function forceFlush(){}
+
 async function openTrip(tripId){
+  let st;
+  try{ st = await loadTrip(tripId); }
+  catch(e){ console.error('여행 열기 실패', e); return; }
   currentTripId = tripId;
-  state = await loadTrip(tripId);
-  rebuildAll(); setMode(currentMode);
+  state = st;
+  if(!Array.isArray(state.links)) state.links = [];
+  rebuildAll();
+  setMode(currentMode);
   showScreen('editor');
+}
+async function goBackToMypage(){
+  await forceFlush();               // Task 12 전엔 no-op
+  await refreshTripList();
+  renderMypage();
+  showScreen('mypage');
 }
 
 async function handleAuthChange(user){
@@ -1350,6 +1356,8 @@ document.addEventListener('click', e => {
   else if(a === 'toggle-mode') setMode(currentMode === 'view' ? 'edit' : 'view');
   else if(a === 'login') loginWithGoogle();
   else if(a === 'new-trip') handleNewTrip();
+  else if(a === 'open-trip') openTrip(btn.dataset.tripId);
+  else if(a === 'back-to-mypage') goBackToMypage();
   else if(a === 'v2modal-close') v2ModalClose();
   else if(a === 'logout') logoutUser();
   else if(a === 'print-pdf') exportPDF();
