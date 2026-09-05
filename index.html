@@ -837,6 +837,65 @@ async function moveTrip(tripId, dir){
   renderMypage();
 }
 
+function initMypageDrag(){
+  const list = document.getElementById('mpList');
+  let pressTimer = null, dragEl = null, dragId = null, startY = 0, longPressed = false;
+  let swallowNextClick = false;
+
+  list.addEventListener('click', (e) => {
+    if(swallowNextClick){ e.stopPropagation(); e.preventDefault(); swallowNextClick = false; }
+  }, true);
+
+  function cleanup(){
+    clearTimeout(pressTimer); pressTimer = null;
+    if(dragEl) dragEl.classList.remove('dragging');
+    dragEl = null; dragId = null; longPressed = false;
+    document.removeEventListener('pointermove', onMove);
+    document.removeEventListener('pointerup', onUp);
+  }
+  function onDown(e){
+    const card = e.target.closest('.mp-card');
+    if(!card) return;
+    if(e.target.closest('.mp-arrows') || e.target.closest('.mp-del')) return;  // 화살표/삭제는 제외
+    dragEl = card; dragId = card.dataset.tripId; startY = e.clientY; longPressed = false;
+    pressTimer = setTimeout(() => {
+      longPressed = true;
+      card.classList.add('dragging');
+    }, 500);
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+  }
+  function onMove(e){
+    if(!dragEl) return;
+    if(!longPressed){
+      if(Math.abs(e.clientY - startY) > 8) cleanup();   // 롱프레스 전 움직임 → 취소(스크롤 등)
+      return;
+    }
+    e.preventDefault();
+    const cards = [...list.querySelectorAll('.mp-card:not(.dragging)')];
+    const after = cards.find(c => {
+      const r = c.getBoundingClientRect();
+      return e.clientY < r.top + r.height / 2;
+    });
+    if(after) list.insertBefore(dragEl, after);
+    else list.appendChild(dragEl);
+  }
+  async function onUp(){
+    const wasLong = longPressed;
+    if(wasLong){
+      swallowNextClick = true;
+      const newOrder = [...list.querySelectorAll('.mp-card')].map(c => c.dataset.tripId);
+      cleanup();
+      await saveProfile({ tripOrder: newOrder });
+      renderMypage();
+    } else {
+      cleanup();
+      // 빠른 탭은 click 위임(open-trip)이 별도로 처리하므로 여기선 아무 것도 안 함
+    }
+  }
+  list.addEventListener('pointerdown', onDown);
+}
+
 function v2ModalOpen(bodyText, actionsHtml){
   document.getElementById('v2ModalBody').textContent = bodyText;
   document.getElementById('v2ModalActions').innerHTML = actionsHtml;
@@ -1581,6 +1640,7 @@ document.addEventListener('change', e => { handleFieldChange(e); handleAuxChange
 /* ---------- INIT ---------- */
 rebuildAll();
 setMode(currentMode);
+initMypageDrag();
 initFirebase();
 </script>
 </body>
