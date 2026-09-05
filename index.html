@@ -663,6 +663,19 @@ async function createTrip(){
   return ref.path.split('/').pop();
 }
 
+async function saveTrip(tripId, tripState){
+  const meta = deriveTripMeta(tripState);
+  await tripsCol().doc(tripId).set({
+    data: JSON.stringify(tripState),
+    title: meta.title, startDate: meta.startDate, endDate: meta.endDate, dayCount: meta.dayCount,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+  }, { merge: true });
+}
+async function deleteTrip(tripId){
+  await tripsCol().doc(tripId).delete();
+  await saveProfile({ tripOrder: profile.tripOrder.filter(id => id !== tripId) });
+}
+
 /* ===== V2: MYPAGE (임시, Task 9에서 구현) ===== */
 function renderMypage(){ /* Task 9 */ }
 
