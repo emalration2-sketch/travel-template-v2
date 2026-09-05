@@ -1,0 +1,12 @@
+{
+  "name": "travel-template-v2",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "serve": "serve -l 5199 ."
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "serve": "^14.2.4"
+  }
+}
