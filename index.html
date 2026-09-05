@@ -554,7 +554,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script>
-const STORAGE_KEY = 'travel-template-data-v1';
 let modalDayId = null, modalItemId = null, editingExpenseId = null, saveTimer = null;
 let currentTripId = null;
 
@@ -603,22 +602,23 @@ function deriveTripMeta(tripState){
     dayCount: days.length,
   };
 }
-function loadState(){
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw) return JSON.parse(raw);
-  }catch(e){}
-  return null;
-}
-let state = loadState() || defaultState();
-if(!Array.isArray(state.links)) state.links = [];
-let currentMode = localStorage.getItem('travel-template-mode') || 'edit';
 
-function save(){
-  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
-  if(currentUser) saveToCloudDebounced();
+/* ===== V2: LOCAL CACHE ===== */
+const LOCAL_KEY = 'ttv2-current-trip';
+function cacheRead(){
+  try{ return JSON.parse(localStorage.getItem(LOCAL_KEY)); }catch(e){ return null; }
 }
-function saveDebounced(){ clearTimeout(saveTimer); saveTimer = setTimeout(save, 300); }
+function cacheWrite(tripId, tripState, dirty){
+  try{
+    localStorage.setItem(LOCAL_KEY, JSON.stringify({
+      tripId, data: JSON.stringify(tripState), dirty: !!dirty, localUpdatedAt: Date.now(),
+    }));
+  }catch(e){}
+}
+function cacheClear(){ try{ localStorage.removeItem(LOCAL_KEY); }catch(e){} }
+
+let state = defaultState();
+let currentMode = localStorage.getItem('travel-template-mode') || 'edit';
 
 /* ---------- FIREBASE SYNC ---------- */
 const firebaseConfig = {
@@ -629,7 +629,7 @@ const firebaseConfig = {
   messagingSenderId: "767720403435",
   appId: "1:767720403435:web:84877d0b03f4cea39b69ae"
 };
-let fbAuth = null, fbDb = null, currentUser = null, cloudSaveTimer = null;
+let fbAuth = null, fbDb = null, currentUser = null;
 function initFirebase(){
   if(fbAuth) return;
   try{
@@ -775,8 +775,38 @@ async function handleNewTrip(){
   }catch(e){ console.error('새 여행 생성 실패', e); }
 }
 
-/* ===== V2: SYNC (임시, Task 12/16에서 구현) ===== */
-async function forceFlush(){}
+/* ===== V2: SYNC ===== */
+let flushTimer = null;
+
+function save(){                 // 편집기 전역에서 호출하던 이름 유지
+  if(!currentTripId) return;
+  cacheWrite(currentTripId, state, true);
+  scheduleFlush();
+}
+function saveDebounced(){ save(); }   // 기존 호출부 호환
+
+function scheduleFlush(){
+  clearTimeout(flushTimer);
+  flushTimer = setTimeout(flushCloud, 1000);
+}
+async function flushCloud(){
+  clearTimeout(flushTimer); flushTimer = null;
+  if(!currentTripId) return;
+  const snapshot = JSON.parse(JSON.stringify(state));
+  try{
+    await saveTrip(currentTripId, snapshot);
+    const c = cacheRead();
+    if(c && c.tripId === currentTripId) cacheWrite(currentTripId, snapshot, false);
+    stopUnsyncedTicker();       // Task 16
+  }catch(e){
+    startUnsyncedTicker();      // Task 16
+  }
+}
+async function forceFlush(){
+  if(flushTimer || (cacheRead() && cacheRead().dirty)) await flushCloud();
+}
+function startUnsyncedTicker(){}   // Task 16
+function stopUnsyncedTicker(){}    // Task 16
 
 async function openTrip(tripId){
   let st;
@@ -784,6 +814,7 @@ async function openTrip(tripId){
   catch(e){ console.error('여행 열기 실패', e); return; }
   currentTripId = tripId;
   state = st;
+  cacheWrite(currentTripId, state, false);
   if(!Array.isArray(state.links)) state.links = [];
   rebuildAll();
   setMode(currentMode);
@@ -808,39 +839,6 @@ async function handleAuthChange(user){
   } else {
     showScreen('landing');
   }
-}
-async function loadFromCloud(){
-  if(!currentUser || !fbDb) return;
-  try{
-    const snap = await fbDb.collection('users').doc(currentUser.uid).get();
-    if(snap.exists && snap.data().data){
-      state = JSON.parse(snap.data().data);
-      if(!Array.isArray(state.links)) state.links = [];
-      if(!Array.isArray(state.notes)) state.notes = [];
-      rebuildAll();
-      setMode(currentMode);
-      try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
-    } else {
-      await saveToCloud();
-    }
-  }catch(e){ console.error('클라우드 불러오기 실패', e); }
-}
-async function saveToCloud(){
-  if(!currentUser || !fbDb) return;
-  try{
-    await fbDb.collection('users').doc(currentUser.uid).set({
-      data: JSON.stringify(state),
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    const statusEl = document.getElementById('syncStatus');
-    if(statusEl) statusEl.textContent = '✓ 동기화됨';
-  }catch(e){ console.error('클라우드 저장 실패', e); }
-}
-function saveToCloudDebounced(){
-  clearTimeout(cloudSaveTimer);
-  const statusEl = document.getElementById('syncStatus');
-  if(statusEl) statusEl.textContent = '동기화 중...';
-  cloudSaveTimer = setTimeout(saveToCloud, 800);
 }
 function loginWithGoogle(){
   initFirebase();
