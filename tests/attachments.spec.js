@@ -33,6 +33,18 @@ test('이미지 행 탭 → 뷰어 열림, 닫기 → 리스트', async ({ page 
   await expect(page.locator('#attViewer')).toBeHidden();
 });
 
+test('뷰 모드: 행 가운데(.att-name 위치) 탭도 뷰어를 연다', async ({ page }) => {
+  await openMaterials(page, [{id:'a1',name:'탑승권'}]);
+  await page.evaluate(() => { attachmentsCache['a1'] = 'data:image/jpeg;base64,/9j/4AAQSkZJRg=='; });
+  await page.evaluate(() => setMode('view'));
+  // position 오프셋 없이 행 중앙 클릭 → .att-name(disabled) 가 pointer-events:none 이라 .att-row 로 폴스루
+  await page.locator('#attList .att-row').first().click();
+  await expect(page.locator('#attViewer')).toBeVisible();
+  await expect(page.locator('#attViewerImg')).toHaveAttribute('src', /^data:image\/jpeg/);
+  await page.locator('#attViewerClose').click();
+  await expect(page.locator('#attViewer')).toBeHidden();
+});
+
 test('.att-name input 탭은 뷰어를 열지 않는다', async ({ page }) => {
   await openMaterials(page, [{id:'a1',name:'탑승권'}]);
   await page.evaluate(() => { attachmentsCache['a1'] = 'data:image/jpeg;base64,/9j/4AAQSkZJRg=='; });
