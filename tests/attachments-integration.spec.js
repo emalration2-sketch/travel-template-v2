@@ -47,3 +47,50 @@ test('exportPDF 캡처 전 4개 뷰 임시 노출, 완료 후 원래 탭 복원'
   expect(await page.evaluate(() => currentEditorTab)).toBe('expense');
   await expect(page.locator('#editView-expense')).toBeVisible();
 });
+
+test('공유 HTML — 링크 포함, 이미지 제외', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    window.__test.seed('users/u1', { avatarId:'default', tripOrder:['t1'] });
+    window.__test.seed('users/u1/trips/t1', { data: JSON.stringify({ title:'교토', travelers:['나'],
+      days:[{id:'d1',date:'2026-05-01',label:'',items:[]}], notes:[],
+      links:[{id:'l1',label:'노선도',url:'https://ex.com'}], attachments:[{id:'a1',name:'탑승권'}] }),
+      title:'교토', dayCount:1 });
+  });
+  await page.evaluate(() => window.__test.signIn({ uid:'u1', displayName:'김진', email:'a@b.com' }));
+  await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
+  await page.evaluate(() => openTrip('t1'));
+  const html = await page.evaluate(() => buildStaticGuideHTML(state));
+  expect(html).toContain('노선도');
+  expect(html).not.toContain('탑승권');
+  expect(html).not.toContain('data:image');
+});
+
+test('전체 흐름: 여행 열기 → 탭 전환 → 링크·이미지 추가 → 삭제', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    window.__test.seed('users/u1', { avatarId:'default', tripOrder:['t1'] });
+    window.__test.seed('users/u1/trips/t1', { data: JSON.stringify({ title:'방콕', travelers:['나'],
+      days:[{id:'d1',date:'',label:'',items:[]}], notes:[], links:[], attachments:[] }), title:'방콕', dayCount:1 });
+  });
+  await page.evaluate(() => window.__test.signIn({ uid:'u1', displayName:'김진', email:'a@b.com' }));
+  await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
+  await page.evaluate(() => openTrip('t1'));
+  await expect(page.locator('#editView-schedule')).toBeVisible();
+
+  await page.locator('#editTabs .tab[data-tab="materials"]').click();
+  await page.locator('#editView-materials [data-action="add-link"]').click();
+  await expect(page.locator('#editView-materials #linksContainer .link-card')).toHaveCount(1);
+
+  await page.evaluate(async () => {
+    const c = document.createElement('canvas'); c.width=30; c.height=30; c.getContext('2d').fillRect(0,0,30,30);
+    const blob = await new Promise(r => c.toBlob(r,'image/png'));
+    await addAttachment(new File([blob], 'QR.png', {type:'image/png'}));
+  });
+  await expect(page.locator('#attList .att-row')).toHaveCount(1);
+  await expect(page.locator('#attCount')).toHaveText('1 / 20');
+
+  await page.locator('#editTabs .tab[data-tab="schedule"]').click();
+  await expect(page.locator('#editView-schedule')).toBeVisible();
+  await expect(page.locator('#dayChips')).toBeVisible();
+});
