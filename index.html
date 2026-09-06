@@ -1699,6 +1699,8 @@ function exportPDF(){
     const dayChipsEl = document.getElementById('dayChips');
     const prevChips = dayChipsEl.hidden;
     try{
+      var __prevTheme = document.documentElement.dataset.theme;
+      document.documentElement.dataset.theme = 'a';
       views.forEach(v => v.hidden = false);
       dayChipsEl.hidden = true;
       await ensureAttachmentsLoaded();
@@ -1723,7 +1725,7 @@ function exportPDF(){
       ].forEach(sec => { if(sec) sections.push(sec); });
 
       for(const sec of sections){
-        const canvas = await window.html2canvas(sec, { scale: 2, useCORS: true, backgroundColor: '#FBF7EF' });
+        const canvas = await window.html2canvas(sec, { scale: 2, useCORS: true, backgroundColor: '#F1F6F4' });
         if(canvas.height === 0 || canvas.width === 0) continue;
         const imgHeight = canvas.height * imgWidth / canvas.width;
         if(!first && (y + imgHeight > pageHeight - margin)){
@@ -1755,6 +1757,7 @@ function exportPDF(){
 
       doc.save(filename);
     }finally{
+      document.documentElement.dataset.theme = __prevTheme;
       views.forEach((v, i) => v.hidden = prevHidden[i]);
       dayChipsEl.hidden = prevChips;
       showEditorTab(currentEditorTab);
