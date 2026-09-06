@@ -42,7 +42,7 @@
         const prefix = path + '/';
         const docs = Object.keys(store)
           .filter((k) => k.startsWith(prefix) && !k.slice(prefix.length).includes('/'))
-          .map((k) => ({ id: k.slice(prefix.length), data: () => clone(store[k]) }));
+          .map((k) => ({ id: k.slice(prefix.length), data: () => clone(store[k]), ref: docRef(k) }));
         return { docs, empty: docs.length === 0, forEach: (f) => docs.forEach(f) };
       },
     };

@@ -778,6 +778,10 @@ async function saveTrip(tripId, tripState){
   }, { merge: true });
 }
 async function deleteTrip(tripId){
+  try{
+    const attSnap = await tripsCol().doc(tripId).collection('att').get();
+    await Promise.all(attSnap.docs.map(d => d.ref.delete()));
+  }catch(e){ console.error('첨부 정리 실패(무시하고 진행)', e); }
   await tripsCol().doc(tripId).delete();
   await saveProfile({ tripOrder: profile.tripOrder.filter(id => id !== tripId) });
 }
