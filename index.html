@@ -1629,38 +1629,70 @@ function exportPDF(){
   const prevScrollY = window.scrollY;
   window.scrollTo(0, 0);
   loadHtml2Pdf().then(async () => {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('p', 'mm', 'a4');
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 10;
-    const imgWidth = pageWidth - margin * 2;
-    let y = margin;
-    let first = true;
+    const views = ['schedule','notes','expense','materials'].map(v => document.getElementById('editView-' + v));
+    const prevHidden = views.map(v => v.hidden);
+    const dayChipsEl = document.getElementById('dayChips');
+    const prevChips = dayChipsEl.hidden;
+    try{
+      views.forEach(v => v.hidden = false);
+      dayChipsEl.hidden = true;
+      await ensureAttachmentsLoaded();
 
-    const sections = [];
-    const headerEl = document.querySelector('.header-card');
-    if(headerEl) sections.push(headerEl);
-    document.querySelectorAll('#daysContainer .day-card').forEach(el => sections.push(el));
-    ['notes', 'links', 'expense'].forEach(id => {
-      const sec = document.getElementById(id);
-      if(sec) sections.push(sec);
-    });
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 10;
+      const imgWidth = pageWidth - margin * 2;
+      let y = margin;
+      let first = true;
 
-    for(const sec of sections){
-      const canvas = await window.html2canvas(sec, { scale: 2, useCORS: true, backgroundColor: '#FBF7EF' });
-      if(canvas.height === 0 || canvas.width === 0) continue;
-      const imgHeight = canvas.height * imgWidth / canvas.width;
-      if(!first && (y + imgHeight > pageHeight - margin)){
-        doc.addPage();
-        y = margin;
+      const sections = [];
+      const headerEl = document.querySelector('.header-card');
+      if(headerEl) sections.push(headerEl);
+      document.querySelectorAll('#daysContainer .day-card').forEach(el => sections.push(el));
+      [
+        document.querySelector('#editView-notes section'),
+        document.querySelector('#editView-expense section'),
+        document.getElementById('linksContainer'),
+      ].forEach(sec => { if(sec) sections.push(sec); });
+
+      for(const sec of sections){
+        const canvas = await window.html2canvas(sec, { scale: 2, useCORS: true, backgroundColor: '#FBF7EF' });
+        if(canvas.height === 0 || canvas.width === 0) continue;
+        const imgHeight = canvas.height * imgWidth / canvas.width;
+        if(!first && (y + imgHeight > pageHeight - margin)){
+          doc.addPage();
+          y = margin;
+        }
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        doc.addImage(imgData, 'JPEG', margin, y, imgWidth, imgHeight);
+        y += imgHeight + 4;
+        first = false;
       }
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
-      doc.addImage(imgData, 'JPEG', margin, y, imgWidth, imgHeight);
-      y += imgHeight + 4;
-      first = false;
+
+      for(const a of (state.attachments || [])){
+        const url = attachmentsCache[a.id];
+        if(!url) continue;
+        const im = new Image();
+        await new Promise(res => { im.onload = res; im.onerror = res; im.src = url; });
+        if(!im.naturalWidth) continue;
+        const ih = im.naturalHeight * imgWidth / im.naturalWidth;
+        if(!first && (y + ih + 6 > pageHeight - margin)){ doc.addPage(); y = margin; }
+        doc.setFontSize(9);
+        doc.text(a.name || '이미지', margin, y + 3);
+        y += 5;
+        doc.addImage(url, 'JPEG', margin, y, imgWidth, ih);
+        y += ih + 4;
+        first = false;
+      }
+
+      doc.save(filename);
+    }finally{
+      views.forEach((v, i) => v.hidden = prevHidden[i]);
+      dayChipsEl.hidden = prevChips;
+      showEditorTab(currentEditorTab);
     }
-    doc.save(filename);
   }).then(() => {
     btns.forEach(b => b.disabled = false);
     window.scrollTo(0, prevScrollY);
