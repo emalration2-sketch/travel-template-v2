@@ -1206,9 +1206,15 @@ function linkHTML(l){
     <a class="link-btn view-only" href="${escapeAttr(normalizeUrl(l.url))}" target="_blank" rel="noopener">${escapeHTML(l.label || '링크')}</a>
   </div>`;
 }
-function renderLinks(){
+function renderMaterials(){
   document.getElementById('linksContainer').innerHTML = state.links.map(linkHTML).join('');
+  const atts = Array.isArray(state.attachments) ? state.attachments : [];
+  document.getElementById('attCount').textContent = atts.length + ' / 20';
+  document.getElementById('attList').innerHTML = atts.map(attRowHTML).join('');
+  const addBtn = document.getElementById('attAddBtn');
+  if(addBtn) addBtn.disabled = atts.length >= 20;
 }
+function attRowHTML(a){ return ''; }   // Task 5 에서 구현 (임시)
 function renderExpenseTab(){
   let all = [];
   state.days.forEach((d, di) => {
@@ -1236,7 +1242,7 @@ function renderExpenseTab(){
     ${ex.note ? `<div class="exp-note">${escapeHTML(ex.note)}</div>` : ''}  </div>`).join('');
 }
 function rebuildAll(){
-  renderHeader(); renderDays(); renderNotes(); renderLinks(); renderExpenseTab();
+  renderHeader(); renderDays(); renderNotes(); renderMaterials(); renderExpenseTab();
 }
 
 /* ---------- OBSERVER ---------- */
@@ -1278,8 +1284,8 @@ function deleteItem(dayId, itemId){
 }
 function addNote(){ state.notes.push({ id:uid(), title:'', content:'' }); renderNotes(); save(); }
 function deleteNote(id){ state.notes = state.notes.filter(n => n.id !== id); renderNotes(); save(); }
-function addLink(){ state.links.push({ id:uid(), label:'', url:'' }); renderLinks(); save(); }
-function deleteLink(id){ state.links = state.links.filter(l => l.id !== id); renderLinks(); save(); }
+function addLink(){ state.links.push({ id:uid(), label:'', url:'' }); renderMaterials(); save(); }
+function deleteLink(id){ state.links = state.links.filter(l => l.id !== id); renderMaterials(); save(); }
 function addTraveler(){
   const inp = document.getElementById('newTravelerInput');
   const v = inp.value.trim(); if(!v) return;
