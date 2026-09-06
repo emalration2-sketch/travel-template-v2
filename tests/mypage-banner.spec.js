@@ -24,5 +24,5 @@ test('마이페이지: 이름과 "내 여행" 사이에 Travel Template 배너',
 
   // teal 배경
   const bg = await page.evaluate(() => getComputedStyle(document.querySelector('.mp-banner')).backgroundColor);
-  expect(bg).toBe('rgb(34, 127, 118)');
+  expect(bg).toBe('rgb(28, 122, 111)');  // --teal #1C7A6F (theme A)
 });

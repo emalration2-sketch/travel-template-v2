@@ -99,6 +99,6 @@ test('모드 색 띠: 수정=teal, 보기=ink-soft', async ({ page }) => {
   await page.evaluate(() => setMode('view'));
   const view = await page.evaluate(() => getComputedStyle(document.querySelector('nav.tabs')).borderBottomColor);
   expect(edit).not.toBe(view);
-  expect(edit).toBe('rgb(34, 127, 118)');   // --teal #227F76
-  expect(view).toBe('rgb(74, 81, 120)');    // --ink-soft #4A5178
+  expect(edit).toBe('rgb(28, 122, 111)');   // --teal #1C7A6F (theme A)
+  expect(view).toBe('rgb(71, 99, 94)');     // --ink-soft #47635E (theme A)
 });

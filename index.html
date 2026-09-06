@@ -11,16 +11,44 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Space+Mono:wght@400;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#1B2340;
-    --ink-soft:#4A5178;
-    --ink-faint:#8A90AE;
-    --red:#E8446B;
-    --gold:#DE9A34;
-    --teal:#227F76;
-    --paper:#FBF7EF;
-    --paper-2:#F3ECDD;
-    --line:#E4DCC8;
-    --card:#FFFFFF;
+    --ink:#16302D; --ink-soft:#47635E; --ink-faint:#8AA39D;
+    --red:#E0556E; --gold:#E3A63C; --teal:#1C7A6F;
+    --paper:#F1F6F4; --paper-2:#E1EDE9; --line:#CEDFD9; --card:#FFFFFF;
+    --fill-strong:#16302D;
+    --mode-edit:#1C7A6F; --mode-view:#415A78;
+    --banner-bg:#1C7A6F; --banner-fg:#FFFFFF;
+  }
+  :root[data-theme="b"]{
+    --ink:#1E2124; --ink-soft:#55585C; --ink-faint:#9A9CA0;
+    --red:#C6506A; --gold:#9A7B4E; --teal:#3E6B8A;
+    --paper:#F4F3F1; --paper-2:#E9E7E3; --line:#DAD8D3; --card:#FFFFFF;
+    --fill-strong:#1E2124;
+    --mode-edit:#3E6B8A; --mode-view:#2E3236;
+    --banner-bg:#2A2D30; --banner-fg:#FFFFFF;
+  }
+  :root[data-theme="c"]{
+    --ink:#1B2340; --ink-soft:#4A5178; --ink-faint:#8A90AE;
+    --red:#E0475F; --gold:#DE9A34; --teal:#35528F;
+    --paper:#F2F4F9; --paper-2:#E6EAF4; --line:#D6DCEA; --card:#FFFFFF;
+    --fill-strong:#1B2340;
+    --mode-edit:#35528F; --mode-view:#8A6E2E;
+    --banner-bg:#1B2340; --banner-fg:#FFFFFF;
+  }
+  :root[data-theme="d"]{
+    --ink:#EAF2F4; --ink-soft:#9FB2BE; --ink-faint:#61748A;
+    --red:#FF6B85; --gold:#E3A63C; --teal:#33D6C0;
+    --paper:#0C1524; --paper-2:#182335; --line:#29374D; --card:#131E30;
+    --fill-strong:#1E2E48;
+    --mode-edit:#33D6C0; --mode-view:#6C7BE0;
+    --banner-bg:linear-gradient(125deg,#0F1C3E 0%,#123E5E 52%,#0C4F4A 100%); --banner-fg:#FFFFFF;
+  }
+  :root[data-theme="e"]{
+    --ink:#43202F; --ink-soft:#8A5560; --ink-faint:#BE93A0;
+    --red:#B23A32; --gold:#E89A3C; --teal:#D8583C;
+    --paper:#FEF3EC; --paper-2:#FBE3D5; --line:#F1D2C0; --card:#FFFFFF;
+    --fill-strong:#43202F;
+    --mode-edit:#D8583C; --mode-view:#A8703E;
+    --banner-bg:linear-gradient(120deg,#E8663E 0%,#EF8A3C 55%,#E8A54A 100%); --banner-fg:#FFFFFF;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0; padding:0;}
