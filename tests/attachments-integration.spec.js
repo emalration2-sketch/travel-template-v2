@@ -135,7 +135,7 @@ test('전체 흐름: 여행 열기 → 탭 전환 → 링크·이미지 추가 �
     const blob = await new Promise(r => c.toBlob(r,'image/png'));
     await addAttachment(new File([blob], 'QR.png', {type:'image/png'}));
   });
-  await expect(page.locator('#attList .att-row')).toHaveCount(1);
+  await expect(page.locator('#attList .att-thumb')).toHaveCount(1);
   await expect(page.locator('#attCount')).toHaveText('1 / 20');
 
   await page.locator('#editTabs .tab[data-tab="schedule"]').click();

@@ -14,41 +14,50 @@ async function openMaterials(page, attachments = []){
   await page.locator('#editTabs .tab[data-tab="materials"]').click();
 }
 
-test('이미지 그룹이 state.attachments 로부터 렌더', async ({ page }) => {
+test('이미지 그룹이 state.attachments 로부터 썸네일 그리드로 렌더', async ({ page }) => {
   await openMaterials(page, [{id:'a1',name:'탑승권'},{id:'a2',name:'입장권 QR'}]);
   await expect(page.locator('#attCount')).toHaveText('2 / 20');
-  await expect(page.locator('#attList .att-row')).toHaveCount(2);
-  // 이름은 .att-name input 의 value 로 렌더된다 (toContainText 는 input value 를 읽지 않음)
-  await expect(page.locator('#attList .att-row').first().locator('.att-name')).toHaveValue('탑승권');
+  await expect(page.locator('#attList .att-thumb')).toHaveCount(2);
+  // #attList 는 att-grid 3열
+  await expect(page.locator('#attList')).toHaveClass(/att-grid/);
+  const cols = await page.evaluate(() =>
+    getComputedStyle(document.getElementById('attList')).gridTemplateColumns.split(' ').length);
+  expect(cols).toBe(3);
+  // 이름은 .att-name 캡션 input 의 value 로 렌더된다
+  await expect(page.locator('#attList .att-thumb').first().locator('.att-name')).toHaveValue('탑승권');
 });
 
-test('이미지 행 탭 → 뷰어 열림, 닫기 → 리스트', async ({ page }) => {
+test('썸네일 이미지 src 는 attachmentsCache 에서 온다', async ({ page }) => {
   await openMaterials(page, [{id:'a1',name:'탑승권'}]);
-  await page.evaluate(() => { attachmentsCache['a1'] = 'data:image/jpeg;base64,/9j/4AAQSkZJRg=='; });
-  // 행 좌측 패딩 영역(=att-row 자체) 탭 → 뷰어 열림. .att-name input 탭은 가드로 무시됨.
-  await page.locator('#attList .att-row').first().click({ position: { x: 4, y: 10 } });
+  await page.evaluate(() => { attachmentsCache['a1'] = 'data:image/jpeg;base64,/9j/4AAQSkZJRg=='; renderMaterials(); });
+  await expect(page.locator('.att-thumb[data-att-id="a1"] img.att-img')).toHaveAttribute('src', /^data:image\/jpeg/);
+});
+
+test('썸네일 탭 → 뷰어 열림, 닫기 → 그리드', async ({ page }) => {
+  await openMaterials(page, [{id:'a1',name:'탑승권'}]);
+  await page.evaluate(() => { attachmentsCache['a1'] = 'data:image/jpeg;base64,/9j/4AAQSkZJRg=='; renderMaterials(); });
+  await page.locator('.att-thumb[data-att-id="a1"] .att-img').click();
   await expect(page.locator('#attViewer')).toBeVisible();
   await expect(page.locator('#attViewerImg')).toHaveAttribute('src', /^data:image\/jpeg/);
   await page.locator('#attViewerClose').click();
   await expect(page.locator('#attViewer')).toBeHidden();
 });
 
-test('뷰 모드: 행 가운데(.att-name 위치) 탭도 뷰어를 연다', async ({ page }) => {
+test('뷰 모드: 썸네일 탭 → 뷰어 (비활성 캡션은 폴스루)', async ({ page }) => {
   await openMaterials(page, [{id:'a1',name:'탑승권'}]);
-  await page.evaluate(() => { attachmentsCache['a1'] = 'data:image/jpeg;base64,/9j/4AAQSkZJRg=='; });
+  await page.evaluate(() => { attachmentsCache['a1'] = 'data:image/jpeg;base64,/9j/4AAQSkZJRg=='; renderMaterials(); });
   await page.evaluate(() => setMode('view'));
-  // position 오프셋 없이 행 중앙 클릭 → .att-name(disabled) 가 pointer-events:none 이라 .att-row 로 폴스루
-  await page.locator('#attList .att-row').first().click();
+  await page.locator('#attList .att-thumb').first().click();
   await expect(page.locator('#attViewer')).toBeVisible();
   await expect(page.locator('#attViewerImg')).toHaveAttribute('src', /^data:image\/jpeg/);
   await page.locator('#attViewerClose').click();
   await expect(page.locator('#attViewer')).toBeHidden();
 });
 
-test('.att-name input 탭은 뷰어를 열지 않는다', async ({ page }) => {
+test('수정 모드: 캡션 input 탭은 뷰어를 열지 않는다', async ({ page }) => {
   await openMaterials(page, [{id:'a1',name:'탑승권'}]);
-  await page.evaluate(() => { attachmentsCache['a1'] = 'data:image/jpeg;base64,/9j/4AAQSkZJRg=='; });
-  await page.locator('#attList .att-row').first().locator('.att-name').click();
+  await page.evaluate(() => { attachmentsCache['a1'] = 'data:image/jpeg;base64,/9j/4AAQSkZJRg=='; renderMaterials(); });
+  await page.locator('.att-thumb[data-att-id="a1"] .att-name').click();
   await expect(page.locator('#attViewer')).toBeHidden();
 });
 
@@ -79,7 +88,7 @@ test('이미지 추가 → att 문서 + state.attachments + 여행문서', async
     const blob = await new Promise(r => c.toBlob(r, 'image/png'));
     await addAttachment(new File([blob], '탑승권.png', { type:'image/png' }));
   });
-  await expect(page.locator('#attList .att-row')).toHaveCount(1);
+  await expect(page.locator('#attList .att-thumb')).toHaveCount(1);
   await expect(page.locator('#attCount')).toHaveText('1 / 20');
   const dump = await page.evaluate(() => window.__test.dump());
   const attKey = Object.keys(dump).find(k => k.startsWith('users/u1/trips/t1/att/'));
@@ -119,10 +128,10 @@ test('오프라인이면 이미지 추가 실패 + 상태 불변', async ({ page
 test('이미지 삭제 — 확인 모달 → att 문서 + state 제거', async ({ page }) => {
   await openMaterials(page, [{id:'a1',name:'탑승권'},{id:'a2',name:'입장권'}]);
   await page.evaluate(() => window.__test.seed('users/u1/trips/t1/att/a1', { name:'탑승권', data:'data:image/jpeg;base64,AA' }));
-  await page.locator('.att-row[data-att-id="a1"] .att-del').click();
+  await page.locator('.att-thumb[data-att-id="a1"] .att-del').click();
   await expect(page.locator('#v2ModalBody')).toContainText('이 이미지를 삭제할까요?');
   await page.locator('#v2Modal').getByText('삭제', { exact:true }).click();
-  await expect(page.locator('#attList .att-row')).toHaveCount(1);
+  await expect(page.locator('#attList .att-thumb')).toHaveCount(1);
   expect(await page.evaluate(() => state.attachments.map(a => a.id))).toEqual(['a2']);
   expect(await page.evaluate(() => window.__test.dump()['users/u1/trips/t1/att/a1'])).toBeUndefined();
 });
@@ -130,7 +139,7 @@ test('이미지 삭제 — 확인 모달 → att 문서 + state 제거', async (
 test('이름 수정 → att 문서 + state 갱신', async ({ page }) => {
   await openMaterials(page, [{id:'a1',name:'탑승권'}]);
   await page.evaluate(() => window.__test.seed('users/u1/trips/t1/att/a1', { name:'탑승권', data:'data:image/jpeg;base64,AA' }));
-  const input = page.locator('.att-row[data-att-id="a1"] .att-name');
+  const input = page.locator('.att-thumb[data-att-id="a1"] .att-name');
   await input.fill('대한항공 탑승권');
   await input.dispatchEvent('change');
   expect(await page.evaluate(() => state.attachments[0].name)).toBe('대한항공 탑승권');
