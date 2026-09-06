@@ -41,6 +41,31 @@ test('힌트 문구가 푸터로 이동', async ({ page }) => {
   await expect(page.locator('footer')).toContainText('로그인한 계정에 자동 저장됩니다');
 });
 
+test('탭 전환 — 한 뷰만 보이고 일차칩은 일정에서만', async ({ page }) => {
+  await openEditor(page);
+  await expect(page.locator('#editView-schedule')).toBeVisible();
+  await expect(page.locator('#dayChips')).toBeVisible();
+
+  await page.locator('#editTabs .tab[data-tab="materials"]').click();
+  await expect(page.locator('#editView-materials')).toBeVisible();
+  await expect(page.locator('#editView-schedule')).toBeHidden();
+  await expect(page.locator('#dayChips')).toBeHidden();
+  await expect(page.locator('#editTabs .tab[data-tab="materials"]')).toHaveClass(/active/);
+
+  await page.locator('#editTabs .tab[data-tab="schedule"]').click();
+  await expect(page.locator('#editView-schedule')).toBeVisible();
+  await expect(page.locator('#dayChips')).toBeVisible();
+});
+
+test('openTrip 은 항상 schedule 로 초기화', async ({ page }) => {
+  await openEditor(page);
+  await page.locator('#editTabs .tab[data-tab="expense"]').click();
+  await expect(page.locator('#editView-expense')).toBeVisible();
+  await page.evaluate(() => openTrip('t1'));
+  await expect(page.locator('#editView-schedule')).toBeVisible();
+  expect(await page.evaluate(() => currentEditorTab)).toBe('schedule');
+});
+
 test('아바타 팝업 안내 문구 삭제됨', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__test.signIn({ uid:'u1', displayName:'김진', email:'a@b.com' }));

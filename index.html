@@ -1042,6 +1042,7 @@ async function openTrip(tripId){
   rebuildAll();
   setMode(currentMode);
   showScreen('editor');
+  showEditorTab('schedule');
   if(needsPush) flushCloud();
 }
 async function goBackToMypage(){
@@ -1159,6 +1160,23 @@ function renderDays(){
   ).join('');
   initObserver();
 }
+
+/* ===== EDITOR TABS ===== */
+let currentEditorTab = 'schedule';
+function showEditorTab(name){
+  currentEditorTab = name;
+  document.querySelectorAll('[id^="editView-"]').forEach(v => {
+    v.hidden = (v.id !== 'editView-' + name);
+  });
+  document.querySelectorAll('#editTabs .tab[data-tab]').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === name);
+  });
+  document.getElementById('dayChips').hidden = (name !== 'schedule');
+  window.scrollTo(0, 0);
+  if(name === 'materials') ensureAttachmentsLoaded();
+}
+async function ensureAttachmentsLoaded(){ /* Task 7 */ }
+
 function noteHTML(n){
   return `<div class="note-card">
     <div class="note-row">
@@ -1567,6 +1585,7 @@ document.addEventListener('click', e => {
   if(avCell){ pickPendingAvatar(avCell.dataset.avatar); return; }
   if(!btn) return;
   const a = btn.dataset.action;
+  if(a === 'edit-tab'){ showEditorTab(btn.dataset.tab); return; }
   if(a === 'add-day') addDay();
   else if(a === 'delete-day') deleteDay(btn.dataset.dayId);
   else if(a === 'add-item') addItem(btn.dataset.dayId);
