@@ -1299,6 +1299,28 @@ async function addAttachment(file){
   save();
   renderMaterials();
 }
+function showAttDeleteModal(id){
+  v2ModalOpen('이 이미지를 삭제할까요?\n되돌릴 수 없습니다.',
+    '<button class="v2-btn-ghost" data-action="v2modal-close">취소</button>' +
+    '<button class="v2-btn-danger" data-action="att-confirm-delete" data-att-id="' + escapeAttr(id) + '">삭제</button>');
+}
+async function deleteAttachment(id){
+  v2ModalClose();
+  try{ await tripsCol().doc(currentTripId).collection('att').doc(id).delete(); }
+  catch(e){ alert('삭제하지 못했어요. 연결을 확인해주세요.'); return; }
+  delete attachmentsCache[id];
+  state.attachments = (state.attachments || []).filter(a => a.id !== id);
+  save();
+  renderMaterials();
+}
+async function renameAttachment(id, name){
+  const a = (state.attachments || []).find(x => x.id === id);
+  if(!a) return;
+  a.name = name;
+  save();
+  try{ await tripsCol().doc(currentTripId).collection('att').doc(id).set({ name }, { merge: true }); }
+  catch(e){ /* 이름은 state.attachments 에도 있으니 다음 flush 로 복구 */ }
+}
 function renderExpenseTab(){
   let all = [];
   state.days.forEach((d, di) => {
@@ -1690,6 +1712,8 @@ document.addEventListener('click', e => {
   else if(a === 'add-link') addLink();
   else if(a === 'delete-link') deleteLink(btn.dataset.linkId);
   else if(a === 'att-open'){ if(e.target.closest('.att-name')) return; openAttachmentViewer(btn.dataset.attId); }
+  else if(a === 'att-delete') showAttDeleteModal(btn.dataset.attId);
+  else if(a === 'att-confirm-delete') deleteAttachment(btn.dataset.attId);
   else if(a === 'att-viewer-close') closeAttachmentViewer();
   else if(a === 'add-attachment') document.getElementById('attFileInput').click();
   else if(a === 'add-traveler') addTraveler();
@@ -1796,6 +1820,8 @@ function handleFieldChange(e){
         if(field === 'url') btnEl.href = normalizeUrl(t.value);
       }
     }
+  } else if(scope === 'att'){
+    renameAttachment(t.dataset.attId, t.value);
   }
   saveDebounced();
 }

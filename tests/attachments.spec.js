@@ -116,6 +116,27 @@ test('오프라인이면 이미지 추가 실패 + 상태 불변', async ({ page
   expect(await page.evaluate(() => state.attachments.length)).toBe(0);
 });
 
+test('이미지 삭제 — 확인 모달 → att 문서 + state 제거', async ({ page }) => {
+  await openMaterials(page, [{id:'a1',name:'탑승권'},{id:'a2',name:'입장권'}]);
+  await page.evaluate(() => window.__test.seed('users/u1/trips/t1/att/a1', { name:'탑승권', data:'data:image/jpeg;base64,AA' }));
+  await page.locator('.att-row[data-att-id="a1"] .att-del').click();
+  await expect(page.locator('#v2ModalBody')).toContainText('이 이미지를 삭제할까요?');
+  await page.locator('#v2Modal').getByText('삭제', { exact:true }).click();
+  await expect(page.locator('#attList .att-row')).toHaveCount(1);
+  expect(await page.evaluate(() => state.attachments.map(a => a.id))).toEqual(['a2']);
+  expect(await page.evaluate(() => window.__test.dump()['users/u1/trips/t1/att/a1'])).toBeUndefined();
+});
+
+test('이름 수정 → att 문서 + state 갱신', async ({ page }) => {
+  await openMaterials(page, [{id:'a1',name:'탑승권'}]);
+  await page.evaluate(() => window.__test.seed('users/u1/trips/t1/att/a1', { name:'탑승권', data:'data:image/jpeg;base64,AA' }));
+  const input = page.locator('.att-row[data-att-id="a1"] .att-name');
+  await input.fill('대한항공 탑승권');
+  await input.dispatchEvent('change');
+  expect(await page.evaluate(() => state.attachments[0].name)).toBe('대한항공 탑승권');
+  await expect.poll(() => page.evaluate(() => (window.__test.dump()['users/u1/trips/t1/att/a1']||{}).name)).toBe('대한항공 탑승권');
+});
+
 test('compressImage — 장변 1400 이하, 700KB 이하', async ({ page }) => {
   await page.goto('/');
   const r = await page.evaluate(async () => {
