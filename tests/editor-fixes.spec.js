@@ -92,13 +92,13 @@ test('마이페이지 카드: user-select none', async ({ page }) => {
   expect(us).toBe('none');
 });
 
-test('모드 색 띠: 수정=teal, 보기=ink-soft', async ({ page }) => {
+test('모드 색 띠: 수정=mode-edit, 보기=mode-view', async ({ page }) => {
   await openTrip1(page);
   await page.evaluate(() => setMode('edit'));
   const edit = await page.evaluate(() => getComputedStyle(document.querySelector('nav.tabs')).borderBottomColor);
   await page.evaluate(() => setMode('view'));
   const view = await page.evaluate(() => getComputedStyle(document.querySelector('nav.tabs')).borderBottomColor);
   expect(edit).not.toBe(view);
-  expect(edit).toBe('rgb(28, 122, 111)');   // --teal #1C7A6F (theme A)
-  expect(view).toBe('rgb(71, 99, 94)');     // --ink-soft #47635E (theme A)
+  expect(edit).toBe('rgb(28, 122, 111)');   // --mode-edit #1C7A6F (theme A)
+  expect(view).toBe('rgb(65, 90, 120)');    // --mode-view #415A78 (theme A)
 });
