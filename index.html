@@ -1162,6 +1162,7 @@ function renderDays(){
     `<a class="tab day-chip" href="#day-${d.id}" id="chip-${d.id}">${escapeHTML(tabLabel(d, idx))}</a>`
   ).join('');
   initObserver();
+  applyModeLock();
 }
 
 /* ===== EDITOR TABS ===== */
@@ -1201,6 +1202,7 @@ function noteHTML(n){
 }
 function renderNotes(){
   document.getElementById('notesContainer').innerHTML = state.notes.map(noteHTML).join('');
+  applyModeLock();
 }
 function normalizeUrl(u){
   u = (u||'').trim();
@@ -1225,6 +1227,7 @@ function renderMaterials(){
   document.getElementById('attList').innerHTML = atts.map(attRowHTML).join('');
   const addBtn = document.getElementById('attAddBtn');
   if(addBtn) addBtn.disabled = atts.length >= 20;
+  applyModeLock();
 }
 /* ===== ATTACHMENTS ===== */
 let attachmentsCache = {};
@@ -1521,11 +1524,14 @@ function deleteExpenseEntry(dayId, itemId, expId){
   renderExpenseTab(); save();
 }
 const STAGE_LABEL = { edit:'📝 수정 모드', view:'✅ 보기 모드' };
+function applyModeLock(){
+  document.querySelectorAll('[data-scope]').forEach(el => { el.disabled = (currentMode === 'view'); });
+}
 function setMode(mode){
   currentMode = mode;
   document.body.classList.remove('mode-edit','mode-view');
   document.body.classList.add('mode-' + mode);
-  document.querySelectorAll('[data-scope]').forEach(el => { el.disabled = (mode === 'view'); });
+  applyModeLock();
   document.getElementById('modeBtn').textContent = mode === 'view' ? '✏️ 수정' : '완료';
   document.getElementById('stageBadge').textContent = STAGE_LABEL[mode] || '';
   try{ localStorage.setItem('travel-template-mode', mode); }catch(e){}

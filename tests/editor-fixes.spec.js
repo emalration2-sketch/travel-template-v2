@@ -20,3 +20,31 @@ test('PDF: loadPdfLibs 가 jsPDF+html2canvas 전역을 갖춘다', async ({ page
     return [typeof d.addImage, typeof d.splitTextToSize, typeof d.text, typeof d.save].join(','); });
   expect(m).toBe('function,function,function,function');
 });
+
+async function openTrip1(page, seedAtt = [{id:'a1',name:'IMG_1'}]){
+  await page.goto('/');
+  await page.evaluate((att) => {
+    window.__test.seed('users/u1', { avatarId:'default', tripOrder:['t1'] });
+    window.__test.seed('users/u1/trips/t1', { data: JSON.stringify({ title:'X', travelers:['나'],
+      days:[{id:'d1',date:'',label:'',items:[]}], notes:[], links:[], attachments: att }), title:'X', dayCount:1 });
+    att.forEach(a => window.__test.seed('users/u1/trips/t1/att/'+a.id, { name:a.name, data:'data:image/jpeg;base64,AA' }));
+  }, seedAtt);
+  await page.evaluate(() => window.__test.signIn({ uid:'u1', displayName:'김진', email:'a@b.com' }));
+  await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
+  await page.evaluate(() => openTrip('t1'));
+  await expect(page.locator('section[data-screen="editor"]')).toBeVisible();
+}
+
+test('이미지 이름: 보기모드 재렌더 후에도 잠김, 수정모드는 편집 가능', async ({ page }) => {
+  await openTrip1(page);
+  // 보기모드 전환 후 자료모음 첫 진입(→ ensureAttachmentsLoaded → renderMaterials 재렌더)
+  await page.evaluate(() => setMode('view'));
+  await page.locator('#editTabs .tab[data-tab="materials"]').click();
+  await expect.poll(() => page.evaluate(() => { const el=document.querySelector('#attList .att-name'); return el && el.disabled; })).toBe(true);
+  // 수정모드로
+  await page.evaluate(() => setMode('edit'));
+  expect(await page.evaluate(() => document.querySelector('#attList .att-name').disabled)).toBe(false);
+  // 수정모드에서 renderMaterials 재호출해도 편집 가능 유지
+  await page.evaluate(() => renderMaterials());
+  expect(await page.evaluate(() => document.querySelector('#attList .att-name').disabled)).toBe(false);
+});
