@@ -31,7 +31,7 @@ test('exportPDF 캡처 전 4개 뷰 임시 노출, 완료 후 원래 탭 복원'
   // html2canvas / jsPDF 를 스텁
   await page.evaluate(() => {
     window.__seenVisible = null;
-    window.loadHtml2Pdf = async () => {
+    window.loadPdfLibs = async () => {
       window.html2canvas = async () => {
         window.__seenVisible = ['schedule','notes','expense','materials']
           .filter(v => !document.getElementById('editView-'+v).hidden);
@@ -75,7 +75,7 @@ test('exportPDF 첨부 이미지 루프 — 각 첨부가 doc.addImage 로 삽�
   await page.evaluate(() => {
     window.__pdfImages = [];
     window.__pdfSaved = false;
-    window.loadHtml2Pdf = async () => {
+    window.loadPdfLibs = async () => {
       window.html2canvas = async () => ({ width: 10, height: 10, toDataURL: () => 'data:image/jpeg;base64,AA' });
       window.jspdf = { jsPDF: function(){ return {
         internal:{ pageSize:{ getWidth:()=>210, getHeight:()=>297 } },
