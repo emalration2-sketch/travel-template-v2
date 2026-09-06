@@ -650,7 +650,7 @@ function defaultState(){
   return {
     title:'', travelers:['나'],
     days:[{ id:uid(), date:'', label:'', items:[{ id:uid(), time:'', place:'', memo:'', expenses:[] }] }],
-    notes:[], links:[]
+    notes:[], links:[], attachments:[]
   };
 }
 /* ===== V2: META ===== */
@@ -753,6 +753,7 @@ async function loadTrip(tripId){
   if(!Array.isArray(st.links)) st.links = [];
   if(!Array.isArray(st.notes)) st.notes = [];
   if(!Array.isArray(st.travelers)) st.travelers = ['나'];
+  if(!Array.isArray(st.attachments)) st.attachments = [];
   return st;
 }
 
@@ -1038,6 +1039,7 @@ async function openTrip(tripId){
   state = st;
   if(!Array.isArray(state.links)) state.links = [];
   if(!Array.isArray(state.notes)) state.notes = [];
+  if(!Array.isArray(state.attachments)) state.attachments = [];
   cacheWrite(currentTripId, state, needsPush);
   rebuildAll();
   setMode(currentMode);
@@ -1214,7 +1216,28 @@ function renderMaterials(){
   const addBtn = document.getElementById('attAddBtn');
   if(addBtn) addBtn.disabled = atts.length >= 20;
 }
-function attRowHTML(a){ return ''; }   // Task 5 에서 구현 (임시)
+/* ===== ATTACHMENTS ===== */
+let attachmentsCache = {};
+let loadedAttTripId = null;
+
+function attRowHTML(a){
+  return `<div class="att-row" data-action="att-open" data-att-id="${escapeAttr(a.id)}">
+    <span class="att-thumb"></span>
+    <input class="att-name" data-scope="att" data-att-id="${escapeAttr(a.id)}" data-field="name"
+           value="${escapeAttr(a.name || '')}" placeholder="이미지">
+    <button class="att-del edit-only" data-action="att-delete" data-att-id="${escapeAttr(a.id)}">✕</button>
+  </div>`;
+}
+function openAttachmentViewer(id){
+  const url = attachmentsCache[id];
+  if(!url) return;
+  document.getElementById('attViewerImg').src = url;
+  document.getElementById('attViewer').hidden = false;
+}
+function closeAttachmentViewer(){
+  document.getElementById('attViewer').hidden = true;
+  document.getElementById('attViewerImg').src = '';
+}
 function renderExpenseTab(){
   let all = [];
   state.days.forEach((d, di) => {
@@ -1605,6 +1628,8 @@ document.addEventListener('click', e => {
   else if(a === 'delete-note') deleteNote(btn.dataset.noteId);
   else if(a === 'add-link') addLink();
   else if(a === 'delete-link') deleteLink(btn.dataset.linkId);
+  else if(a === 'att-open'){ if(e.target.closest('.att-name')) return; openAttachmentViewer(btn.dataset.attId); }
+  else if(a === 'att-viewer-close') closeAttachmentViewer();
   else if(a === 'add-traveler') addTraveler();
   else if(a === 'delete-traveler') deleteTraveler(btn.dataset.idx);
   else if(a === 'reset') resetAll();
