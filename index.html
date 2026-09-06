@@ -71,7 +71,6 @@
     border-radius:999px; padding:6px 12px; text-decoration:none;
   }
   .tab.active{background:var(--ink); color:#fff; border-color:var(--ink);}
-  .tab-add{cursor:pointer; background:#fff; color:var(--teal); border:1px dashed var(--teal); font-weight:700;}
 
   /* ---------- HEADER ---------- */
   .header-card{padding-top:18px; padding-bottom:8px;}
@@ -101,7 +100,6 @@
     border:1px dashed var(--teal); background:#fff; color:var(--teal);
     width:26px; height:26px; border-radius:50%; cursor:pointer; font-weight:700;
   }
-  .hint{font-size:11.5px; color:var(--ink-faint); padding-bottom:6px;}
   .sync-row{display:flex; align-items:center; gap:8px; padding-bottom:8px; flex-wrap:wrap;}
   .sync-btn{
     border:1px solid var(--teal); background:#fff; color:var(--teal);
@@ -337,7 +335,6 @@
 
   /* ---------- STAGE SYSTEM (draft / live / final) ---------- */
   body:not(.mode-edit) .edit-only,
-  body:not(.mode-edit) .tab-add,
   body:not(.mode-edit) .chip-add,
   body:not(.mode-edit) .chip button{display:none !important;}
   body.mode-edit .view-only{display:none !important;}
@@ -444,7 +441,6 @@
   .att-row .att-name:disabled{-webkit-text-fill-color:var(--ink); color:var(--ink); pointer-events:none;}
   .att-row .att-del{border:none; background:transparent; color:#C9CBD8; font-size:12px; cursor:pointer;}
   #attAddBtn:disabled{opacity:.45; cursor:default;}
-  .att-limit-note{font-size:10.5px; color:var(--ink-faint); margin:4px 2px 0;}
   /* 이미지 뷰어 */
   #attViewer{position:fixed; inset:0; z-index:130; background:#000; display:flex; align-items:center; justify-content:center;}
   #attViewer[hidden]{display:none;}
@@ -1295,7 +1291,7 @@ async function addAttachment(file){
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
   }catch(e){
-    alert('오프라인에서는 이미지를 추가할 수 없어요. 연결 후 다시 시도해주세요.');
+    alert('이미지를 추가하지 못했어요. 연결 상태를 확인해주세요.');
     return;
   }
   attachmentsCache[id] = out.dataUrl;
@@ -1318,10 +1314,7 @@ async function deleteAttachment(id){
   renderMaterials();
 }
 async function renameAttachment(id, name){
-  const a = (state.attachments || []).find(x => x.id === id);
-  if(!a) return;
-  a.name = name;
-  save();
+  // att 하위문서 이름 반영(디바운스 아님). 인메모리 state.attachments 갱신은 호출부(handleFieldChange)가 담당.
   try{ await tripsCol().doc(currentTripId).collection('att').doc(id).set({ name }, { merge: true }); }
   catch(e){ /* 이름은 state.attachments 에도 있으니 다음 flush 로 복구 */ }
 }
@@ -1680,8 +1673,9 @@ function exportPDF(){
         const ih = im.naturalHeight * imgWidth / im.naturalWidth;
         if(!first && (y + ih + 6 > pageHeight - margin)){ doc.addPage(); y = margin; }
         doc.setFontSize(9);
-        doc.text(a.name || '이미지', margin, y + 3);
-        y += 5;
+        const cap = doc.splitTextToSize(a.name || '이미지', imgWidth);
+        doc.text(cap, margin, y + 3);
+        y += (cap.length > 1) ? 4 * cap.length : 5;
         doc.addImage(url, 'JPEG', margin, y, imgWidth, ih);
         y += ih + 4;
         first = false;
@@ -1857,7 +1851,9 @@ function handleFieldChange(e){
       }
     }
   } else if(scope === 'att'){
-    renameAttachment(t.dataset.attId, t.value);
+    const a = (state.attachments || []).find(x => x.id === t.dataset.attId);
+    if(a) a.name = t.value;
+    if(e.type === 'change') renameAttachment(t.dataset.attId, t.value);
   }
   saveDebounced();
 }

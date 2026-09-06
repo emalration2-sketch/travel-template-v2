@@ -154,3 +154,28 @@ test('compressImage — 장변 1400 이하, 700KB 이하', async ({ page }) => {
   expect(r.bytes).toBeLessThanOrEqual(700 * 1024);
   expect(r.mime).toContain('image/jpeg');
 });
+
+test('compressImage — 대형 그라디언트 1600x1600 도 리사이즈 + 700KB 이하', async ({ page }) => {
+  await page.goto('/');
+  const r = await page.evaluate(async () => {
+    const c = document.createElement('canvas'); c.width = 1600; c.height = 1600;
+    const ctx = c.getContext('2d');
+    const g = ctx.createLinearGradient(0, 0, 1600, 1600);
+    g.addColorStop(0, '#ff0000'); g.addColorStop(0.5, '#00ff88'); g.addColorStop(1, '#0033ff');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, 1600, 1600);
+    // 노이즈를 조금 더해 압축이 지나치게 작아지지 않도록
+    for(let i = 0; i < 4000; i++){
+      ctx.fillStyle = `rgb(${(i*7)%255},${(i*13)%255},${(i*29)%255})`;
+      ctx.fillRect((i*97)%1600, (i*53)%1600, 3, 3);
+    }
+    const blob = await new Promise(res => c.toBlob(res, 'image/png'));
+    const file = new File([blob], 'big.png', { type: 'image/png' });
+    const out = await compressImage(file);
+    const img = new Image(); img.src = out.dataUrl;
+    await new Promise(res => { img.onload = res; });
+    return { w: img.naturalWidth, h: img.naturalHeight, bytes: out.bytes };
+  });
+  expect(r.w).toBeLessThanOrEqual(1400);
+  expect(r.h).toBeLessThanOrEqual(1400);
+  expect(r.bytes).toBeLessThanOrEqual(700 * 1024);
+});

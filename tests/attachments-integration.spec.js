@@ -14,6 +14,7 @@ test('deleteTrip 이 att 하위 문서도 삭제', async ({ page }) => {
   const dump = await page.evaluate(() => window.__test.dump());
   expect(dump['users/u1/trips/t1']).toBeUndefined();
   expect(dump['users/u1/trips/t1/att/a1']).toBeUndefined();
+  expect(dump['users/u1/trips/t2']).toBeDefined();
 });
 
 test('exportPDF 캡처 전 4개 뷰 임시 노출, 완료 후 원래 탭 복원', async ({ page }) => {
@@ -46,6 +47,53 @@ test('exportPDF 캡처 전 4개 뷰 임시 노출, 완료 후 원래 탭 복원'
   await expect.poll(() => page.evaluate(() => (window.__seenVisible||[]).length)).toBe(4);
   expect(await page.evaluate(() => currentEditorTab)).toBe('expense');
   await expect(page.locator('#editView-expense')).toBeVisible();
+});
+
+test('exportPDF 첨부 이미지 루프 — 각 첨부가 doc.addImage 로 삽입된다', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    window.__test.seed('users/u1', { avatarId:'default', tripOrder:['t1'] });
+    window.__test.seed('users/u1/trips/t1', { data: JSON.stringify({ title:'X', travelers:['나'],
+      days:[{id:'d1',date:'',label:'',items:[]}], notes:[], links:[],
+      attachments:[{id:'a1',name:'탑승권'},{id:'a2',name:'입장권 QR'}] }), title:'X', dayCount:1 });
+  });
+  await page.evaluate(() => window.__test.signIn({ uid:'u1', displayName:'김진', email:'a@b.com' }));
+  await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
+  await page.evaluate(() => openTrip('t1'));
+  // materials 탭 1회 진입 → ensureAttachmentsLoaded 가 loadedAttTripId 를 t1 로 고정(캐시 프라임 후 재fetch 방지)
+  await page.locator('#editTabs .tab[data-tab="materials"]').click();
+  await expect.poll(() => page.evaluate(() => loadedAttTripId)).toBe('t1');
+  // 실제 디코드 가능한 JPEG data URI 로 캐시 프라임
+  const attUrls = await page.evaluate(() => {
+    const mk = (fill) => { const c = document.createElement('canvas'); c.width = 24; c.height = 24;
+      const x = c.getContext('2d'); x.fillStyle = fill; x.fillRect(0,0,24,24); return c.toDataURL('image/jpeg'); };
+    window.__attUrls = [mk('#f00'), mk('#0f0')];
+    attachmentsCache['a1'] = window.__attUrls[0];
+    attachmentsCache['a2'] = window.__attUrls[1];
+    return window.__attUrls;
+  });
+  await page.evaluate(() => {
+    window.__pdfImages = [];
+    window.__pdfSaved = false;
+    window.loadHtml2Pdf = async () => {
+      window.html2canvas = async () => ({ width: 10, height: 10, toDataURL: () => 'data:image/jpeg;base64,AA' });
+      window.jspdf = { jsPDF: function(){ return {
+        internal:{ pageSize:{ getWidth:()=>210, getHeight:()=>297 } },
+        addImage(...args){ window.__pdfImages.push(args); },
+        addPage(){},
+        setFontSize(){},
+        text(){},
+        splitTextToSize(s){ return [s]; },
+        save(){ window.__pdfSaved = true; },
+      }; } };
+    };
+  });
+  await page.evaluate(() => exportPDF());
+  await expect.poll(() => page.evaluate(() => window.__pdfSaved === true)).toBe(true);
+  const imgs = await page.evaluate(() => window.__pdfImages.map(a => a[0]));
+  // 첨부 2장이 각각 addImage 로 삽입됨(섹션 캡처는 'data:image/jpeg;base64,AA' 로 구분됨)
+  expect(imgs.filter(u => attUrls.includes(u)).length).toBeGreaterThanOrEqual(2);
+  expect(imgs.filter(u => typeof u === 'string' && u.startsWith('data:image/jpeg')).length).toBeGreaterThanOrEqual(2);
 });
 
 test('공유 HTML — 링크 포함, 이미지 제외', async ({ page }) => {
