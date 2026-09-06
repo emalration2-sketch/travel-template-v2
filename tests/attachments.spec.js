@@ -71,6 +71,51 @@ test('자료모음 첫 진입 시 att 하위 컬렉션 1회 로드', async ({ pa
   expect(await page.evaluate(() => loadedAttTripId)).toBe('t1');
 });
 
+test('이미지 추가 → att 문서 + state.attachments + 여행문서', async ({ page }) => {
+  await openMaterials(page, []);
+  await page.evaluate(async () => {
+    const c = document.createElement('canvas'); c.width = 40; c.height = 40;
+    c.getContext('2d').fillRect(0,0,40,40);
+    const blob = await new Promise(r => c.toBlob(r, 'image/png'));
+    await addAttachment(new File([blob], '탑승권.png', { type:'image/png' }));
+  });
+  await expect(page.locator('#attList .att-row')).toHaveCount(1);
+  await expect(page.locator('#attCount')).toHaveText('1 / 20');
+  const dump = await page.evaluate(() => window.__test.dump());
+  const attKey = Object.keys(dump).find(k => k.startsWith('users/u1/trips/t1/att/'));
+  expect(attKey).toBeTruthy();
+  expect(dump[attKey].data).toMatch(/^data:image\/jpeg/);
+  expect(dump[attKey].name).toBe('탑승권');
+  await page.waitForTimeout(1300);
+  const dump2 = await page.evaluate(() => window.__test.dump());
+  expect(JSON.parse(dump2['users/u1/trips/t1'].data).attachments.length).toBe(1);
+});
+
+test('20장이면 추가 버튼 비활성 + 추가 안 됨', async ({ page }) => {
+  const many = Array.from({length:20}, (_,i) => ({id:'x'+i, name:'img'+i}));
+  await openMaterials(page, many);
+  await expect(page.locator('#attAddBtn')).toBeDisabled();
+  const before = await page.evaluate(() => state.attachments.length);
+  await page.evaluate(async () => {
+    const c = document.createElement('canvas'); c.width=10; c.height=10; c.getContext('2d').fillRect(0,0,10,10);
+    const blob = await new Promise(r => c.toBlob(r,'image/png'));
+    await addAttachment(new File([blob], 'over.png', {type:'image/png'}));
+  });
+  expect(await page.evaluate(() => state.attachments.length)).toBe(before);
+});
+
+test('오프라인이면 이미지 추가 실패 + 상태 불변', async ({ page }) => {
+  await openMaterials(page, []);
+  page.on('dialog', d => d.accept());
+  await page.evaluate(() => window.__test.setOffline(true));
+  await page.evaluate(async () => {
+    const c = document.createElement('canvas'); c.width=10; c.height=10; c.getContext('2d').fillRect(0,0,10,10);
+    const blob = await new Promise(r => c.toBlob(r,'image/png'));
+    await addAttachment(new File([blob], 'x.png', {type:'image/png'}));
+  });
+  expect(await page.evaluate(() => state.attachments.length)).toBe(0);
+});
+
 test('compressImage — 장변 1400 이하, 700KB 이하', async ({ page }) => {
   await page.goto('/');
   const r = await page.evaluate(async () => {

@@ -1273,6 +1273,32 @@ function compressImage(file){
     img.src = objUrl;
   });
 }
+async function addAttachment(file){
+  const atts = state.attachments || (state.attachments = []);
+  if(atts.length >= 20){
+    v2ModalOpen('이미지는 여행당 20장까지 추가할 수 있어요.',
+      '<button class="v2-btn-solid" data-action="v2modal-close">확인</button>');
+    return;
+  }
+  let out;
+  try{ out = await compressImage(file); }
+  catch(e){ alert('이미지가 너무 커요. 더 작은 파일을 사용해주세요.'); return; }
+  const id = uid();
+  const name = file.name.replace(/\.[^.]+$/, '');
+  try{
+    await tripsCol().doc(currentTripId).collection('att').doc(id).set({
+      name, mime: 'image/jpeg', data: out.dataUrl,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+  }catch(e){
+    alert('오프라인에서는 이미지를 추가할 수 없어요. 연결 후 다시 시도해주세요.');
+    return;
+  }
+  attachmentsCache[id] = out.dataUrl;
+  atts.push({ id, name });
+  save();
+  renderMaterials();
+}
 function renderExpenseTab(){
   let all = [];
   state.days.forEach((d, di) => {
@@ -1665,6 +1691,7 @@ document.addEventListener('click', e => {
   else if(a === 'delete-link') deleteLink(btn.dataset.linkId);
   else if(a === 'att-open'){ if(e.target.closest('.att-name')) return; openAttachmentViewer(btn.dataset.attId); }
   else if(a === 'att-viewer-close') closeAttachmentViewer();
+  else if(a === 'add-attachment') document.getElementById('attFileInput').click();
   else if(a === 'add-traveler') addTraveler();
   else if(a === 'delete-traveler') deleteTraveler(btn.dataset.idx);
   else if(a === 'reset') resetAll();
@@ -1690,6 +1717,12 @@ document.addEventListener('click', e => {
 });
 document.getElementById('modalOverlay').addEventListener('click', e => {
   if(e.target.id === 'modalOverlay') closeExpenseModal();
+});
+const _attFile = document.getElementById('attFileInput');
+if(_attFile) _attFile.addEventListener('change', e => {
+  const f = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if(f) addAttachment(f);
 });
 document.getElementById('v2Modal').addEventListener('click', e => {
   if(e.target.id === 'v2Modal') v2ModalClose();
