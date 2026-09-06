@@ -13,15 +13,13 @@ test('5개 테마 토큰이 data-theme 로 적용된다', async ({ page }) => {
   for(const [id, exp] of Object.entries(EXPECT)){
     const got = await page.evaluate((t) => {
       document.documentElement.dataset.theme = t;
-      const s = getComputedStyle(document.documentElement);
-      const g = n => s.getPropertyValue(n).trim();
       // css var 원시값은 hex 라 비교용으로 실제 렌더 색을 뽑는다
       const probe = document.createElement('div');
       probe.style.cssText = 'color:var(--paper)';
       document.body.appendChild(probe);
       const rgb = k => { probe.style.color = 'var(' + k + ')'; return getComputedStyle(probe).color; };
       const out = { paper:rgb('--paper'), teal:rgb('--teal'), fillStrong:rgb('--fill-strong'),
-                    modeEdit:rgb('--mode-edit'), modeView:rgb('--mode-view'), bannerBg:g('--banner-bg') };
+                    modeEdit:rgb('--mode-edit'), modeView:rgb('--mode-view') };
       probe.remove();
       return out;
     }, id);

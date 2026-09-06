@@ -11,20 +11,19 @@ test('exportPDF 캡처 중 테마 a 강제, 이후 원복', async ({ page }) => 
   await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
   await page.evaluate(() => openTrip('t1'));
 
-  const seen = await page.evaluate(async () => {
+  await page.evaluate(async () => {
     document.documentElement.dataset.theme = 'd';        // 다크 테마 상태에서 시작
-    let themeAtCapture = null;
+    window.__themeAtCapture = null;
     window.loadPdfLibs = () => Promise.resolve();
     window.jspdf = { jsPDF: function(){ return {
       internal:{ pageSize:{ getWidth:()=>210, getHeight:()=>297 } },
       addImage(){}, addPage(){}, setFontSize(){}, splitTextToSize:(s)=>[s], text(){}, save(){}
     }; } };
-    window.html2canvas = async () => { themeAtCapture = document.documentElement.dataset.theme;
+    window.html2canvas = async () => { window.__themeAtCapture = document.documentElement.dataset.theme;
       return { width:0, height:0, toDataURL:()=>'' }; };
     await exportPDF();
-    await new Promise(r => setTimeout(r, 50));
-    return { themeAtCapture, themeAfter: document.documentElement.dataset.theme };
   });
-  expect(seen.themeAtCapture).toBe('a');
-  expect(seen.themeAfter).toBe('d');
+  // exportPDF 가 프로미스 체인을 반환하지 않으므로 캡처/원복을 poll 로 관측
+  await expect.poll(() => page.evaluate(() => window.__themeAtCapture)).toBe('a');
+  await expect.poll(() => page.evaluate(() => document.documentElement.dataset.theme)).toBe('d');
 });

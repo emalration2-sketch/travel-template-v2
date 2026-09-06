@@ -50,7 +50,18 @@ test('index.html 에 #243057 / #1B2340 하드코딩이 배경으로 남지 않�
   const html = fs.readFileSync(require('path').join(__dirname, '..', 'index.html'), 'utf8');
   const styleBlock = html.slice(0, html.indexOf('</style>'));
   expect(styleBlock).not.toContain('#243057');
-  // #1B2340 는 :root/[data-theme="c"] 정의에만 허용 → style 블록 그 외 등장 금지
-  const occurrences = (styleBlock.match(/#1B2340/g) || []).length;
-  expect(occurrences).toBeLessThanOrEqual(3); // bare :root 는 a값이라 없음; [data-theme=c] --ink & --fill-strong & --banner-bg 3회
+  // #1B2340 은 [data-theme="c"] 팔레트 정의에만 허용 → 그 블록을 제거한 나머지엔 등장 금지
+  const withoutThemeC = styleBlock.replace(/:root\[data-theme="c"\]\{[\s\S]*?\}/, '');
+  expect(withoutThemeC).not.toContain('#1B2340');
+});
+
+test('style 블록에 background:#fff 하드코딩이 @media print 밖에 남지 않았다', async () => {
+  const fs = require('fs');
+  const html = fs.readFileSync(require('path').join(__dirname, '..', 'index.html'), 'utf8');
+  // STATIC_CSS 문자열은 </style> 뒤라 이미 제외됨
+  let styleBlock = html.slice(0, html.indexOf('</style>'));
+  // @media print{ ... } 블록을 먼저 제거 (인쇄물은 항상 라이트라 #fff 허용)
+  styleBlock = styleBlock.replace(/@media print\{[\s\S]*?\n  \}/, '');
+  expect(styleBlock).not.toContain('background:#fff');
+  expect(styleBlock).not.toContain('background: #fff');
 });
