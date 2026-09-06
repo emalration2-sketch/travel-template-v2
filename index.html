@@ -426,6 +426,30 @@
   .av-cell{width:100%; aspect-ratio:1; border-radius:50%; background:var(--paper-2); display:flex; align-items:center; justify-content:center; font-size:22px; cursor:pointer;}
   .av-cell.sel{outline:2.5px solid var(--teal); outline-offset:2px;}
   .av-reset{font-size:10.5px; color:var(--ink-faint); text-decoration:underline; background:none; border:none; cursor:pointer;}
+
+  /* ===== EDITOR TABS ===== */
+  .tabs-scroll.day-chips{padding-top:0; padding-bottom:8px;}
+  .tabs-scroll.day-chips[hidden]{display:none;}
+  .tab.day-chip{font-size:11.5px; padding:5px 11px; background:#fff; border-color:var(--line); color:var(--ink-soft);}
+  .tab.day-chip.active{background:#243057; color:#fff; border-color:#243057;}
+  .day-card{scroll-margin-top:104px;}   /* nav-title + editTabs + dayChips 대략 높이 */
+  [id^="editView-"][hidden]{display:none !important;}
+  .mat-group-title{font-size:11px; font-weight:700; color:var(--ink-faint); letter-spacing:.03em; margin:16px 2px 8px; text-transform:uppercase;}
+  .mat-group-title:first-of-type{margin-top:6px;}
+  #editView-materials .add-block{margin-top:2px;}
+  /* 이미지 리스트 */
+  .att-row{display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--line); border-radius:10px; padding:10px 11px; margin-bottom:7px; cursor:pointer;}
+  .att-row .att-thumb{width:16px; height:16px; border-radius:3px; background:#243057; flex:none;}
+  .att-row .att-name{flex:1; font-size:12.5px; color:var(--ink); border:none; background:transparent; min-width:0;}
+  .att-row .att-name:disabled{-webkit-text-fill-color:var(--ink); color:var(--ink);}
+  .att-row .att-del{border:none; background:transparent; color:#C9CBD8; font-size:12px; cursor:pointer;}
+  #attAddBtn:disabled{opacity:.45; cursor:default;}
+  .att-limit-note{font-size:10.5px; color:var(--ink-faint); margin:4px 2px 0;}
+  /* 이미지 뷰어 */
+  #attViewer{position:fixed; inset:0; z-index:130; background:#000; display:flex; align-items:center; justify-content:center;}
+  #attViewer[hidden]{display:none;}
+  #attViewer img{max-width:100%; max-height:100%; object-fit:contain; touch-action:pinch-zoom;}
+  #attViewerClose{position:absolute; top:14px; right:16px; width:34px; height:34px; border-radius:50%; border:none; background:rgba(255,255,255,.15); color:#fff; font-size:15px; cursor:pointer;}
 </style>
 </head>
 <body>
@@ -488,44 +512,56 @@
       <button class="sync-btn" id="backToMypage" data-action="back-to-mypage">← 마이페이지</button>
     </div>
   </div>
-  <div class="tabs-scroll" id="tabScroll">
-    <span id="dayTabs" style="display:contents"></span>
-    <a class="tab" href="#notes">메모</a>
-    <a class="tab" href="#links">참고 링크</a>
-    <a class="tab" href="#expense">지출기록</a>
-    <button class="tab tab-add" data-action="add-day">＋ 일차</button>
+  <div class="tabs-scroll" id="editTabs">
+    <button class="tab active" data-action="edit-tab" data-tab="schedule">일정</button>
+    <button class="tab" data-action="edit-tab" data-tab="notes">메모</button>
+    <button class="tab" data-action="edit-tab" data-tab="expense">지출</button>
+    <button class="tab" data-action="edit-tab" data-tab="materials">자료모음</button>
   </div>
+  <div class="tabs-scroll day-chips" id="dayChips"></div>
 </nav>
 
 <div id="printArea">
-<div class="header-card wrap">
-  <input id="inputTitle" class="h-title" type="text" data-scope="header" data-field="title" placeholder="여행 제목을 입력하세요">
-  <div class="h-travelers" id="travelersWrap"></div>
-  <div class="hint">✏️ [수정모드]에서 모든 항목을 자유롭게 입력·수정할 수 있어요. [보기모드]에서는 조회만 가능합니다.</div>
+<div id="editView-schedule">
+  <div class="header-card wrap">
+    <input id="inputTitle" class="h-title" type="text" data-scope="header" data-field="title" placeholder="여행 제목을 입력하세요">
+    <div class="h-travelers" id="travelersWrap"></div>
+  </div>
+
+  <div class="wrap">
+    <div id="daysContainer"></div>
+    <button class="add-day edit-only" data-action="add-day">＋ 새로운 일차 추가</button>
+  </div>
 </div>
 
-<div class="wrap">
-  <div id="daysContainer"></div>
-  <button class="add-day edit-only" data-action="add-day">＋ 새로운 일차 추가</button>
+<div id="editView-notes" hidden>
+  <section class="wrap section-block">
+    <div class="section-title">메모</div>
+    <div id="notesContainer"></div>
+    <button class="add-block edit-only" data-action="add-note">+ 메모 추가</button>
+  </section>
 </div>
 
-<section id="notes" class="wrap section-block">
-  <div class="section-title">메모</div>
-  <div id="notesContainer"></div>
-  <button class="add-block edit-only" data-action="add-note">+ 메모 추가</button>
-</section>
+<div id="editView-expense" hidden>
+  <section class="wrap section-block">
+    <div class="section-title">지출</div>
+    <div id="expenseSummary" class="exp-summary"></div>
+    <div id="expenseList"></div>
+  </section>
+</div>
 
-<section id="links" class="wrap section-block">
-  <div class="section-title">참고 링크</div>
-  <div id="linksContainer" class="links-grid"></div>
-  <button class="add-block edit-only" data-action="add-link">+ 링크 버튼 추가</button>
-</section>
-
-<section id="expense" class="wrap section-block">
-  <div class="section-title">지출기록</div>
-  <div id="expenseSummary" class="exp-summary"></div>
-  <div id="expenseList"></div>
-</section>
+<div id="editView-materials" hidden>
+  <section class="wrap section-block">
+    <div class="section-title">자료모음</div>
+    <div class="mat-group-title">링크</div>
+    <div id="linksContainer" class="links-grid"></div>
+    <button class="add-block edit-only" data-action="add-link">+ 링크 추가</button>
+    <div class="mat-group-title">이미지 <span id="attCount"></span></div>
+    <div id="attList"></div>
+    <button class="add-block edit-only" id="attAddBtn" data-action="add-attachment">+ 이미지 추가</button>
+    <input type="file" id="attFileInput" accept="image/*" hidden>
+  </section>
+</div>
 
 </div>
 
@@ -538,6 +574,7 @@
     <button data-action="share">공유하기</button>
   </div>
   <div class="foot-note">로그인한 계정에 자동 저장됩니다</div>
+  <div class="foot-note">✏️ [수정모드]에서 모든 항목을 자유롭게 입력·수정할 수 있어요. [보기모드]에서는 조회만 가능합니다.</div>
 </footer>
 
 </section>
@@ -568,6 +605,11 @@
     <div class="v2-modal-body" id="v2ModalBody"></div>
     <div class="v2-modal-actions" id="v2ModalActions"></div>
   </div>
+</div>
+
+<div id="attViewer" hidden>
+  <button id="attViewerClose" data-action="att-viewer-close">✕</button>
+  <img id="attViewerImg" alt="">
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -764,7 +806,6 @@ function openAvatarModal(){
   ).join('');
   document.getElementById('v2ModalBody').innerHTML =
     '<div style="font-weight:700;font-size:13px;margin-bottom:4px">아바타 선택</div>' +
-    '<div style="font-size:10.5px;color:#8A90AE;margin-bottom:8px">기본값은 ✈ Travel Template 아이콘</div>' +
     '<div class="av-grid">' + grid + '</div>';
   document.getElementById('v2ModalActions').innerHTML =
     '<button class="v2-btn-ghost" data-action="v2modal-close">취소</button>' +
@@ -1113,8 +1154,8 @@ function itemHTML(d, it){
 }
 function renderDays(){
   document.getElementById('daysContainer').innerHTML = state.days.map(dayCardHTML).join('');
-  document.getElementById('dayTabs').innerHTML = state.days.map((d, idx) =>
-    `<a class="tab" href="#day-${d.id}" id="tab-${d.id}">${escapeHTML(tabLabel(d, idx))}</a>`
+  document.getElementById('dayChips').innerHTML = state.days.map((d, idx) =>
+    `<a class="tab day-chip" href="#day-${d.id}" id="chip-${d.id}">${escapeHTML(tabLabel(d, idx))}</a>`
   ).join('');
   initObserver();
 }
