@@ -9,7 +9,7 @@ async function signedIn(page){
 test('문서 없으면 기본값', async ({ page }) => {
   await signedIn(page);
   const p = await page.evaluate(() => loadProfile());
-  expect(p).toEqual({ avatarId: 'default', tripOrder: [] });
+  expect(p).toEqual({ avatarId: 'default', tripOrder: [], theme: 'a' });
 });
 
 test('saveProfile 후 재로드 round-trip', async ({ page }) => {
@@ -18,5 +18,5 @@ test('saveProfile 후 재로드 round-trip', async ({ page }) => {
   const raw = await page.evaluate(() => window.__test.dump()['users/u1']);
   expect(raw).toMatchObject({ avatarId: 'fox', tripOrder: ['t1', 't2'] });
   const p = await page.evaluate(() => loadProfile());
-  expect(p).toEqual({ avatarId: 'fox', tripOrder: ['t1', 't2'] });
+  expect(p).toEqual({ avatarId: 'fox', tripOrder: ['t1', 't2'], theme: 'a' });
 });

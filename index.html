@@ -494,6 +494,7 @@
 </style>
 </head>
 <body>
+<script>try{document.documentElement.dataset.theme=localStorage.getItem('ttv2-theme')||'a';}catch(e){document.documentElement.dataset.theme='a';}</script>
 
 <section data-screen="landing" hidden>
   <div class="v2-wrap landing">
@@ -722,6 +723,13 @@ function cacheWrite(tripId, tripState, dirty){
 }
 function cacheClear(){ try{ localStorage.removeItem(LOCAL_KEY); }catch(e){} }
 
+const THEME_IDS = ['a','b','c','d','e'];
+function applyTheme(t){
+  const theme = THEME_IDS.includes(t) ? t : 'a';
+  document.documentElement.dataset.theme = theme;
+  try{ localStorage.setItem('ttv2-theme', theme); }catch(e){}
+}
+
 let state = defaultState();
 let currentMode = localStorage.getItem('travel-template-mode') || 'edit';
 
@@ -745,7 +753,7 @@ function initFirebase(){
   }catch(e){ console.error('Firebase 초기화 실패', e); }
 }
 /* ===== V2: PROFILE STORE ===== */
-let profile = { avatarId: 'default', tripOrder: [] };
+let profile = { avatarId: 'default', tripOrder: [], theme: 'a' };
 let profileLoaded = false;
 function profileDoc(){ return fbDb.collection('users').doc(currentUser.uid); }
 async function loadProfile(){
@@ -755,15 +763,18 @@ async function loadProfile(){
   profile = {
     avatarId: d.avatarId || 'default',
     tripOrder: Array.isArray(d.tripOrder) ? d.tripOrder.slice() : [],
+    theme: THEME_IDS.includes(d.theme) ? d.theme : 'a',
   };
+  applyTheme(profile.theme);
   profileLoaded = true;
   return profile;
 }
 async function saveProfile(patch){
   if(!profileLoaded){ console.error('프로필 미로드 상태 — 저장 취소'); return; }
   Object.assign(profile, patch);
+  if(patch.theme) applyTheme(profile.theme);
   await profileDoc().set(
-    { avatarId: profile.avatarId, tripOrder: profile.tripOrder },
+    { avatarId: profile.avatarId, tripOrder: profile.tripOrder, theme: profile.theme },
     { merge: true }
   );
 }

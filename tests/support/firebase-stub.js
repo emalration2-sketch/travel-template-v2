@@ -1,5 +1,10 @@
 (function () {
-  const store = {};              // { "users/u1": {...}, "users/u1/trips/t1": {...} }
+  // Firestore 스텁 저장소: 같은 테스트 컨텍스트 내에서 page.reload() 를 넘어 유지되도록
+  // sessionStorage 에 write-through 한다. (Playwright 는 테스트마다 컨텍스트가 격리되므로 누수 없음)
+  const SS_KEY = '__fb_stub_store__';
+  const readSS = () => { try { return JSON.parse(sessionStorage.getItem(SS_KEY)) || {}; } catch (e) { return {}; } };
+  const store = readSS();       // { "users/u1": {...}, "users/u1/trips/t1": {...} }
+  const persist = () => { try { sessionStorage.setItem(SS_KEY, JSON.stringify(store)); } catch (e) {} };
   let authUser = null, authCb = null, offline = false, pendingUser = null;
   const clone = (v) => (v === undefined ? undefined : JSON.parse(JSON.stringify(v)));
   const stamp = () => ({ __ts: Date.now() });
@@ -16,14 +21,17 @@
       async set(v, opts) {
         if (offline) throw new Error('offline');
         store[path] = opts && opts.merge ? Object.assign({}, store[path] || {}, clone(v)) : clone(v);
+        persist();
       },
       async update(v) {
         if (offline) throw new Error('offline');
         store[path] = Object.assign({}, store[path] || {}, clone(v));
+        persist();
       },
       async delete() {
         if (offline) throw new Error('offline');
         delete store[path];
+        persist();
       },
       collection(sub) { return collRef(path + '/' + sub); },
     };
@@ -36,6 +44,7 @@
         if (offline) throw new Error('offline');
         const p = path + '/' + rid();
         store[p] = clone(v);
+        persist();
         return docRef(p);
       },
       async get() {
@@ -65,8 +74,8 @@
     signIn(user) { pendingUser = user || null; return fakeAuth.signInWithPopup(); },
     signOut() { return fakeAuth.signOut(); },
     setOffline(v) { offline = !!v; },
-    seed(path, obj) { store[path] = clone(obj); },
+    seed(path, obj) { store[path] = clone(obj); persist(); },
     dump() { return clone(store); },
-    reset() { Object.keys(store).forEach((k) => delete store[k]); authUser = null; offline = false; pendingUser = null; },
+    reset() { Object.keys(store).forEach((k) => delete store[k]); persist(); authUser = null; offline = false; pendingUser = null; },
   };
 })();
