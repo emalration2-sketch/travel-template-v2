@@ -60,3 +60,43 @@ test('초기화 버튼: 일정 뷰 안, 링크형, 푸터엔 없음', async ({ p
   await page.evaluate(() => setMode('edit'));
   await expect(page.locator('#editView-schedule .reset-link')).toBeVisible();
 });
+
+test('힌트 문구 줄바꿈', async ({ page }) => {
+  await page.goto('/');
+  const html = await page.evaluate(() => [...document.querySelectorAll('footer .foot-note')].map(n => n.innerHTML).join('|'));
+  expect(html).toContain('<br>');
+  expect(html).toContain('[보기모드]에서는 조회만 가능합니다');
+});
+
+test('동행자 칩: 보기모드 좌우 여백 대칭', async ({ page }) => {
+  await openTrip1(page);
+  await page.evaluate(() => { state.travelers = ['나','길동']; renderTravelers(); setMode('view'); });
+  const pad = await page.evaluate(() => { const c = document.querySelector('#travelersWrap .chip');
+    const s = getComputedStyle(c); return { l: s.paddingLeft, r: s.paddingRight }; });
+  expect(pad.l).toBe(pad.r);
+});
+
+test('마이페이지 카드: user-select none', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__test.signIn({ uid:'u1', displayName:'김진', email:'a@b.com' }));
+  await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
+  await page.evaluate(() => {
+    window.__test.seed('users/u1', { avatarId:'default', tripOrder:['t1'] });
+    window.__test.seed('users/u1/trips/t1', { title:'A', dayCount:1 });
+  });
+  await page.evaluate(async () => { await loadProfile(); await refreshTripList(); renderMypage(); });
+  const us = await page.evaluate(() => getComputedStyle(document.querySelector('.mp-card')).userSelect
+    || getComputedStyle(document.querySelector('.mp-card')).webkitUserSelect);
+  expect(us).toBe('none');
+});
+
+test('모드 색 띠: 수정=teal, 보기=ink-soft', async ({ page }) => {
+  await openTrip1(page);
+  await page.evaluate(() => setMode('edit'));
+  const edit = await page.evaluate(() => getComputedStyle(document.querySelector('nav.tabs')).borderBottomColor);
+  await page.evaluate(() => setMode('view'));
+  const view = await page.evaluate(() => getComputedStyle(document.querySelector('nav.tabs')).borderBottomColor);
+  expect(edit).not.toBe(view);
+  expect(edit).toBe('rgb(34, 127, 118)');   // --teal #227F76
+  expect(view).toBe('rgb(74, 81, 120)');    // --ink-soft #4A5178
+});

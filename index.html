@@ -38,7 +38,7 @@
     position:sticky; top:0; z-index:50;
     background:rgba(251,247,239,.94);
     backdrop-filter:blur(6px);
-    border-bottom:1px solid var(--line);
+    border-bottom:4px solid var(--teal);
   }
   .nav-title{
     display:flex; align-items:center; justify-content:space-between; gap:10px;
@@ -87,6 +87,7 @@
     background:var(--paper-2); border:1px solid var(--line);
     border-radius:999px; padding:5px 6px 5px 12px; font-size:12.5px; font-weight:600;
   }
+  body:not(.mode-edit) .chip{ padding-right:12px; }
   .chip button{
     border:none; background:transparent; color:var(--ink-faint);
     width:18px; height:18px; border-radius:50%; cursor:pointer; font-size:11px;
@@ -380,7 +381,7 @@
   .mp-name{font-size:13.5px; font-weight:700; color:var(--ink);}
   .mp-h{font-family:'Fraunces',serif; font-size:20px; font-weight:700; color:var(--ink); margin:14px 0 3px;}
   .mp-count{font-size:11.5px; color:var(--ink-faint); margin-bottom:12px;}
-  .mp-card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px 12px 12px 40px; margin-bottom:9px; position:relative; cursor:pointer;}
+  .mp-card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px 12px 12px 40px; margin-bottom:9px; position:relative; cursor:pointer; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;}
   .mp-card .mp-title{font-size:14px; font-weight:700; color:var(--ink);}
   .mp-card .mp-dates{font-family:'Space Mono',monospace; font-size:10.5px; color:var(--ink-faint); margin-top:3px;}
   .mp-card .mp-arrows{position:absolute; left:8px; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; gap:2px;}
@@ -447,6 +448,7 @@
   #attViewerClose{position:absolute; top:14px; right:16px; width:34px; height:34px; border-radius:50%; border:none; background:rgba(255,255,255,.15); color:#fff; font-size:15px; cursor:pointer;}
   .reset-link{ display:block; margin:18px auto 4px; padding:4px 10px; background:none; border:none;
     font-size:11px; color:var(--ink-faint); text-decoration:underline; cursor:pointer; }
+  body.mode-view nav.tabs{ border-bottom-color:var(--ink-soft); }
 </style>
 </head>
 <body>
@@ -569,7 +571,7 @@
     <button data-action="share">공유하기</button>
   </div>
   <div class="foot-note">로그인한 계정에 자동 저장됩니다</div>
-  <div class="foot-note">✏️ [수정모드]에서 모든 항목을 자유롭게 입력·수정할 수 있어요. [보기모드]에서는 조회만 가능합니다.</div>
+  <div class="foot-note">✏️ [수정모드]에서 모든 항목을 자유롭게 입력·수정할 수 있어요.<br>[보기모드]에서는 조회만 가능합니다.</div>
 </footer>
 
 </section>
