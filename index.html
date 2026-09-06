@@ -439,12 +439,17 @@
   #editView-materials .add-block{margin-top:2px;}
   /* 이미지 썸네일 그리드 */
   .att-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:7px;}
-  .att-thumb{position:relative; aspect-ratio:1/1; border-radius:10px; overflow:hidden; border:1px solid var(--line); background:#243057;}
+  .att-thumb{position:relative; border-radius:10px; overflow:hidden; border:1px solid var(--line); background:var(--card);}
+  .att-img-wrap{position:relative; aspect-ratio:1/1; background:#243057;}
   .att-thumb .att-img{width:100%; height:100%; object-fit:cover; display:block; cursor:pointer;}
-  .att-thumb .att-del{position:absolute; top:4px; right:4px; width:20px; height:20px; padding:0; border:none; border-radius:50%; background:rgba(27,35,64,.72); color:#fff; font-size:11px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;}
+  .att-thumb .att-del{position:absolute; top:4px; right:4px; width:22px; height:22px; padding:0; border:none; border-radius:50%; background:rgba(27,35,64,.78); color:#fff; font-size:11px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;}
+  /* 보기모드: 캡션은 이미지 위 은은한 오버레이 라벨 */
   .att-thumb .att-name{position:absolute; left:0; right:0; bottom:0; width:100%; border:none; text-align:center; font-size:9.5px; color:#fff; background:linear-gradient(transparent,rgba(0,0,0,.62)); padding:12px 5px 4px;}
   .att-thumb .att-name:disabled{-webkit-text-fill-color:#fff; color:#fff; pointer-events:none;}
-  .att-thumb .att-name::placeholder{color:rgba(255,255,255,.6);}
+  /* 수정모드: 캡션은 사진 아래 눈에 띄는 입력칸 */
+  body.mode-edit .att-thumb .att-name{position:static; width:auto; margin:5px; padding:5px 7px; background:#fff; border:1px solid var(--line); border-radius:6px; color:var(--ink); font-size:11px; text-align:left;}
+  body.mode-edit .att-thumb .att-name:focus{outline:none; border-color:var(--teal);}
+  body.mode-edit .att-thumb .att-name::placeholder{color:var(--ink-faint);}
   #attAddBtn:disabled{opacity:.45; cursor:default;}
   /* 이미지 뷰어 */
   #attViewer{position:fixed; inset:0; z-index:130; background:#000; display:flex; align-items:center; justify-content:center;}
@@ -1246,10 +1251,12 @@ function attThumbHTML(a){
     ? `<img class="att-img" src="${src}" alt="${escapeAttr(a.name || '이미지')}" data-action="att-open" data-att-id="${escapeAttr(a.id)}">`
     : `<span class="att-img" data-action="att-open" data-att-id="${escapeAttr(a.id)}"></span>`;
   return `<div class="att-thumb" data-att-id="${escapeAttr(a.id)}">
-    ${media}
-    <button class="att-del edit-only" data-action="att-delete" data-att-id="${escapeAttr(a.id)}">✕</button>
+    <div class="att-img-wrap">
+      ${media}
+      <button class="att-del edit-only" data-action="att-delete" data-att-id="${escapeAttr(a.id)}">✕</button>
+    </div>
     <input class="att-name" data-scope="att" data-att-id="${escapeAttr(a.id)}" data-field="name"
-           value="${escapeAttr(a.name || '')}" placeholder="이미지">
+           value="${escapeAttr(a.name || '')}" placeholder="＋ 이름 입력">
   </div>`;
 }
 function openAttachmentViewer(id){
