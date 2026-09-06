@@ -66,6 +66,45 @@ test('openTrip 은 항상 schedule 로 초기화', async ({ page }) => {
   expect(await page.evaluate(() => currentEditorTab)).toBe('schedule');
 });
 
+test('일차 칩이 dayChips 에 렌더 + 스크롤스파이가 칩만 토글', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    window.__test.seed('users/u1', { avatarId:'default', tripOrder:['t1'] });
+    window.__test.seed('users/u1/trips/t1', { data: JSON.stringify({ title:'오사카', travelers:['나'],
+      days:[
+        {id:'d1',date:'2026-03-14',label:'',items:[]},
+        {id:'d2',date:'2026-03-15',label:'',items:[]},
+        {id:'d3',date:'2026-03-16',label:'',items:[]},
+        {id:'d4',date:'2026-03-17',label:'',items:[]},
+      ], notes:[], links:[] }), title:'오사카', dayCount:4 });
+  });
+  await page.evaluate(() => window.__test.signIn({ uid:'u1', displayName:'김진', email:'a@b.com' }));
+  await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
+  await page.evaluate(() => openTrip('t1'));
+  await expect(page.locator('section[data-screen="editor"]')).toBeVisible();
+
+  const chips = page.locator('#dayChips .day-chip');
+  await expect(chips).toHaveCount(4);
+  await expect(chips.nth(0)).toHaveAttribute('href', '#day-d1');
+  await expect(chips.nth(0)).toHaveAttribute('id', 'chip-d1');
+  await expect(chips.nth(1)).toHaveAttribute('href', '#day-d2');
+  await expect(chips.nth(1)).toHaveAttribute('id', 'chip-d2');
+
+  // 옛 위치/옛 id 는 없음
+  expect(await page.locator('#dayTabs').count()).toBe(0);
+  expect(await page.evaluate(() => document.getElementById('tab-d1'))).toBeNull();
+
+  // 스크롤스파이는 #daysContainer .day-card 만 관측한다
+  expect(await page.evaluate(() => document.querySelectorAll('#daysContainer .day-card').length)).toBe(4);
+
+  // 아래쪽 일차 카드로 스크롤 → #dayChips 칩만 토글되고 (첫 칩 아님)
+  // 편집기 상단 탭(#editTabs)의 active 는 스크롤스파이가 건드리지 않는다
+  await page.evaluate(() => document.getElementById('day-d4').scrollIntoView({ block: 'center' }));
+  await expect(page.locator('#dayChips .day-chip.active')).toHaveCount(1);
+  await expect(page.locator('#dayChips .day-chip#chip-d1')).not.toHaveClass(/active/);
+  await expect(page.locator('#editTabs .tab[data-tab="schedule"]')).toHaveClass(/active/);
+});
+
 test('아바타 팝업 안내 문구 삭제됨', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__test.signIn({ uid:'u1', displayName:'김진', email:'a@b.com' }));

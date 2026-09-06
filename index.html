@@ -1245,13 +1245,13 @@ function initObserver(){
   const obs = new IntersectionObserver(entries => {
     entries.forEach(e => {
       if(e.isIntersecting){
-        document.querySelectorAll('.tab').forEach(a => a.classList.remove('active'));
-        const tab = document.querySelector(`.tab[href="#${e.target.id}"]`);
-        if(tab) tab.classList.add('active');
+        document.querySelectorAll('#dayChips .day-chip').forEach(a => a.classList.remove('active'));
+        const chip = document.getElementById('chip-' + e.target.id.replace(/^day-/, ''));
+        if(chip) chip.classList.add('active');
       }
     });
   }, { rootMargin:'-40% 0px -55% 0px' });
-  document.querySelectorAll('section[id]').forEach(sec => obs.observe(sec));
+  document.querySelectorAll('#daysContainer .day-card').forEach(sec => obs.observe(sec));
   window._obs = obs;
 }
 
@@ -1331,7 +1331,7 @@ function handleAuxChange(e){
       const viewEl = document.querySelector(`.day-date-view[data-day-id="${dayId}"]`) || e.target.closest('.day-headfields').querySelector('.day-date-view');
       if(viewEl) viewEl.textContent = val;
       const idx = state.days.indexOf(d);
-      const tabEl = document.getElementById('tab-' + dayId);
+      const tabEl = document.getElementById('chip-' + dayId);
       if(tabEl) tabEl.textContent = tabLabel(d, idx);
       saveDebounced();
     }
@@ -1648,7 +1648,7 @@ function handleFieldChange(e){
       d[field] = val;
       if(field === 'label' || field === 'date'){
         const idx = state.days.indexOf(d);
-        const tabEl = document.getElementById('tab-' + d.id);
+        const tabEl = document.getElementById('chip-' + d.id);
         if(tabEl) tabEl.textContent = tabLabel(d, idx);
       }
       if(field === 'date'){
