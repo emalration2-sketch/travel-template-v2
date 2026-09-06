@@ -10,6 +10,8 @@ test('PDF: loadPdfLibs 존재 + 옛 html2pdf 참조 없음', async ({ page }) =>
   expect(src).not.toContain('loadHtml2Pdf');
 });
 
+// 주의: 이 테스트는 실제 cdnjs 를 네트워크로 로드한다 (라우트 스텁 없음).
+// 원래 PDF 버그를 잡아낼 수 있는 유일한 검사라 남겨둠 — CI 없음. 오프라인/제한망에선 실패.
 test('PDF: loadPdfLibs 가 jsPDF+html2canvas 전역을 갖춘다', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => loadPdfLibs());

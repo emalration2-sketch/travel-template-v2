@@ -1621,7 +1621,7 @@ function loadPdfLibs(){
   pdfLibsPromise = Promise.all([
     load('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'),
     load('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'),
-  ]);
+  ]).catch(e => { pdfLibsPromise = null; throw e; });
   return pdfLibsPromise;
 }
 function exportPDF(){
