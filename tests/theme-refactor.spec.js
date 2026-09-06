@@ -52,5 +52,5 @@ test('index.html 에 #243057 / #1B2340 하드코딩이 배경으로 남지 않�
   expect(styleBlock).not.toContain('#243057');
   // #1B2340 는 :root/[data-theme="c"] 정의에만 허용 → style 블록 그 외 등장 금지
   const occurrences = (styleBlock.match(/#1B2340/g) || []).length;
-  expect(occurrences).toBeLessThanOrEqual(2); // bare :root 는 a값이라 없음; [data-theme=c] --ink & --fill-strong 2회
+  expect(occurrences).toBeLessThanOrEqual(3); // bare :root 는 a값이라 없음; [data-theme=c] --ink & --fill-strong & --banner-bg 3회
 });
