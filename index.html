@@ -347,7 +347,6 @@
 
   .foot-view{display:none;}
   body.mode-view .foot-view{display:flex;}
-  body.mode-view .foot-edit{display:none;}
 
   /* ---------- PRINT ---------- */
   @media print{
@@ -446,6 +445,8 @@
   #attViewer[hidden]{display:none;}
   #attViewer img{max-width:100%; max-height:100%; object-fit:contain; touch-action:pinch-zoom;}
   #attViewerClose{position:absolute; top:14px; right:16px; width:34px; height:34px; border-radius:50%; border:none; background:rgba(255,255,255,.15); color:#fff; font-size:15px; cursor:pointer;}
+  .reset-link{ display:block; margin:18px auto 4px; padding:4px 10px; background:none; border:none;
+    font-size:11px; color:var(--ink-faint); text-decoration:underline; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -527,6 +528,7 @@
   <div class="wrap">
     <div id="daysContainer"></div>
     <button class="add-day edit-only" data-action="add-day">＋ 새로운 일차 추가</button>
+    <button class="reset-link edit-only" data-action="reset">초기화</button>
   </div>
 </div>
 
@@ -562,9 +564,6 @@
 </div>
 
 <footer>
-  <div class="foot-btns foot-edit">
-    <button data-action="reset">초기화</button>
-  </div>
   <div class="foot-btns foot-view">
     <button data-action="print-pdf">PDF로 저장</button>
     <button data-action="share">공유하기</button>

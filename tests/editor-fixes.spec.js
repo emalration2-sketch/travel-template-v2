@@ -48,3 +48,15 @@ test('이미지 이름: 보기모드 재렌더 후에도 잠김, 수정모드는
   await page.evaluate(() => renderMaterials());
   expect(await page.evaluate(() => document.querySelector('#attList .att-name').disabled)).toBe(false);
 });
+
+test('초기화 버튼: 일정 뷰 안, 링크형, 푸터엔 없음', async ({ page }) => {
+  await openTrip1(page);
+  expect(await page.locator('#editView-schedule .reset-link[data-action="reset"]').count()).toBe(1);
+  expect(await page.locator('footer .foot-btns.foot-edit').count()).toBe(0);
+  expect(await page.locator('footer .foot-btns.foot-view').count()).toBe(1); // PDF/공유 유지
+  // 보기모드에선 숨김
+  await page.evaluate(() => setMode('view'));
+  await expect(page.locator('#editView-schedule .reset-link')).toBeHidden();
+  await page.evaluate(() => setMode('edit'));
+  await expect(page.locator('#editView-schedule .reset-link')).toBeVisible();
+});
