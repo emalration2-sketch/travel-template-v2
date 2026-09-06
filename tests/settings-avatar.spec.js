@@ -12,7 +12,7 @@ test('상단 바 탭 → 설정, 계정 정보 노출', async ({ page }) => {
   await expect(page.locator('#setName')).toHaveText('김진');
   await expect(page.locator('#setEmail')).toHaveText('kim@x.com');
   await expect(page.locator('#setLang')).toContainText('준비 중');
-  await expect(page.locator('#setTheme')).toContainText('준비 중');
+  await expect(page.locator('#setTheme')).toContainText('오션');
 });
 
 test('아바타 변경 → 팝업 → 저장 → 마이페이지 반영 + 영속', async ({ page }) => {

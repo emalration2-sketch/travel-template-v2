@@ -452,6 +452,18 @@
   .set-row.set-disabled{cursor:default; color:var(--ink-faint);}
   .set-chev{color:#C9CBD8;}
   .set-soon{font-size:10px; color:#B4B8C8; background:var(--paper-2); padding:2px 7px; border-radius:999px;}
+  .set-row-val{ display:flex; align-items:center; gap:5px; color:var(--ink-faint); font-size:12px; }
+  .theme-card{ display:flex; align-items:center; gap:11px; border:1px solid var(--line);
+    border-radius:12px; padding:11px 12px; margin-bottom:8px; background:var(--card); cursor:pointer; }
+  .theme-card.sel{ border:2px solid var(--teal); padding:10px 11px; }
+  .theme-card .tsw{ display:flex; border-radius:8px; overflow:hidden; border:1px solid var(--line); flex:none; }
+  .theme-card .tsw i{ width:16px; height:34px; display:block; }
+  .theme-card .tmeta{ flex:1; min-width:0; }
+  .theme-card .tnm{ font-size:13px; font-weight:700; color:var(--ink); }
+  .theme-card .tds{ font-size:10.5px; color:var(--ink-faint); margin-top:1px; }
+  .theme-card .tck{ width:20px; height:20px; border-radius:50%; background:var(--teal); color:#fff;
+    font-size:11px; display:none; align-items:center; justify-content:center; flex:none; }
+  .theme-card.sel .tck{ display:flex; }
   .set-logout{margin-top:16px; width:100%; border:1px solid #F1C9D3; background:#fff; color:var(--red); border-radius:999px; padding:10px; font-size:12.5px; font-weight:700; cursor:pointer;}
   /* 아바타 팝업 그리드 */
   .av-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px 8px; margin:6px 0 4px;}
@@ -540,7 +552,10 @@
     </div>
     <div class="set-row" id="setAvatarRow" data-action="open-avatar"><span>아바타 변경</span><span class="set-chev">›</span></div>
     <div class="set-row set-disabled" id="setLang"><span>언어</span><span class="set-soon">준비 중</span></div>
-    <div class="set-row set-disabled" id="setTheme"><span>컬러 테마</span><span class="set-soon">준비 중</span></div>
+    <div class="set-row" id="setTheme" data-action="open-theme">
+      <span>컬러 테마</span>
+      <span class="set-row-val"><span id="setThemeVal"></span> <span class="set-chev">›</span></span>
+    </div>
     <button class="set-logout" id="setLogout" data-action="logout">로그아웃</button>
   </div>
 </section>
@@ -856,6 +871,8 @@ function renderSettings(){
   big.classList.toggle('emoji', profile.avatarId && profile.avatarId !== 'default');
   document.getElementById('setName').textContent = (currentUser && currentUser.displayName) || '내 계정';
   document.getElementById('setEmail').textContent = (currentUser && currentUser.email) || '';
+  const tv = document.getElementById('setThemeVal');
+  if(tv) tv.textContent = themeName(profile.theme || 'a');
 }
 let pendingAvatar = null;
 function openAvatarModal(){
@@ -882,6 +899,40 @@ async function saveAvatar(){
   await saveProfile({ avatarId: pendingAvatar || 'default' });
   renderSettings();
   renderMypage();
+}
+
+const THEME_LIST = [
+  { id:'a', name:'오션',            desc:'쿨 민트 · 틸 (기본)',        sw:['#F1F6F4','#1C7A6F','#16302D'] },
+  { id:'b', name:'모노 슬레이트',    desc:'뉴트럴 그레이 · 슬레이트블루', sw:['#F4F3F1','#3E6B8A','#1E2124'] },
+  { id:'c', name:'미드나잇',        desc:'딥 네이비 · 골드',           sw:['#F2F4F9','#35528F','#1B2340'] },
+  { id:'d', name:'아쿠아마린 갤럭시', desc:'다크 · 아쿠아마린 · 갤럭시',   sw:['#0C1524','#33D6C0','#EAF2F4'] },
+  { id:'e', name:'코랄 선라이즈',    desc:'웜 · 코랄 · 선라이즈',        sw:['#FEF3EC','#D8583C','#43202F'] },
+];
+function themeName(id){ const t = THEME_LIST.find(x => x.id === id); return t ? t.name : '오션'; }
+function openThemeModal(){
+  const cur = profile.theme || 'a';
+  const cards = THEME_LIST.map(t =>
+    `<div class="theme-card${t.id === cur ? ' sel' : ''}" data-theme="${t.id}">` +
+      `<span class="tsw">${t.sw.map(c => `<i style="background:${c}"></i>`).join('')}</span>` +
+      `<span class="tmeta"><span class="tnm">${t.name}</span><span class="tds">${t.desc}</span></span>` +
+      `<span class="tck">✓</span>` +
+    `</div>`
+  ).join('');
+  document.getElementById('v2ModalBody').innerHTML =
+    '<div style="font-weight:700;font-size:13px;margin-bottom:6px">컬러 테마</div>' +
+    '<div style="font-size:11px;color:var(--ink-faint);margin-bottom:11px">탭하면 바로 적용됩니다.</div>' +
+    cards;
+  document.getElementById('v2ModalActions').innerHTML =
+    '<button class="v2-btn-ghost" data-action="v2modal-close">닫기</button>';
+  document.getElementById('v2Modal').hidden = false;
+}
+function pickTheme(id){
+  applyTheme(id);
+  document.querySelectorAll('#v2Modal .theme-card').forEach(c =>
+    c.classList.toggle('sel', c.dataset.theme === id));
+  saveProfile({ theme: id });
+  const v = document.getElementById('setThemeVal');
+  if(v) v.textContent = themeName(id);
 }
 
 /* ===== V2: MYPAGE ===== */
@@ -1800,6 +1851,8 @@ document.addEventListener('click', e => {
   const btn = e.target.closest('[data-action]');
   const avCell = e.target.closest('#v2Modal .av-cell');
   if(avCell){ pickPendingAvatar(avCell.dataset.avatar); return; }
+  const tCard = e.target.closest('#v2Modal .theme-card');
+  if(tCard){ pickTheme(tCard.dataset.theme); return; }
   if(!btn) return;
   const a = btn.dataset.action;
   if(a === 'edit-tab'){ showEditorTab(btn.dataset.tab); return; }
@@ -1837,6 +1890,7 @@ document.addEventListener('click', e => {
   else if(a === 'go-settings'){ renderSettings(); showScreen('settings'); }
   else if(a === 'go-mypage'){ renderMypage(); showScreen('mypage'); }
   else if(a === 'open-avatar') openAvatarModal();
+  else if(a === 'open-theme') openThemeModal();
   else if(a === 'avatar-reset') pickPendingAvatar('default');
   else if(a === 'avatar-save') saveAvatar();
   else if(a === 'v2modal-close') v2ModalClose();
