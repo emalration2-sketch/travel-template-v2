@@ -51,3 +51,21 @@ test('.att-name input 탭은 뷰어를 열지 않는다', async ({ page }) => {
   await page.locator('#attList .att-row').first().locator('.att-name').click();
   await expect(page.locator('#attViewer')).toBeHidden();
 });
+
+test('compressImage — 장변 1400 이하, 700KB 이하', async ({ page }) => {
+  await page.goto('/');
+  const r = await page.evaluate(async () => {
+    // 2000x100 빨간 PNG 를 canvas 로 만들어 File 로
+    const c = document.createElement('canvas'); c.width = 2000; c.height = 100;
+    const ctx = c.getContext('2d'); ctx.fillStyle = '#f00'; ctx.fillRect(0,0,2000,100);
+    const blob = await new Promise(res => c.toBlob(res, 'image/png'));
+    const file = new File([blob], 'wide.png', { type: 'image/png' });
+    const out = await compressImage(file);
+    const img = new Image(); img.src = out.dataUrl;
+    await new Promise(res => { img.onload = res; });
+    return { w: img.naturalWidth, h: img.naturalHeight, bytes: out.bytes, mime: out.dataUrl.slice(5, 15) };
+  });
+  expect(r.w).toBeLessThanOrEqual(1400);
+  expect(r.bytes).toBeLessThanOrEqual(700 * 1024);
+  expect(r.mime).toContain('image/jpeg');
+});
