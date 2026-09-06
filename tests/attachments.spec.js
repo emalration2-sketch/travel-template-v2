@@ -52,6 +52,25 @@ test('.att-name input 탭은 뷰어를 열지 않는다', async ({ page }) => {
   await expect(page.locator('#attViewer')).toBeHidden();
 });
 
+test('자료모음 첫 진입 시 att 하위 컬렉션 1회 로드', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    window.__test.seed('users/u1', { avatarId:'default', tripOrder:['t1'] });
+    window.__test.seed('users/u1/trips/t1', { data: JSON.stringify({ title:'X', travelers:['나'],
+      days:[{id:'d1',date:'',label:'',items:[]}], notes:[], links:[],
+      attachments:[{id:'a1',name:'탑승권'}] }), title:'X', dayCount:1 });
+    window.__test.seed('users/u1/trips/t1/att/a1', { name:'탑승권', mime:'image/jpeg', data:'data:image/jpeg;base64,AAAA' });
+  });
+  await page.evaluate(() => window.__test.signIn({ uid:'u1', displayName:'김진', email:'a@b.com' }));
+  await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
+  await page.evaluate(() => openTrip('t1'));
+  // 아직 materials 안 열었으면 캐시 비어있음
+  expect(await page.evaluate(() => Object.keys(attachmentsCache).length)).toBe(0);
+  await page.locator('#editTabs .tab[data-tab="materials"]').click();
+  await expect.poll(() => page.evaluate(() => attachmentsCache['a1'] || '')).toContain('data:image/jpeg');
+  expect(await page.evaluate(() => loadedAttTripId)).toBe('t1');
+});
+
 test('compressImage — 장변 1400 이하, 700KB 이하', async ({ page }) => {
   await page.goto('/');
   const r = await page.evaluate(async () => {

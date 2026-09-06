@@ -1036,6 +1036,7 @@ async function openTrip(tripId){
     catch(e){ console.error('여행 열기 실패', e); return; }
   }
   currentTripId = tripId;
+  loadedAttTripId = null;
   state = st;
   if(!Array.isArray(state.links)) state.links = [];
   if(!Array.isArray(state.notes)) state.notes = [];
@@ -1177,7 +1178,16 @@ function showEditorTab(name){
   window.scrollTo(0, 0);
   if(name === 'materials') ensureAttachmentsLoaded();
 }
-async function ensureAttachmentsLoaded(){ /* Task 7 */ }
+async function ensureAttachmentsLoaded(){
+  if(!currentTripId || loadedAttTripId === currentTripId) return;
+  attachmentsCache = {};
+  try{
+    const snap = await tripsCol().doc(currentTripId).collection('att').get();
+    snap.forEach(d => { attachmentsCache[d.id] = (d.data() || {}).data; });
+    loadedAttTripId = currentTripId;
+  }catch(e){ console.error('첨부 로드 실패', e); }
+  renderMaterials();
+}
 
 function noteHTML(n){
   return `<div class="note-card">
