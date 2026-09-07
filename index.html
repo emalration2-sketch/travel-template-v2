@@ -75,17 +75,21 @@
     max-width:640px; margin:0 auto;
   }
   .nav-left{display:flex; align-items:center; gap:8px; flex:none;}
-  .nav-left .stage-badge{padding:6px 11px; font-size:11.5px;}
-  .nav-left .mode-btn{padding:7px 14px; font-size:12.5px;}
   .nav-sync{display:flex; align-items:center; gap:5px; flex-wrap:nowrap; justify-content:flex-end; min-width:0;}
   .nav-sync .sync-btn{padding:5px 10px; font-size:11px; white-space:nowrap;}
   .nav-sync .sync-status{font-size:10.5px; color:var(--red); font-weight:600; white-space:nowrap;}
   .nav-sync .sync-status:empty{display:none;}
-  .mode-btn{
-    flex:none; border:2px solid var(--mode-edit); background:var(--mode-edit); color:#fff;
-    border-radius:999px; padding:8px 18px; font-size:13.5px; font-weight:700; cursor:pointer;
+  .mode-seg{
+    display:inline-flex; flex:none; gap:2px; padding:3px;
+    background:var(--paper-2); border:1px solid var(--line); border-radius:999px;
   }
-  body:not(.mode-edit) .mode-btn{background:var(--mode-view); color:#fff; border-color:var(--mode-view);}
+  .mode-seg-opt{
+    border:none; background:transparent; color:var(--ink-faint);
+    font-size:12px; font-weight:700; padding:7px 14px; border-radius:999px;
+    cursor:pointer; white-space:nowrap; transition:background .12s, color .12s;
+  }
+  body.mode-view .mode-seg-opt[data-mode="view"]{ background:var(--mode-view); color:#fff; }
+  body.mode-edit .mode-seg-opt[data-mode="edit"]{ background:var(--mode-edit); color:#fff; }
   .tabs-scroll{
     display:flex; gap:6px; overflow-x:auto; padding:0 16px 10px;
     scrollbar-width:none;
@@ -134,11 +138,6 @@
     border:1px solid var(--teal); background:var(--card); color:var(--teal);
     border-radius:999px; padding:6px 14px; font-size:12px; font-weight:600; cursor:pointer;
   }
-  .stage-badge{
-    font-size:12.5px; font-weight:700; letter-spacing:.02em; padding:7px 14px;
-    border-radius:999px; background:var(--paper-2); color:var(--mode-edit); flex:none; white-space:nowrap;
-  }
-  body.mode-view .stage-badge{background:var(--paper-2); color:var(--mode-view);}
 
   /* ---------- DAY CARDS ---------- */
   .day-card{
@@ -154,23 +153,23 @@
   }
   .day-headfields{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;}
   .day-date{
-    display:block; flex:1; min-width:0; border:none; background:transparent; font-family:'Space Mono',monospace;
-    font-size:10.5px; letter-spacing:.06em; color:#B9C0DE; padding:1px 0;
+    display:block; flex:none; width:104px; border:none; background:transparent; font-family:'Space Mono',monospace;
+    font-size:12px; letter-spacing:.06em; color:rgba(255,255,255,.92); padding:1px 0;
   }
-  .day-date-row{display:flex; align-items:center; gap:6px;}
-  .day-date-pick-wrap{position:relative; width:18px; height:18px; flex:none;}
+  .day-date-row{display:flex; align-items:center; gap:8px;}
+  .day-date-pick-wrap{position:relative; width:30px; height:30px; flex:none; background:rgba(255,255,255,.1); border-radius:8px;}
   .day-date-pick{
     position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-    opacity:.8; pointer-events:none;
+    opacity:.9; pointer-events:none;
   }
-  .day-date-pick svg{width:14px; height:14px; display:block;}
+  .day-date-pick svg{width:17px; height:17px; display:block;}
   .day-date-native{
     position:absolute; inset:0; width:100%; height:100%; opacity:0; border:none;
     padding:0; margin:0; cursor:pointer;
   }
   .day-date-view{
-    display:block; font-family:'Space Mono',monospace; font-size:10.5px;
-    letter-spacing:.06em; color:#B9C0DE;
+    display:block; font-family:'Space Mono',monospace; font-size:12px;
+    letter-spacing:.06em; color:rgba(255,255,255,.92);
   }
   .day-label{
     display:block; width:100%; border:none; background:transparent; font-size:15.5px;
@@ -372,7 +371,7 @@
     opacity:1; -webkit-text-fill-color:var(--ink); color:var(--ink);
     background:transparent; border:none !important; cursor:default; resize:none;
   }
-  body:not(.mode-edit) .day-date:disabled{color:#B9C0DE !important; -webkit-text-fill-color:#B9C0DE !important;}
+  body:not(.mode-edit) .day-date:disabled{color:rgba(255,255,255,.92) !important; -webkit-text-fill-color:rgba(255,255,255,.92) !important;}
   body:not(.mode-edit) .day-label:disabled{color:#fff !important; -webkit-text-fill-color:#fff !important; font-weight:700 !important;}
 
   .foot-view{display:none;}
@@ -442,7 +441,7 @@
   .v2-btn-danger{border:none; background:var(--red); color:#fff;}
 
   /* ===== V2 SETTINGS ===== */
-  .set{padding-top:16px; min-height:100vh;}
+  .set{padding-top:16px; min-height:100vh; display:flex; flex-direction:column;}
   .set-back{border:none; background:transparent; color:var(--teal); font-size:11.5px; font-weight:700; cursor:pointer; padding:0 0 14px;}
   .set-account{display:flex; align-items:center; gap:12px; padding:4px 2px 18px; border-bottom:1px solid var(--line);}
   .set-avatar-big{width:52px; height:52px; border-radius:50%; background:var(--fill-strong); color:#fff; display:flex; align-items:center; justify-content:center; font-size:24px; flex:none;}
@@ -460,12 +459,11 @@
   .theme-card .tsw{ display:flex; border-radius:8px; overflow:hidden; border:1px solid var(--line); flex:none; }
   .theme-card .tsw i{ width:16px; height:34px; display:block; }
   .theme-card .tmeta{ flex:1; min-width:0; }
-  .theme-card .tnm{ font-size:13px; font-weight:700; color:var(--ink); }
-  .theme-card .tds{ font-size:10.5px; color:var(--ink-faint); margin-top:1px; }
+  .theme-card .tnm{ font-size:14px; font-weight:700; color:var(--ink); }
   .theme-card .tck{ width:20px; height:20px; border-radius:50%; background:var(--teal); color:#fff;
     font-size:11px; display:none; align-items:center; justify-content:center; flex:none; }
   .theme-card.sel .tck{ display:flex; }
-  .set-logout{margin-top:16px; width:100%; border:1px solid #F1C9D3; background:var(--card); color:var(--red); border-radius:999px; padding:10px; font-size:12.5px; font-weight:700; cursor:pointer;}
+  .set-logout{margin-top:auto; margin-bottom:24px; width:100%; border:1px solid var(--line); background:var(--card); color:var(--red); border-radius:999px; padding:12px; font-size:12.5px; font-weight:700; cursor:pointer;}
   /* 아바타 팝업 그리드 */
   .av-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px 8px; margin:6px 0 4px;}
   .av-cell{width:100%; aspect-ratio:1; border-radius:50%; background:var(--paper-2); display:flex; align-items:center; justify-content:center; font-size:22px; cursor:pointer;}
@@ -566,8 +564,10 @@
 <nav class="tabs">
   <div class="wrap nav-title">
     <div class="nav-left">
-      <span class="stage-badge" id="stageBadge"></span>
-      <button class="mode-btn" id="modeBtn" data-action="toggle-mode">완료</button>
+      <div class="mode-seg">
+        <button class="mode-seg-opt" data-mode="view" data-action="set-mode">👁 보기</button>
+        <button class="mode-seg-opt" data-mode="edit" data-action="set-mode">✏️ 수정</button>
+      </div>
     </div>
     <div class="nav-sync" id="navSync">
       <span class="sync-status" id="syncStatus"></span>
@@ -903,11 +903,11 @@ async function saveAvatar(){
 }
 
 const THEME_LIST = [
-  { id:'a', name:'오션',            desc:'쿨 민트 · 틸 (기본)',        sw:['#F1F6F4','#1C7A6F','#16302D'] },
-  { id:'b', name:'모노 슬레이트',    desc:'뉴트럴 그레이 · 슬레이트블루', sw:['#F4F3F1','#3E6B8A','#1E2124'] },
-  { id:'c', name:'미드나잇',        desc:'딥 네이비 · 골드',           sw:['#F2F4F9','#35528F','#1B2340'] },
-  { id:'d', name:'아쿠아마린 갤럭시', desc:'다크 · 아쿠아마린 · 갤럭시',   sw:['#0C1524','#33D6C0','#EAF2F4'] },
-  { id:'e', name:'코랄 선라이즈',    desc:'웜 · 코랄 · 선라이즈',        sw:['#FEF3EC','#D8583C','#43202F'] },
+  { id:'a', name:'오션',            sw:['#F1F6F4','#1C7A6F','#16302D'] },
+  { id:'b', name:'모노 슬레이트',    sw:['#F4F3F1','#3E6B8A','#1E2124'] },
+  { id:'c', name:'미드나잇',        sw:['#F2F4F9','#35528F','#1B2340'] },
+  { id:'d', name:'아쿠아마린 갤럭시', sw:['#0C1524','#33D6C0','#EAF2F4'] },
+  { id:'e', name:'코랄 선라이즈',    sw:['#FEF3EC','#D8583C','#43202F'] },
 ];
 function themeName(id){ const t = THEME_LIST.find(x => x.id === id); return t ? t.name : '오션'; }
 function openThemeModal(){
@@ -915,7 +915,7 @@ function openThemeModal(){
   const cards = THEME_LIST.map(t =>
     `<div class="theme-card${t.id === cur ? ' sel' : ''}" data-theme="${t.id}">` +
       `<span class="tsw">${t.sw.map(c => `<i style="background:${c}"></i>`).join('')}</span>` +
-      `<span class="tmeta"><span class="tnm">${t.name}</span><span class="tds">${t.desc}</span></span>` +
+      `<span class="tmeta"><span class="tnm">${t.name}</span></span>` +
       `<span class="tck">✓</span>` +
     `</div>`
   ).join('');
@@ -1639,7 +1639,6 @@ function deleteExpenseEntry(dayId, itemId, expId){
   if(modalDayId === dayId && modalItemId === itemId) renderModalEntries();
   renderExpenseTab(); save();
 }
-const STAGE_LABEL = { edit:'📝 수정 모드', view:'✅ 보기 모드' };
 function applyModeLock(){
   document.querySelectorAll('[data-scope]').forEach(el => { el.disabled = (currentMode === 'view'); });
 }
@@ -1648,8 +1647,6 @@ function setMode(mode){
   document.body.classList.remove('mode-edit','mode-view');
   document.body.classList.add('mode-' + mode);
   applyModeLock();
-  document.getElementById('modeBtn').textContent = mode === 'view' ? '✏️ 수정' : '완료';
-  document.getElementById('stageBadge').textContent = STAGE_LABEL[mode] || '';
   try{ localStorage.setItem('travel-template-mode', mode); }catch(e){}
 }
 
@@ -1751,11 +1748,10 @@ function exportPDF(){
     const dayChipsEl = document.getElementById('dayChips');
     const prevChips = dayChipsEl.hidden;
     try{
-      var __prevTheme = document.documentElement.dataset.theme;
-      document.documentElement.dataset.theme = 'a';
       views.forEach(v => v.hidden = false);
       dayChipsEl.hidden = true;
       await ensureAttachmentsLoaded();
+      const paperBg = getComputedStyle(document.documentElement).getPropertyValue('--paper').trim() || '#ffffff';
 
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF('p', 'mm', 'a4');
@@ -1777,7 +1773,7 @@ function exportPDF(){
       ].forEach(sec => { if(sec) sections.push(sec); });
 
       for(const sec of sections){
-        const canvas = await window.html2canvas(sec, { scale: 2, useCORS: true, backgroundColor: '#F1F6F4' });
+        const canvas = await window.html2canvas(sec, { scale: 2, useCORS: true, backgroundColor: paperBg });
         if(canvas.height === 0 || canvas.width === 0) continue;
         const imgHeight = canvas.height * imgWidth / canvas.width;
         if(!first && (y + imgHeight > pageHeight - margin)){
@@ -1809,7 +1805,6 @@ function exportPDF(){
 
       doc.save(filename);
     }finally{
-      document.documentElement.dataset.theme = __prevTheme;
       views.forEach((v, i) => v.hidden = prevHidden[i]);
       dayChipsEl.hidden = prevChips;
       showEditorTab(currentEditorTab);
@@ -1878,7 +1873,7 @@ document.addEventListener('click', e => {
   else if(a === 'add-traveler') addTraveler();
   else if(a === 'delete-traveler') deleteTraveler(btn.dataset.idx);
   else if(a === 'reset') resetAll();
-  else if(a === 'toggle-mode') setMode(currentMode === 'view' ? 'edit' : 'view');
+  else if(a === 'set-mode') setMode(btn.dataset.mode);
   else if(a === 'login') loginWithGoogle();
   else if(a === 'new-trip') handleNewTrip();
   else if(a === 'delete-trip') showDeleteModal(btn.dataset.tripId);

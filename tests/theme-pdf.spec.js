@@ -1,6 +1,6 @@
 const { test, expect } = require('./support/fixtures');
 
-test('exportPDF 캡처 중 테마 a 강제, 이후 원복', async ({ page }) => {
+test('exportPDF 는 현재 테마로 캡처한다 (강제 라이트 없음)', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => {
     window.__test.seed('users/u1', { avatarId:'default', tripOrder:['t1'] });
@@ -14,16 +14,22 @@ test('exportPDF 캡처 중 테마 a 강제, 이후 원복', async ({ page }) => 
   await page.evaluate(async () => {
     document.documentElement.dataset.theme = 'd';        // 다크 테마 상태에서 시작
     window.__themeAtCapture = null;
+    window.__bgAtCapture = null;
     window.loadPdfLibs = () => Promise.resolve();
     window.jspdf = { jsPDF: function(){ return {
       internal:{ pageSize:{ getWidth:()=>210, getHeight:()=>297 } },
       addImage(){}, addPage(){}, setFontSize(){}, splitTextToSize:(s)=>[s], text(){}, save(){}
     }; } };
-    window.html2canvas = async () => { window.__themeAtCapture = document.documentElement.dataset.theme;
-      return { width:0, height:0, toDataURL:()=>'' }; };
+    window.html2canvas = async (sec, opts) => {
+      window.__themeAtCapture = document.documentElement.dataset.theme;
+      window.__bgAtCapture = opts && opts.backgroundColor;
+      return { width:0, height:0, toDataURL:()=>'' };
+    };
     await exportPDF();
   });
-  // exportPDF 가 프로미스 체인을 반환하지 않으므로 캡처/원복을 poll 로 관측
-  await expect.poll(() => page.evaluate(() => window.__themeAtCapture)).toBe('a');
+  // 캡처는 활성 테마(d)에서 일어나고, 이후에도 d 로 유지된다
+  await expect.poll(() => page.evaluate(() => window.__themeAtCapture)).toBe('d');
   await expect.poll(() => page.evaluate(() => document.documentElement.dataset.theme)).toBe('d');
+  // html2canvas 배경색이 테마 d 의 --paper (#0C1524)
+  expect(await page.evaluate(() => window.__bgAtCapture)).toBe('#0C1524');
 });
