@@ -3,7 +3,7 @@ const { test, expect } = require('./support/fixtures');
 test('표지에 소개 + 로그인 버튼', async ({ page }) => {
   await page.goto('/');
   const landing = page.locator('section[data-screen="landing"]');
-  await expect(landing.getByText('Travel Template')).toBeVisible();
+  await expect(landing.getByText('Travel Template', { exact: true })).toBeVisible();
   await expect(landing.locator('#landingLoginBtn')).toBeVisible();
 });
 
