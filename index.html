@@ -509,8 +509,8 @@
   .day-rail[hidden]{display:none;}
   .day-rail::before{content:""; position:absolute; left:12px; top:22px; bottom:22px; width:2px; background:var(--line);}
   .rail-node{position:relative; display:flex; align-items:center; width:100%; height:40px; padding:0; border:none; background:none; cursor:pointer;}
-  .rail-dot{position:absolute; left:6px; width:12px; height:12px; border-radius:50%; background:var(--card); border:2px solid var(--ink-faint); box-sizing:border-box; z-index:1; transition:width .13s, height .13s, left .13s, background .13s, border-color .13s;}
-  .rail-node.active .rail-dot{width:16px; height:16px; left:4px; background:var(--fill-strong); border-color:var(--fill-strong);}
+  .rail-dot{position:absolute; left:6px; width:12px; height:12px; border-radius:50%; background:var(--card); border:2px solid var(--ink-faint); box-sizing:border-box; z-index:1; transition:transform .13s, background .13s, border-color .13s;}
+  .rail-node.active .rail-dot{transform:scale(1.34); background:var(--fill-strong); border-color:var(--fill-strong);}
   .rail-lbl{position:absolute; left:22px; white-space:nowrap; font-family:'Space Mono',monospace; font-size:10px; font-weight:700; color:var(--ink-soft); background:var(--card); border:1px solid var(--teal); border-radius:999px; padding:2px 8px; box-shadow:0 2px 8px rgba(0,0,0,.16); opacity:0; transform:translateX(-4px); transition:opacity .13s, transform .13s; pointer-events:none;}
   .rail-node.active .rail-lbl{opacity:1; transform:none; color:var(--teal);}
   .day-card{scroll-margin-top:104px;}   /* nav-title + editTabs 대략 높이 */
