@@ -563,6 +563,21 @@
   </div>
 </section>
 
+<section data-screen="terms" hidden>
+  <div class="v2-wrap legal">
+    <button class="set-back" data-action="legal-back">← 뒤로</button>
+    <h2 class="legal-title">이용약관</h2>
+    <div class="legal-body" id="legalBody-terms"></div>
+  </div>
+</section>
+<section data-screen="privacy" hidden>
+  <div class="v2-wrap legal">
+    <button class="set-back" data-action="legal-back">← 뒤로</button>
+    <h2 class="legal-title">개인정보처리방침</h2>
+    <div class="legal-body" id="legalBody-privacy"></div>
+  </div>
+</section>
+
 <section data-screen="editor" hidden>
 
 <nav class="tabs">
@@ -745,6 +760,32 @@ function renderMarkdown(md){
     out.push(`<p>${inline(buf.join(' '))}</p>`);
   }
   return out.join('\n');
+}
+
+const LEGAL_DOCS = {
+  terms:   { file: 'docs/legal/terms-ko.md',   gh: 'https://github.com/emalration2-sketch/travel-template-v2/blob/main/docs/legal/terms-ko.md' },
+  privacy: { file: 'docs/legal/privacy-ko.md', gh: 'https://github.com/emalration2-sketch/travel-template-v2/blob/main/docs/legal/privacy-ko.md' },
+};
+const legalCache = {};
+let legalFrom = 'landing';
+async function openLegal(doc){
+  const meta = LEGAL_DOCS[doc];
+  if(!meta) return;
+  showScreen(doc);
+  window.scrollTo(0, 0);
+  const body = document.getElementById('legalBody-' + doc);
+  if(legalCache[doc]){ body.innerHTML = legalCache[doc]; return; }
+  body.innerHTML = '<div class="legal-loading">문서를 불러오는 중…</div>';
+  try{
+    const res = await fetch(meta.file, { cache: 'no-cache' });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const html = renderMarkdown(await res.text());
+    legalCache[doc] = html;
+    body.innerHTML = html;
+  }catch(e){
+    body.innerHTML = '<div class="legal-error">문서를 불러오지 못했어요. ' +
+      '<a href="' + meta.gh + '" target="_blank" rel="noopener">GitHub에서 보기</a></div>';
+  }
 }
 
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
@@ -1950,6 +1991,9 @@ document.addEventListener('click', e => {
   else if(a === 'retry-load') handleAuthChange(currentUser);
   else if(a === 'go-settings'){ forceFlush(); renderSettings(); showScreen('settings'); }
   else if(a === 'go-mypage'){ renderMypage(); showScreen('mypage'); }
+  else if(a === 'legal-back'){
+    showScreen(legalFrom === 'settings' ? 'settings' : (currentUser ? 'settings' : 'landing'));
+  }
   else if(a === 'open-avatar') openAvatarModal();
   else if(a === 'open-theme') openThemeModal();
   else if(a === 'avatar-reset') pickPendingAvatar('default');

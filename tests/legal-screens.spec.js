@@ -74,3 +74,63 @@ test('renderMarkdown: 무한루프 방지 - 구분선 없는 표', async ({ page
   expect(html).toBeDefined();
   expect(html).toContain('a | b');  // 파이프가 리터럴 텍스트로 포함됨
 });
+
+const TERMS_MD = ['# 이용약관','','## 제1조','내용 A.','','| K | V |','|---|---|','| a | b |'].join('\n');
+const PRIV_MD  = ['# 개인정보처리방침','','## 1. 수집','내용 B. <script>x</script>'].join('\n');
+
+async function routeLegal(page, { termsStatus = 200 } = {}){
+  await page.route('**/docs/legal/terms-ko.md', r =>
+    termsStatus === 200 ? r.fulfill({ contentType:'text/markdown', body: TERMS_MD })
+                        : r.fulfill({ status: termsStatus, body: 'err' }));
+  await page.route('**/docs/legal/privacy-ko.md', r =>
+    r.fulfill({ contentType:'text/markdown', body: PRIV_MD }));
+}
+
+test('openLegal: 문서 fetch → 렌더 → 화면 표시', async ({ page }) => {
+  await routeLegal(page);
+  await page.goto('/');
+  await page.evaluate(() => { legalFrom = 'landing'; openLegal('terms'); });
+  await expect(page.locator('section[data-screen="terms"]')).toBeVisible();
+  await expect(page.locator('#legalBody-terms h3')).toHaveText('제1조');
+  await expect(page.locator('#legalBody-terms .legal-table table')).toBeVisible();
+  await expect(page.locator('#legalBody-terms')).not.toContainText('이용약관');   // 첫 # 줄 제거
+});
+
+test('legal-back: 온 화면으로 복귀', async ({ page }) => {
+  await routeLegal(page);
+  await page.goto('/');
+  await page.evaluate(() => { legalFrom = 'landing'; openLegal('privacy'); });
+  await expect(page.locator('section[data-screen="privacy"]')).toBeVisible();
+  await page.locator('section[data-screen="privacy"] [data-action="legal-back"]').click();
+  await expect(page.locator('section[data-screen="landing"]')).toBeVisible();
+});
+
+test('openLegal: 재진입 시 fetch 1회만 (캐시)', async ({ page }) => {
+  let hits = 0;
+  await page.route('**/docs/legal/terms-ko.md', r => { hits++; r.fulfill({ contentType:'text/markdown', body: TERMS_MD }); });
+  await page.route('**/docs/legal/privacy-ko.md', r => r.fulfill({ contentType:'text/markdown', body: PRIV_MD }));
+  await page.goto('/');
+  await page.evaluate(async () => { legalFrom='landing'; openLegal('terms'); });
+  await expect(page.locator('#legalBody-terms h3')).toBeVisible();
+  await page.evaluate(() => showScreen('landing'));
+  await page.evaluate(async () => { openLegal('terms'); });
+  await expect(page.locator('section[data-screen="terms"]')).toBeVisible();
+  await page.waitForTimeout(200);
+  expect(hits).toBe(1);
+});
+
+test('openLegal: fetch 실패 시 에러 + GitHub 링크', async ({ page }) => {
+  await routeLegal(page, { termsStatus: 500 });
+  await page.goto('/');
+  await page.evaluate(() => { legalFrom='landing'; openLegal('terms'); });
+  await expect(page.locator('#legalBody-terms .legal-error')).toBeVisible();
+  await expect(page.locator('#legalBody-terms .legal-error a')).toHaveAttribute('href', /github\.com.*terms-ko\.md/);
+});
+
+test('렌더러 이스케이프: 문서 본문의 <script> 는 텍스트', async ({ page }) => {
+  await routeLegal(page);
+  await page.goto('/');
+  await page.evaluate(() => { legalFrom='landing'; openLegal('privacy'); });
+  await expect(page.locator('#legalBody-privacy')).toContainText('<script>x</script>');
+  expect(await page.locator('#legalBody-privacy script').count()).toBe(0);
+});
