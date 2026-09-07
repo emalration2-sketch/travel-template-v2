@@ -130,9 +130,24 @@ test('편집기 ⚙ 버튼 → 설정, 마이페이지 이름 탭은 설정 안 
   await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
   await expect(page.locator('section[data-screen="settings"]')).toBeHidden();
 
-  // 편집기 안에서 ⚙ → 설정
+  // 편집기 안에서 ⚙ → 설정 → 뒤로 → 편집기 (마이페이지 아님)
   await page.evaluate(() => openTrip('t1'));
   await expect(page.locator('section[data-screen="editor"]')).toBeVisible();
   await page.locator('#editorOptBtn').click();
   await expect(page.locator('section[data-screen="settings"]')).toBeVisible();
+  await expect(page.locator('#setBack')).toHaveText('← 편집으로');
+  await page.locator('#setBack').click();
+  await expect(page.locator('section[data-screen="editor"]')).toBeVisible();
+  await expect(page.locator('section[data-screen="mypage"]')).toBeHidden();
+});
+
+test('마이페이지 → 설정 → 뒤로 → 마이페이지', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__test.signIn({ uid:'u1', displayName:'김', email:'a@b.com' }));
+  await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
+  await page.locator('#mpSettingsRow').click();
+  await expect(page.locator('section[data-screen="settings"]')).toBeVisible();
+  await expect(page.locator('#setBack')).toHaveText('← 내 여행');
+  await page.locator('#setBack').click();
+  await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
 });
