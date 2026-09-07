@@ -140,5 +140,5 @@ test('전체 흐름: 여행 열기 → 탭 전환 → 링크·이미지 추가 �
 
   await page.locator('#editTabs .tab[data-tab="schedule"]').click();
   await expect(page.locator('#editView-schedule')).toBeVisible();
-  await expect(page.locator('#dayChips')).toBeVisible();
+  await expect(page.locator('#dayRail')).toBeVisible();
 });

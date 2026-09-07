@@ -502,11 +502,18 @@
   .av-reset{font-size:10.5px; color:var(--ink-faint); text-decoration:underline; background:none; border:none; cursor:pointer;}
 
   /* ===== EDITOR TABS ===== */
-  .tabs-scroll.day-chips{padding-top:7px; padding-bottom:8px; background:var(--paper); border-top:1px solid var(--line);}
-  .tabs-scroll.day-chips[hidden]{display:none;}
-  .tab.day-chip{font-size:11.5px; padding:5px 11px; background:var(--card); border-color:var(--line); color:var(--ink-soft);}
-  .tab.day-chip.active{background:var(--fill-strong); color:#fff; border-color:var(--fill-strong);}
-  .day-card{scroll-margin-top:104px;}   /* nav-title + editTabs + dayChips 대략 높이 */
+  /* 좌측 세로 일차 레일 (타임라인 스파인) */
+  .sched-wrap{display:flex; align-items:flex-start; gap:0;}
+  .sched-days{flex:1; min-width:0;}
+  .day-rail{flex:none; width:26px; align-self:flex-start; position:sticky; top:114px; padding:12px 0; z-index:5;}
+  .day-rail[hidden]{display:none;}
+  .day-rail::before{content:""; position:absolute; left:12px; top:22px; bottom:22px; width:2px; background:var(--line);}
+  .rail-node{position:relative; display:flex; align-items:center; width:100%; height:40px; padding:0; border:none; background:none; cursor:pointer;}
+  .rail-dot{position:absolute; left:6px; width:12px; height:12px; border-radius:50%; background:var(--card); border:2px solid var(--ink-faint); box-sizing:border-box; z-index:1; transition:width .13s, height .13s, left .13s, background .13s, border-color .13s;}
+  .rail-node.active .rail-dot{width:16px; height:16px; left:4px; background:var(--fill-strong); border-color:var(--fill-strong);}
+  .rail-lbl{position:absolute; left:22px; white-space:nowrap; font-family:'Space Mono',monospace; font-size:10px; font-weight:700; color:var(--ink-soft); background:var(--card); border:1px solid var(--teal); border-radius:999px; padding:2px 8px; box-shadow:0 2px 8px rgba(0,0,0,.16); opacity:0; transform:translateX(-4px); transition:opacity .13s, transform .13s; pointer-events:none;}
+  .rail-node.active .rail-lbl{opacity:1; transform:none; color:var(--teal);}
+  .day-card{scroll-margin-top:104px;}   /* nav-title + editTabs 대략 높이 */
   [id^="editView-"][hidden]{display:none !important;}
   .mat-group-title{font-size:11px; font-weight:700; color:var(--ink-faint); letter-spacing:.03em; margin:16px 2px 8px; text-transform:uppercase;}
   .mat-group-title:first-of-type{margin-top:6px;}
@@ -638,7 +645,6 @@
     <button class="tab" data-action="edit-tab" data-tab="expense">지출</button>
     <button class="tab" data-action="edit-tab" data-tab="materials">자료모음</button>
   </div>
-  <div class="tabs-scroll day-chips" id="dayChips"></div>
 </nav>
 
 <div id="printArea">
@@ -648,10 +654,13 @@
     <div class="h-travelers" id="travelersWrap"></div>
   </div>
 
-  <div class="wrap">
-    <div id="daysContainer"></div>
-    <button class="add-day edit-only" data-action="add-day">＋ 새로운 일차 추가</button>
-    <button class="reset-link edit-only" data-action="reset">초기화</button>
+  <div class="wrap sched-wrap">
+    <nav class="day-rail" id="dayRail" aria-label="일차 이동"></nav>
+    <div class="sched-days">
+      <div id="daysContainer"></div>
+      <button class="add-day edit-only" data-action="add-day">＋ 새로운 일차 추가</button>
+      <button class="reset-link edit-only" data-action="reset">초기화</button>
+    </div>
   </div>
 </div>
 
@@ -1422,11 +1431,19 @@ function itemHTML(d, it){
 }
 function renderDays(){
   document.getElementById('daysContainer').innerHTML = state.days.map(dayCardHTML).join('');
-  document.getElementById('dayChips').innerHTML = state.days.map((d, idx) =>
-    `<a class="tab day-chip" href="#day-${d.id}" id="chip-${d.id}">${escapeHTML(tabLabel(d, idx))}</a>`
+  document.getElementById('dayRail').innerHTML = state.days.map((d, idx) =>
+    `<button type="button" class="rail-node" data-action="jump-day" data-day-id="${d.id}" id="rail-${d.id}" aria-label="Day ${idx+1}"><span class="rail-dot"></span><span class="rail-lbl">Day ${idx+1}</span></button>`
   ).join('');
   initObserver();
   applyModeLock();
+}
+function scrollToDay(dayId){
+  const el = document.getElementById('day-' + dayId);
+  if(!el) return;
+  const nav = document.querySelector('section[data-screen="editor"] nav.tabs');
+  const navH = nav ? nav.getBoundingClientRect().height : 0;
+  const y = el.getBoundingClientRect().top + window.pageYOffset - navH - 8;
+  window.scrollTo({ top: y, behavior: 'smooth' });
 }
 
 /* ===== EDITOR TABS ===== */
@@ -1439,7 +1456,6 @@ function showEditorTab(name){
   document.querySelectorAll('#editTabs .tab[data-tab]').forEach(t => {
     t.classList.toggle('active', t.dataset.tab === name);
   });
-  document.getElementById('dayChips').hidden = (name !== 'schedule');
   window.scrollTo(0, 0);
   if(name === 'materials') ensureAttachmentsLoaded();
 }
@@ -1627,9 +1643,9 @@ function initObserver(){
   const obs = new IntersectionObserver(entries => {
     entries.forEach(e => {
       if(e.isIntersecting){
-        document.querySelectorAll('#dayChips .day-chip').forEach(a => a.classList.remove('active'));
-        const chip = document.getElementById('chip-' + e.target.id.replace(/^day-/, ''));
-        if(chip) chip.classList.add('active');
+        document.querySelectorAll('#dayRail .rail-node').forEach(a => a.classList.remove('active'));
+        const node = document.getElementById('rail-' + e.target.id.replace(/^day-/, ''));
+        if(node) node.classList.add('active');
       }
     });
   }, { rootMargin:'-40% 0px -55% 0px' });
@@ -1712,9 +1728,6 @@ function handleAuxChange(e){
       if(textInput) textInput.value = val;
       const viewEl = document.querySelector(`.day-date-view[data-day-id="${dayId}"]`) || e.target.closest('.day-headfields').querySelector('.day-date-view');
       if(viewEl) viewEl.textContent = val;
-      const idx = state.days.indexOf(d);
-      const tabEl = document.getElementById('chip-' + dayId);
-      if(tabEl) tabEl.textContent = tabLabel(d, idx);
       saveDebounced();
     }
   }
@@ -1899,11 +1912,11 @@ function exportPDF(){
   loadPdfLibs().then(async () => {
     const views = ['schedule','notes','expense','materials'].map(v => document.getElementById('editView-' + v));
     const prevHidden = views.map(v => v.hidden);
-    const dayChipsEl = document.getElementById('dayChips');
-    const prevChips = dayChipsEl.hidden;
+    const dayRailEl = document.getElementById('dayRail');
+    const prevRail = dayRailEl.hidden;
     try{
       views.forEach(v => v.hidden = false);
-      dayChipsEl.hidden = true;
+      dayRailEl.hidden = true;
       await ensureAttachmentsLoaded();
       const paperBg = getComputedStyle(document.documentElement).getPropertyValue('--paper').trim() || '#ffffff';
 
@@ -1960,7 +1973,7 @@ function exportPDF(){
       doc.save(filename);
     }finally{
       views.forEach((v, i) => v.hidden = prevHidden[i]);
-      dayChipsEl.hidden = prevChips;
+      dayRailEl.hidden = prevRail;
       showEditorTab(currentEditorTab);
     }
   }).then(() => {
@@ -2006,6 +2019,7 @@ document.addEventListener('click', e => {
   if(!btn) return;
   const a = btn.dataset.action;
   if(a === 'edit-tab'){ showEditorTab(btn.dataset.tab); return; }
+  if(a === 'jump-day'){ scrollToDay(btn.dataset.dayId); return; }
   if(a === 'add-day') addDay();
   else if(a === 'delete-day') deleteDay(btn.dataset.dayId);
   else if(a === 'add-item') addItem(btn.dataset.dayId);
@@ -2085,11 +2099,6 @@ function handleFieldChange(e){
         t.value = val;
       }
       d[field] = val;
-      if(field === 'label' || field === 'date'){
-        const idx = state.days.indexOf(d);
-        const tabEl = document.getElementById('chip-' + d.id);
-        if(tabEl) tabEl.textContent = tabLabel(d, idx);
-      }
       if(field === 'date'){
         const viewEl = document.querySelector(`.day-date-view[data-day-id="${d.id}"]`) || t.closest('.day-headfields').querySelector('.day-date-view');
         if(viewEl) viewEl.textContent = val;
