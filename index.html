@@ -441,7 +441,7 @@
   .v2-btn-danger{border:none; background:var(--red); color:#fff;}
 
   /* ===== V2 SETTINGS ===== */
-  .set{padding-top:16px; min-height:100vh; display:flex; flex-direction:column;}
+  .set{padding-top:16px; min-height:100vh;}
   .set-back{border:none; background:transparent; color:var(--teal); font-size:11.5px; font-weight:700; cursor:pointer; padding:0 0 14px;}
   .set-account{display:flex; align-items:center; gap:12px; padding:4px 2px 18px; border-bottom:1px solid var(--line);}
   .set-avatar-big{width:52px; height:52px; border-radius:50%; background:var(--fill-strong); color:#fff; display:flex; align-items:center; justify-content:center; font-size:24px; flex:none;}
@@ -463,7 +463,7 @@
   .theme-card .tck{ width:20px; height:20px; border-radius:50%; background:var(--teal); color:#fff;
     font-size:11px; display:none; align-items:center; justify-content:center; flex:none; }
   .theme-card.sel .tck{ display:flex; }
-  .set-logout{margin-top:auto; margin-bottom:24px; width:100%; border:1px solid var(--line); background:var(--card); color:var(--red); border-radius:999px; padding:12px; font-size:12.5px; font-weight:700; cursor:pointer;}
+  .set-logout{margin-top:140px; width:100%; border:1px solid var(--line); background:var(--card); color:var(--red); border-radius:999px; padding:12px; font-size:12.5px; font-weight:700; cursor:pointer;}
   /* 아바타 팝업 그리드 */
   .av-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px 8px; margin:6px 0 4px;}
   .av-cell{width:100%; aspect-ratio:1; border-radius:50%; background:var(--paper-2); display:flex; align-items:center; justify-content:center; font-size:22px; cursor:pointer;}
@@ -1039,7 +1039,13 @@ function initMypageDrag(){
       // 빠른 탭은 click 위임(open-trip)이 별도로 처리하므로 여기선 아무 것도 안 함
     }
   }
+  function onTouchMove(e){
+    // 드래그(롱프레스) 중에는 페이지 스크롤 방지. pointermove 의 preventDefault 로는
+    // iOS 스크롤이 안 막히므로 non-passive touchmove 에서 직접 막는다.
+    if(longPressed) e.preventDefault();
+  }
   list.addEventListener('pointerdown', onDown);
+  list.addEventListener('touchmove', onTouchMove, { passive: false });
 }
 
 function v2ModalOpen(bodyText, actionsHtml){
@@ -1230,7 +1236,7 @@ function dayCardHTML(d, idx){
           <input type="text" inputmode="numeric" maxlength="10" placeholder="YYYYMMDD" class="day-date" data-scope="day" data-day-id="${d.id}" data-field="date" value="${d.date||''}">
         </div>
         <span class="day-date-view view-only" data-day-id="${d.id}">${escapeHTML(d.date||'')}</span>
-        <input type="text" class="day-label" placeholder="이 날의 제목 (예: 도착 · 시내)" data-scope="day" data-day-id="${d.id}" data-field="label" value="${escapeAttr(d.label||'')}">
+        <input type="text" class="day-label" placeholder="일정 제목" data-scope="day" data-day-id="${d.id}" data-field="label" value="${escapeAttr(d.label||'')}">
       </div>
       <button class="day-del edit-only" data-action="delete-day" data-day-id="${d.id}">✕</button>
     </div>
