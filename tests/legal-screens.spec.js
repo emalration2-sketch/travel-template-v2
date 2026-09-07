@@ -56,3 +56,21 @@ test('renderMarkdown: 굵게(**) 도 지원', async ({ page }) => {
   const html = await md(page, '이건 **강조** 입니다.');
   expect(html).toContain('<strong>강조</strong>');
 });
+
+test('renderMarkdown: 무한루프 방지 - 고아 | 라인', async ({ page }) => {
+  test.setTimeout(10000);
+  await page.goto('/');
+  // 단독 | 라인은 유효한 테이블이 아니므로 무한루프 없이 반환되어야 함
+  const html = await md(page, '|');
+  expect(html).toBeDefined();
+  expect(html).toContain('|');  // 파이프는 리터럴 텍스트로 처리됨
+});
+
+test('renderMarkdown: 무한루프 방지 - 구분선 없는 표', async ({ page }) => {
+  test.setTimeout(10000);
+  await page.goto('/');
+  // 구분선이 없는 표 형식은 무한루프 없이 반환되고 파이프를 리터럴로 포함해야 함
+  const html = await md(page, ['| a | b |','| c | d |'].join('\n'));
+  expect(html).toBeDefined();
+  expect(html).toContain('a | b');  // 파이프가 리터럴 텍스트로 포함됨
+});
