@@ -28,3 +28,16 @@ test('취소 시 아무 일 없음', async ({ page }) => {
   await page.locator('#v2Modal').getByText('취소', { exact: true }).click();
   await expect(page.locator('.mp-card')).toHaveCount(2);
 });
+
+test('삭제 실패(오프라인) 시 목록 원복 + 경고', async ({ page }) => {
+  await signedInWith(page, ['a', 'b']);
+  const dialogs = [];
+  page.on('dialog', d => { dialogs.push(d.message()); d.accept(); });
+  await page.evaluate(() => window.__test.setOffline(true));
+  await page.locator('.mp-card[data-trip-id="a"] .mp-del').click();
+  await page.locator('#v2Modal').getByText('삭제', { exact: true }).click();
+  // 낙관적으로 사라졌다가 백그라운드 삭제 실패 → 되돌아온다
+  await expect(page.locator('.mp-card')).toHaveCount(2);
+  await expect(page.locator('.mp-card[data-trip-id="a"]')).toBeVisible();
+  expect(dialogs.join(' ')).toContain('삭제에 실패');
+});
