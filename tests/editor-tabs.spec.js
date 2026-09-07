@@ -128,6 +128,9 @@ test('레일 노드 클릭 → 해당 일차가 sticky nav 바로 아래로 정�
   await page.evaluate(() => openTrip('t1'));
   await expect(page.locator('section[data-screen="editor"]')).toBeVisible();
 
+  // 레일은 스크롤 중에만 클릭 가능 → 먼저 노출시킨다
+  await page.evaluate(() => showRail());
+  await expect(page.locator('#dayRail')).toHaveClass(/scrolling/);
   await page.locator('#dayRail #rail-d3').click();
   await page.waitForTimeout(700); // smooth scroll settle
 
@@ -139,7 +142,33 @@ test('레일 노드 클릭 → 해당 일차가 sticky nav 바로 아래로 정�
   expect(top).toBeLessThan(navH + 40);
 });
 
-test('레일 Day 라벨은 스크롤 중에만 (.scrolling) 나타나고 멈추면 사라진다', async ({ page }) => {
+test('마지막 일차도 화면 상단까지 스크롤 가능 (하단 스페이서)', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    window.__test.seed('users/u1', { avatarId:'default', tripOrder:['t1'] });
+    window.__test.seed('users/u1/trips/t1', { data: JSON.stringify({ title:'오사카', travelers:['나'],
+      days:[
+        {id:'d1',date:'',label:'',items:[{id:'i1',time:'',place:'a',memo:'',expenses:[]}]},
+        {id:'d2',date:'',label:'',items:[{id:'i2',time:'',place:'b',memo:'',expenses:[]}]},
+        {id:'d3',date:'',label:'',items:[{id:'i3',time:'',place:'c',memo:'',expenses:[]}]},
+      ], notes:[], links:[] }), title:'오사카', dayCount:3 });
+  });
+  await page.evaluate(() => window.__test.signIn({ uid:'u1', displayName:'김진', email:'a@b.com' }));
+  await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
+  await page.evaluate(() => openTrip('t1'));
+  await expect(page.locator('section[data-screen="editor"]')).toBeVisible();
+
+  await page.evaluate(() => { showRail(); scrollToDay('d3'); });
+  await page.waitForTimeout(700);
+  const top = await page.evaluate(() => document.getElementById('day-d3').getBoundingClientRect().top);
+  const navH = await page.evaluate(() =>
+    document.querySelector('section[data-screen="editor"] nav.tabs').getBoundingClientRect().height);
+  // 짧은 마지막 일차라도 상단(nav 바로 아래)까지 올라온다
+  expect(top).toBeGreaterThan(navH - 4);
+  expect(top).toBeLessThan(navH + 40);
+});
+
+test('레일은 스크롤 중에만 노출(반투명) + 레이아웃 차지 안 함', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => {
     const mk = () => Array.from({length:6}, (_,k) => ({ id:'i'+Math.random(), time:'', place:'x', memo:'메모 '.repeat(8), expenses:[] }));
@@ -153,19 +182,25 @@ test('레일 Day 라벨은 스크롤 중에만 (.scrolling) 나타나고 멈추�
   await page.evaluate(() => openTrip('t1'));
   await expect(page.locator('section[data-screen="editor"]')).toBeVisible();
 
+  const rail = page.locator('#dayRail');
   const lbl = page.locator('#dayRail .rail-node.active .rail-lbl');
 
-  // 정지 상태: 라벨 투명
-  await expect(page.locator('#dayRail')).not.toHaveClass(/scrolling/);
+  // 정지 상태: 레일 투명 + 라벨 투명 + 포인터 통과(레이아웃/탭 방해 X)
+  await expect(rail).not.toHaveClass(/scrolling/);
+  await expect(rail).toHaveCSS('opacity', '0');
+  await expect(rail).toHaveCSS('pointer-events', 'none');
+  await expect(rail).toHaveCSS('position', 'fixed');
   await expect(lbl).toHaveCSS('opacity', '0');
 
-  // 스크롤 발생 → .scrolling 붙고 라벨 나타남
+  // 스크롤 발생 → .scrolling 붙고 레일·라벨 나타남
   await page.evaluate(() => window.scrollBy(0, 400));
-  await expect(page.locator('#dayRail')).toHaveClass(/scrolling/);
+  await expect(rail).toHaveClass(/scrolling/);
+  await expect(rail).toHaveCSS('opacity', '1');
   await expect(lbl).toHaveCSS('opacity', '1');
 
-  // 멈추면 ~0.85s 뒤 자동으로 사라짐
-  await expect(page.locator('#dayRail')).not.toHaveClass(/scrolling/, { timeout: 2000 });
+  // 멈추면 ~1.2s 뒤 자동으로 사라짐
+  await expect(rail).not.toHaveClass(/scrolling/, { timeout: 2500 });
+  await expect(rail).toHaveCSS('opacity', '0');
   await expect(lbl).toHaveCSS('opacity', '0');
 });
 

@@ -13,7 +13,7 @@
   :root{
     --ink:#16302D; --ink-soft:#47635E; --ink-faint:#8AA39D;
     --red:#E0556E; --gold:#E3A63C; --teal:#1C7A6F;
-    --paper:#F1F6F4; --paper-2:#E1EDE9; --line:#CEDFD9; --card:#FFFFFF; --nav-bg:rgba(241,246,244,.94);
+    --paper:#F1F6F4; --paper-2:#E1EDE9; --line:#CEDFD9; --card:#FFFFFF; --nav-bg:rgba(241,246,244,.94); --rail-glass:rgba(241,246,244,.68);
     --fill-strong:#16302D;
     --mode-edit:#1C7A6F; --mode-view:#415A78;
     --banner-bg:#1C7A6F; --banner-fg:#FFFFFF;
@@ -21,7 +21,7 @@
   :root[data-theme="b"]{
     --ink:#1E2124; --ink-soft:#55585C; --ink-faint:#9A9CA0;
     --red:#C6506A; --gold:#9A7B4E; --teal:#3E6B8A;
-    --paper:#F4F3F1; --paper-2:#E9E7E3; --line:#DAD8D3; --card:#FFFFFF; --nav-bg:rgba(244,243,241,.94);
+    --paper:#F4F3F1; --paper-2:#E9E7E3; --line:#DAD8D3; --card:#FFFFFF; --nav-bg:rgba(244,243,241,.94); --rail-glass:rgba(244,243,241,.68);
     --fill-strong:#1E2124;
     --mode-edit:#3E6B8A; --mode-view:#2E3236;
     --banner-bg:#2A2D30; --banner-fg:#FFFFFF;
@@ -29,7 +29,7 @@
   :root[data-theme="c"]{
     --ink:#1B2340; --ink-soft:#4A5178; --ink-faint:#8A90AE;
     --red:#E0475F; --gold:#DE9A34; --teal:#35528F;
-    --paper:#F2F4F9; --paper-2:#E6EAF4; --line:#D6DCEA; --card:#FFFFFF; --nav-bg:rgba(242,244,249,.94);
+    --paper:#F2F4F9; --paper-2:#E6EAF4; --line:#D6DCEA; --card:#FFFFFF; --nav-bg:rgba(242,244,249,.94); --rail-glass:rgba(242,244,249,.68);
     --fill-strong:#1B2340;
     --mode-edit:#35528F; --mode-view:#8A6E2E;
     --banner-bg:#1B2340; --banner-fg:#FFFFFF;
@@ -37,7 +37,7 @@
   :root[data-theme="d"]{
     --ink:#EAF2F4; --ink-soft:#9FB2BE; --ink-faint:#61748A;
     --red:#FF6B85; --gold:#E3A63C; --teal:#33D6C0;
-    --paper:#0C1524; --paper-2:#182335; --line:#29374D; --card:#131E30; --nav-bg:rgba(12,21,36,.92);
+    --paper:#0C1524; --paper-2:#182335; --line:#29374D; --card:#131E30; --nav-bg:rgba(12,21,36,.92); --rail-glass:rgba(19,30,48,.66);
     --fill-strong:#1E2E48;
     --mode-edit:#33D6C0; --mode-view:#6C7BE0;
     --banner-bg:linear-gradient(125deg,#0F1C3E 0%,#123E5E 52%,#0C4F4A 100%); --banner-fg:#FFFFFF;
@@ -45,7 +45,7 @@
   :root[data-theme="e"]{
     --ink:#43202F; --ink-soft:#8A5560; --ink-faint:#BE93A0;
     --red:#B23A32; --gold:#E89A3C; --teal:#D8583C;
-    --paper:#FEF3EC; --paper-2:#FBE3D5; --line:#F1D2C0; --card:#FFFFFF; --nav-bg:rgba(254,243,236,.94);
+    --paper:#FEF3EC; --paper-2:#FBE3D5; --line:#F1D2C0; --card:#FFFFFF; --nav-bg:rgba(254,243,236,.94); --rail-glass:rgba(254,243,236,.68);
     --fill-strong:#43202F;
     --mode-edit:#D8583C; --mode-view:#A8703E;
     --banner-bg:linear-gradient(120deg,#E8663E 0%,#EF8A3C 55%,#E8A54A 100%); --banner-fg:#FFFFFF;
@@ -502,23 +502,25 @@
   .av-reset{font-size:10.5px; color:var(--ink-faint); text-decoration:underline; background:none; border:none; cursor:pointer;}
 
   /* ===== EDITOR TABS ===== */
-  /* 좌측 세로 일차 레일 — 화면 전체 높이 스크롤 트랙 */
-  html{scroll-behavior:smooth;}
-  .sched-wrap{display:flex; align-items:flex-start; gap:0;}
-  .sched-days{flex:1; min-width:0;}
+  /* 일차 레일 — 스크롤 중에만 뜨는 반투명 플로팅 인디케이터 (레이아웃 차지 X) */
   .day-rail{
-    flex:none; width:26px; align-self:flex-start; z-index:5;
-    position:sticky; top:112px;
-    height:calc(100vh - 128px); height:calc(100dvh - 128px);
-    display:flex; flex-direction:column; padding:6px 0;
+    position:fixed; left:6px; top:50%; transform:translateY(-50%);
+    z-index:40; display:flex; flex-direction:column; align-items:center; gap:3px;
+    max-height:78vh; padding:8px 5px; border-radius:999px;
+    background:var(--rail-glass);
+    -webkit-backdrop-filter:blur(7px); backdrop-filter:blur(7px);
+    box-shadow:0 4px 18px rgba(0,0,0,.14);
+    opacity:0; pointer-events:none;
+    transition:opacity .2s ease;
   }
   .day-rail[hidden]{display:none;}
-  .day-rail::before{content:""; position:absolute; left:12px; top:6px; bottom:6px; width:2px; background:var(--line); border-radius:2px;}
-  .rail-node{position:relative; display:flex; align-items:center; flex:1 1 0; min-height:34px; width:100%; padding:0; border:none; background:none; cursor:pointer;}
-  .rail-dot{position:absolute; left:6px; top:50%; margin-top:-6px; width:12px; height:12px; border-radius:50%; background:var(--card); border:2px solid var(--ink-faint); box-sizing:border-box; z-index:1; transition:transform .13s, background .13s, border-color .13s;}
-  .rail-node.active .rail-dot{transform:scale(1.4); background:var(--fill-strong); border-color:var(--fill-strong);}
-  .rail-lbl{position:absolute; left:22px; top:50%; white-space:nowrap; font-family:'Space Mono',monospace; font-size:10px; font-weight:700; color:var(--teal); background:var(--card); border:1px solid var(--teal); border-radius:999px; padding:2px 8px; box-shadow:0 2px 10px rgba(0,0,0,.18); opacity:0; transform:translateY(-50%) translateX(-4px); transition:opacity .16s, transform .16s; pointer-events:none;}
-  .day-rail.scrolling .rail-node.active .rail-lbl{opacity:1; transform:translateY(-50%);}
+  .day-rail.scrolling{opacity:1; pointer-events:auto;}
+  .rail-node{position:relative; display:flex; align-items:center; justify-content:center; width:20px; height:24px; flex:none; padding:0; border:none; background:none; cursor:pointer;}
+  .rail-dot{width:8px; height:8px; border-radius:50%; background:var(--ink-faint); opacity:.5; transition:transform .13s, opacity .13s, background .13s;}
+  .rail-node.active .rail-dot{background:var(--teal); opacity:1; transform:scale(1.6);}
+  .rail-lbl{position:absolute; left:24px; top:50%; white-space:nowrap; font-family:'Space Mono',monospace; font-size:10px; font-weight:700; color:var(--teal); background:var(--card); border:1px solid var(--line); border-radius:999px; padding:2px 8px; box-shadow:0 2px 8px rgba(0,0,0,.16); opacity:0; transform:translateY(-50%); transition:opacity .15s; pointer-events:none;}
+  .day-rail.scrolling .rail-node.active .rail-lbl{opacity:1;}
+  .sched-tail{height:55vh;}
   .day-card{scroll-margin-top:104px;}   /* nav-title + editTabs 대략 높이 */
   [id^="editView-"][hidden]{display:none !important;}
   .mat-group-title{font-size:11px; font-weight:700; color:var(--ink-faint); letter-spacing:.03em; margin:16px 2px 8px; text-transform:uppercase;}
@@ -660,13 +662,12 @@
     <div class="h-travelers" id="travelersWrap"></div>
   </div>
 
-  <div class="wrap sched-wrap">
-    <nav class="day-rail" id="dayRail" aria-label="일차 이동"></nav>
-    <div class="sched-days">
-      <div id="daysContainer"></div>
-      <button class="add-day edit-only" data-action="add-day">＋ 새로운 일차 추가</button>
-      <button class="reset-link edit-only" data-action="reset">초기화</button>
-    </div>
+  <nav class="day-rail" id="dayRail" aria-label="일차 이동"></nav>
+  <div class="wrap">
+    <div id="daysContainer"></div>
+    <button class="add-day edit-only" data-action="add-day">＋ 새로운 일차 추가</button>
+    <button class="reset-link edit-only" data-action="reset">초기화</button>
+    <div class="sched-tail" aria-hidden="true"></div>
   </div>
 </div>
 
@@ -1673,16 +1674,31 @@ function initObserver(){
   document.querySelectorAll('#daysContainer .day-card').forEach(sec => obs.observe(sec));
   window._obs = obs;
 }
-/* 스크롤 중에만 레일 라벨(Day N)을 띄운다 — 멈추면 자동으로 사라짐 */
-let _railScrollT = null;
-function pulseRailLabel(){
-  const rail = document.getElementById('dayRail');
-  if(!rail || rail.hidden) return;
-  rail.classList.add('scrolling');
-  clearTimeout(_railScrollT);
-  _railScrollT = setTimeout(() => rail.classList.remove('scrolling'), 850);
+/* 레일은 화면 스크롤 중에만 반투명하게 뜨고, 멈추면 사라진다.
+   손가락/커서를 레일에 올려두면 점을 누를 여유를 주기 위해 계속 유지. */
+let _railT = null;
+function railHide(delay){
+  clearTimeout(_railT);
+  _railT = setTimeout(() => {
+    const r = document.getElementById('dayRail');
+    if(r && !r.matches(':hover')) r.classList.remove('scrolling');
+  }, delay);
 }
-window.addEventListener('scroll', pulseRailLabel, { passive:true });
+function showRail(){
+  const rail = document.getElementById('dayRail');
+  if(!rail || rail.hidden || currentEditorTab !== 'schedule' || currentScreen !== 'editor') return;
+  rail.classList.add('scrolling');
+  railHide(1200);
+}
+window.addEventListener('scroll', showRail, { passive:true });
+(function initRailAutohide(){
+  const rail = document.getElementById('dayRail');
+  if(!rail) return;
+  const keep = () => { rail.classList.add('scrolling'); clearTimeout(_railT); };
+  rail.addEventListener('pointerenter', keep);
+  rail.addEventListener('pointerdown', keep);
+  rail.addEventListener('pointerleave', () => railHide(900));
+})();
 
 /* ---------- ACTIONS ---------- */
 function addDay(){
@@ -2068,7 +2084,7 @@ document.addEventListener('click', e => {
   if(!btn) return;
   const a = btn.dataset.action;
   if(a === 'edit-tab'){ showEditorTab(btn.dataset.tab); return; }
-  if(a === 'jump-day'){ pulseRailLabel(); scrollToDay(btn.dataset.dayId); return; }
+  if(a === 'jump-day'){ showRail(); scrollToDay(btn.dataset.dayId); return; }
   if(a === 'add-day') addDay();
   else if(a === 'delete-day') deleteDay(btn.dataset.dayId);
   else if(a === 'add-item') addItem(btn.dataset.dayId);
