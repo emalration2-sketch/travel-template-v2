@@ -520,8 +520,8 @@
   .rail-node.active .rail-dot{background:var(--teal); opacity:1; transform:scale(1.6);}
   .rail-lbl{position:absolute; left:24px; top:50%; white-space:nowrap; font-family:'Space Mono',monospace; font-size:10px; font-weight:700; color:var(--teal); background:var(--card); border:1px solid var(--line); border-radius:999px; padding:2px 8px; box-shadow:0 2px 8px rgba(0,0,0,.16); opacity:0; transform:translateY(-50%); transition:opacity .15s; pointer-events:none;}
   .day-rail.scrolling .rail-node.active .rail-lbl{opacity:1;}
-  .sched-tail{height:55vh;}
-  .day-card{scroll-margin-top:104px;}   /* nav-title + editTabs 대략 높이 */
+  .sched-tail{height:40vh;}   /* JS(fitSchedTail)가 실제 필요한 높이로 덮어씀; 이건 폴백 */
+  .day-card{scroll-margin-top:112px;}   /* sticky 툴바(약 104) + 여유 8 — scrollIntoView 오프셋 */
   [id^="editView-"][hidden]{display:none !important;}
   .mat-group-title{font-size:11px; font-weight:700; color:var(--ink-faint); letter-spacing:.03em; margin:16px 2px 8px; text-transform:uppercase;}
   .mat-group-title:first-of-type{margin-top:6px;}
@@ -1458,14 +1458,28 @@ function renderDays(){
   ).join('');
   initObserver();
   applyModeLock();
+  fitSchedTail();
+}
+/* 마지막(짧은) 일차도 화면 상단까지 올라오도록 '필요한 만큼만' 하단 여백 확보.
+   목표: 최대 스크롤 시 마지막 일차 카드 상단이 sticky 툴바 바로 아래(112px)에 온다. */
+function fitSchedTail(){
+  const tail = document.querySelector('#editView-schedule .sched-tail');
+  if(!tail) return;
+  const cards = document.querySelectorAll('#daysContainer .day-card');
+  const last = cards[cards.length - 1];
+  if(!last){ tail.style.height = '0px'; return; }
+  tail.style.height = '0px';                                   // 0 으로 두고 실제 콘텐츠 높이 측정
+  const lastTopAbs = last.getBoundingClientRect().top + window.scrollY;
+  const contentH = document.documentElement.scrollHeight;      // 이 읽기가 리플로우를 강제
+  const need = lastTopAbs - 112 + window.innerHeight - contentH;
+  tail.style.height = Math.max(0, Math.round(need)) + 'px';
 }
 function scrollToDay(dayId){
   const el = document.getElementById('day-' + dayId);
   if(!el) return;
-  const nav = document.querySelector('section[data-screen="editor"] nav.tabs');
-  const navH = nav ? nav.getBoundingClientRect().height : 0;
-  const y = el.getBoundingClientRect().top + window.pageYOffset - navH - 8;
-  window.scrollTo({ top: y, behavior: 'smooth' });
+  // 진행 중인 관성 스크롤을 끊고(iOS Safari), scroll-margin-top 이 sticky 툴바 높이를 처리
+  window.scrollTo(window.scrollX, window.scrollY);
+  requestAnimationFrame(() => el.scrollIntoView({ block: 'start', behavior: 'smooth' }));
 }
 
 /* ===== EDITOR TABS ===== */
@@ -1479,6 +1493,7 @@ function showEditorTab(name){
     t.classList.toggle('active', t.dataset.tab === name);
   });
   window.scrollTo(0, 0);
+  if(name === 'schedule') fitSchedTail();
   if(name === 'materials') ensureAttachmentsLoaded();
 }
 async function ensureAttachmentsLoaded(){
@@ -1659,21 +1674,47 @@ function rebuildAll(){
   renderHeader(); renderDays(); renderNotes(); renderMaterials(); renderExpenseTab();
 }
 
-/* ---------- OBSERVER ---------- */
+/* ---------- OBSERVER (레일 활성 점) ---------- */
+/* IntersectionObserver 는 "변화가 있었다" 만 알려주므로, 콜백에서 기하학적으로
+   '툴바 바로 아래(~120px)에 상단이 가장 가까운 일차'를 골라 활성 처리한다.
+   → Day N 을 누르면 그 카드가 최상단에 오고, 활성 점도 정확히 Day N 이 된다. */
+function syncRailActive(){
+  const cards = document.querySelectorAll('#daysContainer .day-card');
+  if(!cards.length) return;
+  const vh = window.innerHeight;
+  let best = null, bestScore = Infinity;
+  cards.forEach(c => {
+    const r = c.getBoundingClientRect();
+    if(r.bottom < 130 || r.top > vh * 0.75) return;      // 화면 상단부에 없는 카드는 제외
+    const score = Math.abs(r.top - 120);
+    if(score < bestScore){ bestScore = score; best = c; }
+  });
+  if(!best){                                             // 경계 상황: 가장 많이 보이는 카드
+    let bestVis = -1;
+    cards.forEach(c => {
+      const r = c.getBoundingClientRect();
+      const vis = Math.min(r.bottom, vh) - Math.max(r.top, 0);
+      if(vis > bestVis){ bestVis = vis; best = c; }
+    });
+  }
+  document.querySelectorAll('#dayRail .rail-node').forEach(a => a.classList.remove('active'));
+  if(best){
+    const n = document.getElementById('rail-' + best.id.replace(/^day-/, ''));
+    if(n) n.classList.add('active');
+  }
+}
 function initObserver(){
   if(window._obs) window._obs.disconnect();
-  const obs = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if(e.isIntersecting){
-        document.querySelectorAll('#dayRail .rail-node').forEach(a => a.classList.remove('active'));
-        const node = document.getElementById('rail-' + e.target.id.replace(/^day-/, ''));
-        if(node) node.classList.add('active');
-      }
-    });
-  }, { rootMargin:'-40% 0px -55% 0px' });
+  const obs = new IntersectionObserver(syncRailActive, { rootMargin:'0px 0px -40% 0px', threshold:[0, .5, 1] });
   document.querySelectorAll('#daysContainer .day-card').forEach(sec => obs.observe(sec));
   window._obs = obs;
+  syncRailActive();
 }
+let _railRaf = 0;
+window.addEventListener('scroll', () => {
+  if(_railRaf || currentEditorTab !== 'schedule' || currentScreen !== 'editor') return;
+  _railRaf = requestAnimationFrame(() => { _railRaf = 0; syncRailActive(); });
+}, { passive:true });
 /* 레일은 화면 스크롤 중에만 반투명하게 뜨고, 멈추면 사라진다.
    손가락/커서를 레일에 올려두면 점을 누를 여유를 주기 위해 계속 유지. */
 let _railT = null;
@@ -1688,9 +1729,11 @@ function showRail(){
   const rail = document.getElementById('dayRail');
   if(!rail || rail.hidden || currentEditorTab !== 'schedule' || currentScreen !== 'editor') return;
   rail.classList.add('scrolling');
-  railHide(1200);
+  railHide(1500);
 }
 window.addEventListener('scroll', showRail, { passive:true });
+let _fitT = null;
+window.addEventListener('resize', () => { clearTimeout(_fitT); _fitT = setTimeout(fitSchedTail, 150); }, { passive:true });
 (function initRailAutohide(){
   const rail = document.getElementById('dayRail');
   if(!rail) return;
@@ -1861,6 +1904,7 @@ function setMode(mode){
   document.body.classList.remove('mode-edit','mode-view');
   document.body.classList.add('mode-' + mode);
   applyModeLock();
+  fitSchedTail();   // 보기/수정 전환 시 카드 높이가 달라짐
   try{ localStorage.setItem('travel-template-mode', mode); }catch(e){}
 }
 

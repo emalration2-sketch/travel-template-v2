@@ -140,6 +140,9 @@ test('레일 노드 클릭 → 해당 일차가 sticky nav 바로 아래로 정�
     document.querySelector('section[data-screen="editor"] nav.tabs').getBoundingClientRect().height);
   expect(top).toBeGreaterThan(navH - 4);
   expect(top).toBeLessThan(navH + 40);
+  // 활성 점도 클릭한 Day 3 이어야 한다 (스크롤스파이가 엉뚱한 일차를 잡지 않음)
+  await expect(page.locator('#dayRail #rail-d3')).toHaveClass(/active/);
+  await expect(page.locator('#dayRail .rail-node.active')).toHaveCount(1);
 });
 
 test('마지막 일차도 화면 상단까지 스크롤 가능 (하단 스페이서)', async ({ page }) => {
