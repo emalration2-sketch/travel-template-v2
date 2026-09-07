@@ -1,7 +1,9 @@
 # 개인정보처리방침
 
 서비스명: Travel Template (여행 템플릿)
+
 시행일: [YYYY-MM-DD — 런칭 시 기재]
+
 운영자: [운영자명/개인 또는 상호 — 런칭 시 기재]
 
 > ⚠️ 초안입니다. 개인정보 보호법에 따른 필수 기재사항을 반영했으나, 정식 런칭 전 법률 전문가 검토 및 아래 `[ ]` 항목의 실제 값 기재가 필요합니다.
@@ -49,7 +51,7 @@
 |---|---|---|---|---|
 | Google LLC (Google Firebase) | 계정 인증(Firebase Authentication), 데이터 저장(Cloud Firestore) | 위 1항의 전 항목 | 서비스 이용 시 네트워크를 통해 수시 전송. 데이터베이스 리전은 아시아-northeast3(서울). 다만 Google의 글로벌 인프라 특성상 인증·백업 등 일부 처리가 대한민국 외에서 이루어질 수 있음 | 위탁 계약 종료 또는 회원 탈퇴 시까지 |
 
-- Google의 개인정보 처리에 관한 사항은 Google 개인정보처리방침(https://policies.google.com/privacy)을 따릅니다.
+- Google의 개인정보 처리에 관한 사항은 Google 개인정보처리방침([https://policies.google.com/privacy](https://policies.google.com/privacy))을 따릅니다.
 - 이용자는 국외 이전을 원하지 않을 경우 서비스 이용을 중단할 수 있으나, 이 경우 서비스의 핵심 기능을 이용할 수 없습니다.
 
 ## 6. 정보주체의 권리와 행사 방법
@@ -90,10 +92,10 @@
 
 개인정보 침해로 인한 신고·상담이 필요한 경우 아래 기관에 문의할 수 있습니다.
 
-- 개인정보분쟁조정위원회: (국번없이) 1833-6972 / www.kopico.go.kr
-- 개인정보침해신고센터(한국인터넷진흥원): (국번없이) 118 / privacy.kisa.or.kr
-- 대검찰청 사이버수사과: (국번없이) 1301 / www.spo.go.kr
-- 경찰청 사이버수사국: (국번없이) 182 / ecrm.police.go.kr
+- 개인정보분쟁조정위원회: (국번없이) 1833-6972 / [www.kopico.go.kr](https://www.kopico.go.kr)
+- 개인정보침해신고센터(한국인터넷진흥원): (국번없이) 118 / [privacy.kisa.or.kr](https://privacy.kisa.or.kr)
+- 대검찰청 사이버수사과: (국번없이) 1301 / [www.spo.go.kr](https://www.spo.go.kr)
+- 경찰청 사이버수사국: (국번없이) 182 / [ecrm.police.go.kr](https://ecrm.police.go.kr)
 
 ## 12. 개인정보처리방침의 변경
 
