@@ -863,7 +863,8 @@ function formatDateDigits(raw){
 function linkify(text){
   const esc = escapeHTML(text);
   return esc.replace(/((https?:\/\/|www\.)[^\s<]+)/g, url => {
-    const href = url.startsWith('http') ? url : 'https://' + url;
+    const raw = url.startsWith('http') ? url : 'https://' + url;
+    const href = raw.replace(/"/g, '&quot;').replace(/'/g, '&#39;');   // 속성 이스케이프 — href 속성 탈출 방지(XSS)
     return `<a href="${href}" target="_blank" rel="noopener">${url}</a>`;
   });
 }
@@ -997,8 +998,14 @@ async function createTrip(){
     title: meta.title, startDate: meta.startDate, endDate: meta.endDate, dayCount: meta.dayCount,
     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
   });
-  await saveProfile({ tripOrder: profile.tripOrder.concat(ref.path.split('/').pop()) });
-  return ref.path.split('/').pop();
+  const id = ref.path.split('/').pop();
+  try{
+    await saveProfile({ tripOrder: profile.tripOrder.concat(id) });
+  }catch(e){
+    try{ await ref.delete(); }catch(_){}   // tripOrder 에 못 넣었으면 보이지 않는 고아 doc 이 됨 — 되돌림
+    throw e;
+  }
+  return id;
 }
 
 async function saveTrip(tripId, tripState){
@@ -1324,7 +1331,7 @@ async function openTrip(tripId){
   }
   if(!st){
     try{ st = await loadTrip(tripId); }
-    catch(e){ console.error('여행 열기 실패', e); return; }
+    catch(e){ console.error('여행 열기 실패', e); alert('여행을 여는 데 실패했어요. 잠시 후 다시 시도해주세요.'); return; }
   }
   currentTripId = tripId;
   loadedAttTripId = null;
@@ -1340,15 +1347,16 @@ async function openTrip(tripId){
   if(needsPush) flushCloud();
 }
 function goBackToMypage(){
-  // 즉시 이동 — 네트워크(플러시/목록조회)를 기다리지 않는다
+  // 즉시 이동 — 네트워크를 기다리지 않는다
   stopUnsyncedTicker();             // 숨겨진 #syncStatus 대상 setInterval 정리
+  // 편집한 여행의 메타(제목·날짜·일수)만 로컬에서 갱신 → 목록 전체 재조회(여행 5개 전문 다운로드) 생략
+  if(currentTripId){
+    const t = trips.find(x => x.id === currentTripId);
+    if(t) Object.assign(t, deriveTripMeta(state));
+  }
   renderMypage();                   // 메모리의 trips 로 바로 렌더
   showScreen('mypage');
-  // 저장/목록갱신은 백그라운드에서
-  forceFlush().catch(e => console.error('플러시 실패(무시)', e));
-  refreshTripList()
-    .then(() => { if(currentScreen === 'mypage') renderMypage(); })
-    .catch(e => console.error('여행 목록 갱신 실패(무시)', e));
+  forceFlush().catch(e => console.error('플러시 실패(무시)', e));   // 실제 저장만 백그라운드
 }
 
 async function handleAuthChange(user){
@@ -1380,6 +1388,7 @@ function loginWithGoogle(){
   });
 }
 function logoutUser(){
+  cacheClear();                 // 공용 기기: 로컬에 남는 여행 전문 캐시 제거
   if(fbAuth) fbAuth.signOut();
 }
 
