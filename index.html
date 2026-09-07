@@ -273,6 +273,47 @@
   }
   .note-content-view:empty{display:none;}
   .note-content-view a{color:var(--teal); text-decoration:underline; word-break:break-all;}
+  /* ---- 메모 체크리스트 모드 ---- */
+  .note-mode-toggle{
+    flex:none; width:26px; height:26px; padding:0; border:1px solid var(--line);
+    background:var(--card); border-radius:7px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .note-mode-toggle svg{width:15px; height:15px; stroke:var(--ink-soft); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
+  .note-mode-toggle.on{background:var(--fill-strong); border-color:var(--fill-strong);}
+  .note-mode-toggle.on svg{stroke:#fff;}
+  .chk-list{margin-top:6px; display:flex; flex-direction:column; gap:2px;}
+  .chk-row{display:flex; align-items:flex-start; gap:8px; padding:5px 2px;}
+  .chk-box{
+    flex:none; width:18px; height:18px; margin-top:1px; border:2px solid var(--ink-faint);
+    border-radius:5px; background:var(--card); cursor:pointer; appearance:none; -webkit-appearance:none;
+    display:inline-flex; align-items:center; justify-content:center;
+  }
+  .chk-box:checked{background:var(--teal); border-color:var(--teal);}
+  .chk-box:checked::after{content:"✓"; color:#fff; font-size:12px; line-height:1;}
+  .chk-text{
+    flex:1; border:none; background:transparent; font-size:12.5px; color:var(--ink);
+    padding:1px 0; border-bottom:1px dashed transparent;
+  }
+  .chk-text:focus{outline:none; border-bottom:1px dashed var(--ink-faint);}
+  .chk-text::placeholder{color:var(--ink-faint);}
+  .chk-text-view{
+    flex:1; font-size:12.5px; color:var(--ink-soft); padding:1px 0; word-break:break-word; white-space:pre-wrap;
+  }
+  .chk-row.done .chk-text-view, .chk-row.done .chk-text{color:var(--ink-faint); text-decoration:line-through;}
+  .chk-del{flex:none; width:20px; height:20px; padding:0; border:none; background:transparent; color:var(--ink-faint); font-size:11px; cursor:pointer;}
+  .chk-add{
+    margin-top:4px; align-self:flex-start; background:transparent; border:none; cursor:pointer;
+    font-size:12px; font-weight:600; color:var(--teal); padding:4px 2px;
+  }
+  .note-done-head{
+    margin-top:8px; display:flex; align-items:center; gap:6px; cursor:pointer;
+    font-size:11.5px; font-weight:600; color:var(--ink-faint); user-select:none;
+  }
+  .note-done-head .chev{transition:transform .15s; font-size:9px;}
+  .note-done-head.collapsed .chev{transform:rotate(-90deg);}
+  .note-done-list{display:flex; flex-direction:column; gap:2px; margin-top:2px;}
+  .note-done-head.collapsed + .note-done-list{display:none;}
   .add-block{
     width:100%; padding:10px; border-radius:12px; border:1px dashed var(--line);
     background:transparent; color:var(--ink-soft); font-size:13px; font-weight:600; cursor:pointer;
@@ -1519,19 +1560,94 @@ async function ensureAttachmentsLoaded(){
   renderMaterials();
 }
 
+/* 완료 섹션 접힘 상태 — 메모리 전용(저장 안 함) */
+const noteDoneCollapsed = new Set();
+function noteItemsOf(n){ return Array.isArray(n.items) ? n.items : []; }
+
+function chkRowHTML(n, it){
+  return `<div class="chk-row${it.done ? ' done' : ''}" data-note-id="${escapeAttr(n.id)}" data-item-id="${escapeAttr(it.id)}">
+    <input type="checkbox" class="chk-box" data-action="note-check" data-note-id="${escapeAttr(n.id)}" data-item-id="${escapeAttr(it.id)}"${it.done ? ' checked' : ''} aria-label="완료">
+    <input type="text" class="chk-text edit-only" data-scope="note-item" data-note-id="${escapeAttr(n.id)}" data-item-id="${escapeAttr(it.id)}" value="${escapeAttr(it.text || '')}" placeholder="항목 내용">
+    <span class="chk-text-view view-only">${escapeHTML(it.text || '')}</span>
+    <button class="chk-del edit-only" data-action="note-del-item" data-note-id="${escapeAttr(n.id)}" data-item-id="${escapeAttr(it.id)}" aria-label="항목 삭제">✕</button>
+  </div>`;
+}
 function noteHTML(n){
-  return `<div class="note-card">
-    <div class="note-row">
-      <input type="text" class="note-title" placeholder="제목 (예: 준비물, 참고 할 것)" data-scope="note" data-note-id="${n.id}" data-field="title" value="${escapeAttr(n.title||'')}">
-      <button class="item-del edit-only" data-action="delete-note" data-note-id="${n.id}">✕</button>
-    </div>
-    <textarea class="note-content edit-only" placeholder="내용을 입력하세요" rows="2" data-scope="note" data-note-id="${n.id}" data-field="content">${escapeHTML(n.content||'')}</textarea>
+  const titleRow = `<div class="note-row">
+      <input type="text" class="note-title" placeholder="제목 (예: 준비물, 참고 할 것)" data-scope="note" data-note-id="${escapeAttr(n.id)}" data-field="title" value="${escapeAttr(n.title||'')}">
+      <button class="note-mode-toggle edit-only${n.mode === 'checklist' ? ' on' : ''}" data-action="note-toggle-mode" data-note-id="${escapeAttr(n.id)}" aria-label="체크리스트 전환" title="체크리스트로 전환">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      </button>
+      <button class="item-del edit-only" data-action="delete-note" data-note-id="${escapeAttr(n.id)}">✕</button>
+    </div>`;
+  if(n.mode !== 'checklist'){
+    return `<div class="note-card">${titleRow}
+    <textarea class="note-content edit-only" placeholder="내용을 입력하세요" rows="2" data-scope="note" data-note-id="${escapeAttr(n.id)}" data-field="content">${escapeHTML(n.content||'')}</textarea>
     <div class="note-content-view view-only" id="note-view-${n.id}">${linkify(n.content||'')}</div>
+  </div>`;
+  }
+  const items = noteItemsOf(n);
+  const undone = items.filter(i => !i.done);
+  const done = items.filter(i => i.done);
+  const collapsed = noteDoneCollapsed.has(n.id);
+  const doneBlock = done.length
+    ? `<div class="note-done-head${collapsed ? ' collapsed' : ''}" data-action="note-toggle-done" data-note-id="${escapeAttr(n.id)}">
+        <span class="chev">▼</span>완료된 항목 ${done.length}개
+      </div>
+      <div class="note-done-list">${done.map(it => chkRowHTML(n, it)).join('')}</div>`
+    : '';
+  return `<div class="note-card">${titleRow}
+    <div class="chk-list">${undone.map(it => chkRowHTML(n, it)).join('')}</div>
+    <button class="chk-add edit-only" data-action="note-add-item" data-note-id="${escapeAttr(n.id)}">＋ 항목 추가</button>
+    ${doneBlock}
   </div>`;
 }
 function renderNotes(){
   document.getElementById('notesContainer').innerHTML = state.notes.map(noteHTML).join('');
   applyModeLock();
+}
+function toggleNoteMode(id){
+  const n = state.notes.find(x => x.id === id);
+  if(!n) return;
+  if(n.mode === 'checklist'){
+    n.content = noteItemsOf(n).map(i => i.text).join('\n');
+    n.mode = 'text';
+    delete n.items;
+  } else {
+    n.items = (n.content || '').split('\n').map(s => s.trim()).filter(Boolean)
+      .map(text => ({ id: uid(), text, done: false }));
+    n.mode = 'checklist';
+  }
+  renderNotes(); save();
+}
+function noteAddItem(id){
+  const n = state.notes.find(x => x.id === id);
+  if(!n) return;
+  if(!Array.isArray(n.items)) n.items = [];
+  n.items.push({ id: uid(), text: '', done: false });
+  renderNotes(); save();
+  const rows = document.querySelectorAll(`.chk-row[data-note-id="${CSS.escape(id)}"] .chk-text`);
+  const last = rows[rows.length - 1];
+  if(last) last.focus();
+}
+function noteDelItem(noteId, itemId){
+  const n = state.notes.find(x => x.id === noteId);
+  if(!n) return;
+  n.items = noteItemsOf(n).filter(i => i.id !== itemId);
+  renderNotes(); save();
+}
+function noteCheckItem(noteId, itemId, done){
+  const n = state.notes.find(x => x.id === noteId);
+  if(!n) return;
+  const it = noteItemsOf(n).find(i => i.id === itemId);
+  if(!it) return;
+  it.done = !!done;
+  renderNotes(); save();
+}
+function toggleNoteDoneSection(id){
+  if(noteDoneCollapsed.has(id)) noteDoneCollapsed.delete(id);
+  else noteDoneCollapsed.add(id);
+  renderNotes();
 }
 function normalizeUrl(u){
   u = (u||'').trim();
@@ -1839,6 +1955,9 @@ function handleAuxChange(e){
       saveDebounced();
     }
   }
+  if(e.target.classList && e.target.classList.contains('chk-box')){
+    noteCheckItem(e.target.dataset.noteId, e.target.dataset.itemId, e.target.checked);
+  }
 }
 function openExpenseModal(dayId, itemId){
   modalDayId = dayId; modalItemId = itemId; editingExpenseId = null;
@@ -1952,6 +2071,8 @@ const STATIC_CSS = `
   .s-note{background:#fff; border:1px solid #E4DCC8; border-radius:14px; padding:10px 14px; margin-bottom:8px;}
   .s-note-title{font-size:14px; font-weight:700;}
   .s-note-content{font-size:12.5px; color:#4A5178; margin-top:4px; white-space:pre-wrap;}
+  .s-chk{font-size:12.5px; color:#4A5178; margin-top:4px;}
+  .s-chk.done{color:#8A90AE; text-decoration:line-through;}
   .s-sum{display:flex; gap:8px; flex-wrap:wrap;}
   .s-sum-card{background:#1B2340; color:#fff; border-radius:12px; padding:10px 16px; min-width:90px;}
   .s-sum-amt{font-family:'Space Mono',monospace; font-size:17px; font-weight:700; margin-top:2px;}
@@ -1976,8 +2097,16 @@ function buildStaticGuideHTML(s){
       ${itemsHTML}
     </section>`;
   }).join('');
+  const noteBody = n => {
+    if(n.mode === 'checklist'){
+      const items = Array.isArray(n.items) ? n.items : [];
+      const line = it => `<div class="s-chk${it.done ? ' done' : ''}">${it.done ? '☑' : '☐'} ${escapeHTML(it.text || '')}</div>`;
+      return items.filter(i => !i.done).map(line).join('') + items.filter(i => i.done).map(line).join('');
+    }
+    return `<div class="s-note-content">${escapeHTML(n.content||'')}</div>`;
+  };
   const notesHTML = s.notes.length
-    ? `<section class="s-block"><div class="s-title">메모</div>${s.notes.map(n => `<div class="s-note"><div class="s-note-title">${escapeHTML(n.title||'')}</div><div class="s-note-content">${escapeHTML(n.content||'')}</div></div>`).join('')}</section>`
+    ? `<section class="s-block"><div class="s-title">메모</div>${s.notes.map(n => `<div class="s-note"><div class="s-note-title">${escapeHTML(n.title||'')}</div>${noteBody(n)}</div>`).join('')}</section>`
     : '';
   const linksHTML = (s.links||[]).length
     ? `<section class="s-block"><div class="s-title">참고 링크</div><div class="s-links">${s.links.map(l => `<a class="s-link-btn" href="${escapeAttr(normalizeUrl(l.url))}" target="_blank" rel="noopener">${escapeHTML(l.label||'링크')}</a>`).join('')}</div></section>`
@@ -2041,9 +2170,11 @@ function exportPDF(){
     const prevHidden = views.map(v => v.hidden);
     const dayRailEl = document.getElementById('dayRail');
     const prevRail = dayRailEl.hidden;
+    const prevCollapsed = [...noteDoneCollapsed];
     try{
       views.forEach(v => v.hidden = false);
       dayRailEl.hidden = true;
+      noteDoneCollapsed.clear(); renderNotes();   // 완료 항목 섹션 펼쳐서 캡처
       await ensureAttachmentsLoaded();
       const paperBg = getComputedStyle(document.documentElement).getPropertyValue('--paper').trim() || '#ffffff';
 
@@ -2101,6 +2232,7 @@ function exportPDF(){
     }finally{
       views.forEach((v, i) => v.hidden = prevHidden[i]);
       dayRailEl.hidden = prevRail;
+      prevCollapsed.forEach(id => noteDoneCollapsed.add(id)); renderNotes();
       showEditorTab(currentEditorTab);
     }
   }).then(() => {
@@ -2158,6 +2290,11 @@ document.addEventListener('click', e => {
   else if(a === 'delete-expense') deleteExpenseEntry(btn.dataset.dayId, btn.dataset.itemId, btn.dataset.expId);
   else if(a === 'add-note') addNote();
   else if(a === 'delete-note') deleteNote(btn.dataset.noteId);
+  else if(a === 'note-toggle-mode') toggleNoteMode(btn.dataset.noteId);
+  else if(a === 'note-add-item') noteAddItem(btn.dataset.noteId);
+  else if(a === 'note-del-item') noteDelItem(btn.dataset.noteId, btn.dataset.itemId);
+  else if(a === 'note-toggle-done') toggleNoteDoneSection(btn.dataset.noteId);
+  else if(a === 'note-check'){ /* checkbox 는 change 이벤트(handleAuxChange)에서 처리 */ }
   else if(a === 'add-link') addLink();
   else if(a === 'delete-link') deleteLink(btn.dataset.linkId);
   else if(a === 'att-open') openAttachmentViewer(btn.dataset.attId);
@@ -2260,6 +2397,14 @@ function handleFieldChange(e){
         const v = document.getElementById('note-view-' + t.dataset.noteId);
         if(v) v.innerHTML = linkify(t.value);
       }
+    }
+  } else if(scope === 'note-item'){
+    const n = state.notes.find(n => n.id === t.dataset.noteId);
+    const it = n && noteItemsOf(n).find(i => i.id === t.dataset.itemId);
+    if(it){
+      it.text = t.value;
+      const vv = t.closest('.chk-row') && t.closest('.chk-row').querySelector('.chk-text-view');
+      if(vv) vv.textContent = t.value;
     }
   } else if(scope === 'link'){
     const l = state.links.find(l => l.id === t.dataset.linkId);
