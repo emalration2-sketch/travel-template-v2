@@ -7,7 +7,7 @@ async function signedIn(page){
 
 test('상단 바 탭 → 설정, 계정 정보 노출', async ({ page }) => {
   await signedIn(page);
-  await page.locator('#mpTop').click();
+  await page.locator('.mp-opt-btn').click();
   await expect(page.locator('section[data-screen="settings"]')).toBeVisible();
   await expect(page.locator('#setName')).toHaveText('김진');
   await expect(page.locator('#setEmail')).toHaveText('kim@x.com');
@@ -17,7 +17,7 @@ test('상단 바 탭 → 설정, 계정 정보 노출', async ({ page }) => {
 
 test('아바타 변경 → 팝업 → 저장 → 마이페이지 반영 + 영속', async ({ page }) => {
   await signedIn(page);
-  await page.locator('#mpTop').click();
+  await page.locator('.mp-opt-btn').click();
   await page.locator('#setAvatarRow').click();
   await expect(page.locator('#v2Modal')).toBeVisible();
   await page.locator('#v2Modal [data-avatar="fox"]').click();
@@ -31,7 +31,7 @@ test('아바타 변경 → 팝업 → 저장 → 마이페이지 반영 + 영속
 test('기본으로 되돌리기 → ✈', async ({ page }) => {
   await signedIn(page);
   await page.evaluate(() => saveProfile({ avatarId: 'bear' }));
-  await page.locator('#mpTop').click();
+  await page.locator('.mp-opt-btn').click();
   await page.locator('#setAvatarRow').click();
   await page.locator('#v2Modal').getByText('기본(✈)으로', { exact: true }).click();
   await page.locator('#v2Modal').getByText('저장', { exact: true }).click();
@@ -40,7 +40,7 @@ test('기본으로 되돌리기 → ✈', async ({ page }) => {
 
 test('로그아웃 → 표지', async ({ page }) => {
   await signedIn(page);
-  await page.locator('#mpTop').click();
+  await page.locator('.mp-opt-btn').click();
   await page.locator('#setLogout').click();
   await expect(page.locator('section[data-screen="landing"]')).toBeVisible();
 });

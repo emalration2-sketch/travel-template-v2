@@ -109,8 +109,30 @@ test('아바타 팝업 안내 문구 삭제됨', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__test.signIn({ uid:'u1', displayName:'김진', email:'a@b.com' }));
   await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
-  await page.locator('#mpTop').click();
+  await page.locator('.mp-opt-btn').click();
   await page.locator('#setAvatarRow').click();
   await expect(page.locator('#v2Modal')).toBeVisible();
   await expect(page.locator('#v2Modal')).not.toContainText('기본값은');
+});
+
+test('편집기 ⚙ 버튼 → 설정, 마이페이지 이름 탭은 설정 안 감', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    window.__test.seed('users/u1', { avatarId:'default', tripOrder:['t1'] });
+    window.__test.seed('users/u1/trips/t1', { data: JSON.stringify({ title:'X', travelers:['나'],
+      days:[{id:'d1',date:'',label:'',items:[]}], notes:[], links:[], attachments:[] }), title:'X', dayCount:1 });
+  });
+  await page.evaluate(() => window.__test.signIn({ uid:'u1', displayName:'김', email:'a@b.com' }));
+  await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
+
+  // 이름/아바타 탭은 더 이상 설정으로 안 감
+  await page.locator('#mpName').click();
+  await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
+  await expect(page.locator('section[data-screen="settings"]')).toBeHidden();
+
+  // 편집기 안에서 ⚙ → 설정
+  await page.evaluate(() => openTrip('t1'));
+  await expect(page.locator('section[data-screen="editor"]')).toBeVisible();
+  await page.locator('#editorOptBtn').click();
+  await expect(page.locator('section[data-screen="settings"]')).toBeVisible();
 });

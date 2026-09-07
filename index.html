@@ -138,6 +138,8 @@
     border:1px solid var(--teal); background:var(--card); color:var(--teal);
     border-radius:999px; padding:6px 14px; font-size:12px; font-weight:600; cursor:pointer;
   }
+  .sync-btn.sync-icon{padding:6px 9px; font-size:14px; line-height:1;}
+  .nav-sync .sync-btn.sync-icon{padding:5px 8px; font-size:13px;}
 
   /* ---------- DAY CARDS ---------- */
   .day-card{
@@ -403,7 +405,8 @@
 
   /* ===== V2 MYPAGE ===== */
   .mp{padding-top:16px; min-height:100vh;}
-  .mp-top{display:flex; align-items:center; gap:9px; padding-bottom:11px; border-bottom:1px solid var(--line); cursor:pointer;}
+  .mp-top{display:flex; align-items:center; gap:9px; padding-bottom:11px; border-bottom:1px solid var(--line);}
+  .mp-opt-btn{margin-left:auto; border:none; background:transparent; color:var(--ink-soft); font-size:19px; line-height:1; padding:4px 2px; cursor:pointer;}
   .mp-avatar{width:30px; height:30px; border-radius:50%; background:var(--fill-strong); color:#fff; display:flex; align-items:center; justify-content:center; font-size:15px; flex:none;}
   .mp-avatar.emoji{background:var(--paper-2);}
   .mp-name{font-size:13.5px; font-weight:700; color:var(--ink);}
@@ -463,7 +466,7 @@
   .theme-card .tck{ width:20px; height:20px; border-radius:50%; background:var(--teal); color:#fff;
     font-size:11px; display:none; align-items:center; justify-content:center; flex:none; }
   .theme-card.sel .tck{ display:flex; }
-  .set-logout{margin-top:140px; width:100%; border:1px solid var(--line); background:var(--card); color:var(--red); border-radius:999px; padding:12px; font-size:12.5px; font-weight:700; cursor:pointer;}
+  .set-logout{margin-top:92px; width:100%; border:1px solid var(--line); background:var(--card); color:var(--red); border-radius:999px; padding:12px; font-size:12.5px; font-weight:700; cursor:pointer;}
   /* 아바타 팝업 그리드 */
   .av-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px 8px; margin:6px 0 4px;}
   .av-cell{width:100%; aspect-ratio:1; border-radius:50%; background:var(--paper-2); display:flex; align-items:center; justify-content:center; font-size:22px; cursor:pointer;}
@@ -523,9 +526,10 @@
 
 <section data-screen="mypage" hidden>
   <div class="v2-wrap mp">
-    <div class="mp-top" id="mpTop" data-action="go-settings">
+    <div class="mp-top" id="mpTop">
       <span class="mp-avatar" id="mpAvatar">✈</span>
       <span class="mp-name" id="mpName"></span>
+      <button class="mp-opt-btn" data-action="go-settings" aria-label="내 정보 및 옵션">⚙</button>
     </div>
     <div class="mp-banner">
       <div class="mpb-line"><span class="mpb-plane">✈</span><span class="mpb-word">Travel Template</span></div>
@@ -565,12 +569,13 @@
   <div class="wrap nav-title">
     <div class="nav-left">
       <div class="mode-seg">
-        <button class="mode-seg-opt" data-mode="view" data-action="set-mode">👁 보기</button>
+        <button class="mode-seg-opt" data-mode="view" data-action="set-mode">📖 보기</button>
         <button class="mode-seg-opt" data-mode="edit" data-action="set-mode">✏️ 수정</button>
       </div>
     </div>
     <div class="nav-sync" id="navSync">
       <span class="sync-status" id="syncStatus"></span>
+      <button class="sync-btn sync-icon" id="editorOptBtn" data-action="go-settings" aria-label="내 정보 및 옵션">⚙</button>
       <button class="sync-btn" id="backToMypage" data-action="back-to-mypage">← 마이페이지</button>
     </div>
   </div>
@@ -634,7 +639,7 @@
     <button data-action="share">공유하기</button>
   </div>
   <div class="foot-note">로그인한 계정에 자동 저장됩니다</div>
-  <div class="foot-note">✏️ [수정모드]에서 모든 항목을 자유롭게 입력·수정할 수 있어요.<br>[보기모드]에서는 조회만 가능합니다.</div>
+  <div class="foot-note">✏️ [수정모드]에서 모든 항목을 자유롭게 입력·수정할 수 있어요.<br>📖 [보기모드]에서는 조회만 가능합니다.</div>
 </footer>
 
 </section>
@@ -1889,7 +1894,7 @@ document.addEventListener('click', e => {
   else if(a === 'move-down') moveTrip(btn.dataset.tripId, 1);
   else if(a === 'back-to-mypage') goBackToMypage();
   else if(a === 'retry-load') handleAuthChange(currentUser);
-  else if(a === 'go-settings'){ renderSettings(); showScreen('settings'); }
+  else if(a === 'go-settings'){ forceFlush(); renderSettings(); showScreen('settings'); }
   else if(a === 'go-mypage'){ renderMypage(); showScreen('mypage'); }
   else if(a === 'open-avatar') openAvatarModal();
   else if(a === 'open-theme') openThemeModal();
