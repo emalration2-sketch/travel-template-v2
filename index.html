@@ -1223,14 +1223,14 @@ function dayCardHTML(d, idx){
       <div class="day-index">${String(idx+1).padStart(2,'0')}</div>
       <div class="day-headfields">
         <div class="day-date-row edit-only">
-          <input type="text" inputmode="numeric" maxlength="10" placeholder="YYYYMMDD" class="day-date" data-scope="day" data-day-id="${d.id}" data-field="date" value="${d.date||''}">
           <span class="day-date-pick-wrap">
             <span class="day-date-pick"><svg viewBox="0 0 24 24" fill="none" stroke="#DE9A34" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="16" y1="3" x2="16" y2="7"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
             <input type="date" class="day-date-native" data-day-id="${d.id}" value="${d.date||''}">
           </span>
+          <input type="text" inputmode="numeric" maxlength="10" placeholder="YYYYMMDD" class="day-date" data-scope="day" data-day-id="${d.id}" data-field="date" value="${d.date||''}">
         </div>
         <span class="day-date-view view-only" data-day-id="${d.id}">${escapeHTML(d.date||'')}</span>
-        <input type="text" class="day-label" placeholder="" data-scope="day" data-day-id="${d.id}" data-field="label" value="${escapeAttr(d.label||'')}">
+        <input type="text" class="day-label" placeholder="이 날의 제목 (예: 도착 · 시내)" data-scope="day" data-day-id="${d.id}" data-field="label" value="${escapeAttr(d.label||'')}">
       </div>
       <button class="day-del edit-only" data-action="delete-day" data-day-id="${d.id}">✕</button>
     </div>
