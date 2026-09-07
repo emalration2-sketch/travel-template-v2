@@ -184,7 +184,7 @@ test('설정 링크 → 개인정보처리방침, 뒤로 → 설정', async ({ p
   await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
   await page.locator('#mpSettingsRow').click();
   await expect(page.locator('section[data-screen="settings"]')).toBeVisible();
-  await page.locator('.set-row[data-doc="privacy"]').click();
+  await page.locator('.set-legal [data-doc="privacy"]').click();
   await expect(page.locator('section[data-screen="privacy"]')).toBeVisible();
   await page.locator('section[data-screen="privacy"] [data-action="legal-back"]').click();
   await expect(page.locator('section[data-screen="settings"]')).toBeVisible();
