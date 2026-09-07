@@ -102,3 +102,25 @@ test('모드 색 띠: 수정=mode-edit, 보기=mode-view', async ({ page }) => {
   expect(edit).toBe('rgb(28, 122, 111)');   // --mode-edit #1C7A6F (theme A)
   expect(view).toBe('rgb(65, 90, 120)');    // --mode-view #415A78 (theme A)
 });
+
+test('모드 세그먼트 토글: 활성 쪽만 채워지고 탭하면 전환', async ({ page }) => {
+  await openTrip1(page);
+  const viewOpt = page.locator('.mode-seg-opt[data-mode="view"]');
+  const editOpt = page.locator('.mode-seg-opt[data-mode="edit"]');
+  await expect(viewOpt).toBeVisible();
+  await expect(editOpt).toBeVisible();
+  // 이전 badge/버튼은 사라짐
+  expect(await page.locator('#stageBadge').count()).toBe(0);
+  expect(await page.locator('#modeBtn').count()).toBe(0);
+
+  await page.evaluate(() => setMode('edit'));
+  const editBgOnEdit = await editOpt.evaluate(el => getComputedStyle(el).backgroundColor);
+  const viewBgOnEdit = await viewOpt.evaluate(el => getComputedStyle(el).backgroundColor);
+  expect(editBgOnEdit).toBe('rgb(28, 122, 111)');           // --mode-edit 채움
+  expect(viewBgOnEdit).toBe('rgba(0, 0, 0, 0)');            // 비활성 투명
+
+  await viewOpt.click();
+  await expect.poll(() => page.evaluate(() => document.body.classList.contains('mode-view'))).toBe(true);
+  // transition 이 있어 값이 안정될 때까지 poll
+  await expect.poll(() => viewOpt.evaluate(el => getComputedStyle(el).backgroundColor)).toBe('rgb(65, 90, 120)');
+});
