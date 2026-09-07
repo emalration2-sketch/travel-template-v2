@@ -1461,18 +1461,21 @@ function renderDays(){
   fitSchedTail();
 }
 /* 마지막(짧은) 일차도 화면 상단까지 올라오도록 '필요한 만큼만' 하단 여백 확보.
-   목표: 최대 스크롤 시 마지막 일차 카드 상단이 sticky 툴바 바로 아래(112px)에 온다. */
+   목표: 최대 스크롤 시 마지막 일차 카드 상단이 sticky 툴바 바로 아래(112px)에 온다.
+   ※ tail 을 0 으로 만들었다 되돌리면 스크롤 중 페이지가 튀므로, 현재 값 기준으로 델타 계산. */
 function fitSchedTail(){
   const tail = document.querySelector('#editView-schedule .sched-tail');
   if(!tail) return;
   const cards = document.querySelectorAll('#daysContainer .day-card');
   const last = cards[cards.length - 1];
-  if(!last){ tail.style.height = '0px'; return; }
-  tail.style.height = '0px';                                   // 0 으로 두고 실제 콘텐츠 높이 측정
+  if(!last){ if(tail.style.height !== '0px') tail.style.height = '0px'; return; }
+  const curTail = tail.getBoundingClientRect().height;
   const lastTopAbs = last.getBoundingClientRect().top + window.scrollY;
-  const contentH = document.documentElement.scrollHeight;      // 이 읽기가 리플로우를 강제
-  const need = lastTopAbs - 112 + window.innerHeight - contentH;
-  tail.style.height = Math.max(0, Math.round(need)) + 'px';
+  const docH = document.documentElement.scrollHeight;          // 현재 tail 포함 전체 높이
+  // newTail = lastTopAbs + curTail + vh - docH - 112  (유도: maxScroll 에서 last.top === 112)
+  const next = Math.max(0, Math.round(lastTopAbs + curTail + window.innerHeight - docH - 112));
+  // 최초 1회는 무조건 px 로 고정(그래야 vh 폴백에서 벗어나 URL 바에 안 흔들림), 이후엔 미세 변동 무시
+  if(!tail.style.height || Math.abs(next - curTail) > 2) tail.style.height = next + 'px';
 }
 function scrollToDay(dayId){
   const el = document.getElementById('day-' + dayId);
@@ -1729,11 +1732,17 @@ function showRail(){
   const rail = document.getElementById('dayRail');
   if(!rail || rail.hidden || currentEditorTab !== 'schedule' || currentScreen !== 'editor') return;
   rail.classList.add('scrolling');
-  railHide(1500);
+  railHide(1200);
 }
 window.addEventListener('scroll', showRail, { passive:true });
+/* tail 재계산은 '화면 회전' 때만. resize 는 iOS 에서 스크롤 중 URL 바 접힘/펴짐으로도
+   나는데(높이만 변함), 거기 반응하면 여백이 고무줄처럼 튄다. orientation change 만 듣는다. */
 let _fitT = null;
-window.addEventListener('resize', () => { clearTimeout(_fitT); _fitT = setTimeout(fitSchedTail, 150); }, { passive:true });
+try{
+  matchMedia('(orientation: portrait)').addEventListener('change', () => {
+    clearTimeout(_fitT); _fitT = setTimeout(fitSchedTail, 250);
+  });
+}catch(e){}
 (function initRailAutohide(){
   const rail = document.getElementById('dayRail');
   if(!rail) return;
