@@ -109,7 +109,7 @@ test('아바타 팝업 안내 문구 삭제됨', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__test.signIn({ uid:'u1', displayName:'김진', email:'a@b.com' }));
   await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
-  await page.locator('.mp-opt-btn').click();
+  await page.locator('#mpSettingsRow').click();
   await page.locator('#setAvatarRow').click();
   await expect(page.locator('#v2Modal')).toBeVisible();
   await expect(page.locator('#v2Modal')).not.toContainText('기본값은');

@@ -170,7 +170,7 @@ test('표지 링크 → 이용약관, 뒤로 → 표지', async ({ page }) => {
   await routeLegal(page);
   await page.goto('/');
   await expect(page.locator('.landing-consent')).toContainText('이용약관');
-  await page.locator('.landing-foot [data-doc="terms"]').click();
+  await page.locator('.landing-consent [data-doc="terms"]').click();
   await expect(page.locator('section[data-screen="terms"]')).toBeVisible();
   await page.locator('section[data-screen="terms"] [data-action="legal-back"]').click();
   await expect(page.locator('section[data-screen="landing"]')).toBeVisible();
@@ -182,7 +182,7 @@ test('설정 링크 → 개인정보처리방침, 뒤로 → 설정', async ({ p
   await page.evaluate(() => { window.__test.seed('users/u1', { avatarId:'default', tripOrder:[] }); });
   await page.evaluate(() => window.__test.signIn({ uid:'u1', displayName:'김', email:'a@b.com' }));
   await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
-  await page.locator('.mp-opt-btn').click();
+  await page.locator('#mpSettingsRow').click();
   await expect(page.locator('section[data-screen="settings"]')).toBeVisible();
   await page.locator('.set-row[data-doc="privacy"]').click();
   await expect(page.locator('section[data-screen="privacy"]')).toBeVisible();

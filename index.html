@@ -432,7 +432,6 @@
   /* ===== V2 MYPAGE ===== */
   .mp{padding-top:16px; min-height:100vh;}
   .mp-top{display:flex; align-items:center; gap:9px; padding-bottom:11px; border-bottom:1px solid var(--line);}
-  .mp-opt-btn{margin-left:auto; border:none; background:transparent; color:var(--ink-soft); font-size:19px; line-height:1; padding:4px 2px; cursor:pointer;}
   .mp-avatar{width:30px; height:30px; border-radius:50%; background:var(--fill-strong); color:#fff; display:flex; align-items:center; justify-content:center; font-size:15px; flex:none;}
   .mp-avatar.emoji{background:var(--paper-2);}
   .mp-name{font-size:13.5px; font-weight:700; color:var(--ink);}
@@ -447,7 +446,7 @@
   .mp-count{font-size:11.5px; color:var(--ink-faint); margin-bottom:12px;}
   .mp-card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px 12px 12px 40px; margin-bottom:9px; position:relative; cursor:pointer; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;}
   .mp-card .mp-title{font-size:14px; font-weight:700; color:var(--ink);}
-  .mp-card .mp-dates{font-family:'Space Mono',monospace; font-size:10.5px; color:var(--ink-faint); margin-top:3px;}
+  .mp-card .mp-dates{font-family:'Space Mono',monospace; font-size:12px; color:var(--ink-soft); font-weight:500; margin-top:3px;}
   .mp-card .mp-arrows{position:absolute; left:8px; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; gap:2px;}
   .mp-card .mp-arrows button{border:none; background:transparent; color:var(--ink-faint); font-size:11px; line-height:1; cursor:pointer; padding:2px;}
   .mp-card .mp-arrows button:disabled{opacity:.25; cursor:default;}
@@ -550,9 +549,6 @@
     <p class="landing-consent">계속하면 <a data-action="open-legal" data-doc="terms">이용약관</a> 및
       <a data-action="open-legal" data-doc="privacy">개인정보처리방침</a>에 동의하게 됩니다.</p>
     <div class="landing-foot">
-      <a data-action="open-legal" data-doc="terms">이용약관</a>
-      <span aria-hidden="true">·</span>
-      <a data-action="open-legal" data-doc="privacy">개인정보처리방침</a>
       <div class="landing-copy">© 2026 Travel Template</div>
     </div>
   </div>
@@ -563,7 +559,6 @@
     <div class="mp-top" id="mpTop">
       <span class="mp-avatar" id="mpAvatar">✈</span>
       <span class="mp-name" id="mpName"></span>
-      <button class="mp-opt-btn" data-action="go-settings" aria-label="내 정보 및 옵션">⚙</button>
     </div>
     <div class="mp-banner">
       <div class="mpb-line"><span class="mpb-plane">✈</span><span class="mpb-word">Travel Template</span></div>
