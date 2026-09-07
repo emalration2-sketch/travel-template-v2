@@ -264,7 +264,8 @@
   .note-card .item-del{width:22px; height:22px;}
   .note-content{
     width:100%; margin-top:4px; border:none; background:var(--paper-2);
-    border-radius:8px; font-size:12.5px; padding:8px; resize:vertical; min-height:44px;
+    border-radius:8px; font-size:12.5px; padding:8px; resize:none; min-height:44px;
+    overflow:hidden;
   }
   .note-content::placeholder{color:var(--ink-faint);}
   .note-content-view{
@@ -275,13 +276,12 @@
   .note-content-view a{color:var(--teal); text-decoration:underline; word-break:break-all;}
   /* ---- 메모 체크리스트 모드 ---- */
   .note-mode-toggle{
-    flex:none; width:26px; height:26px; padding:0; border:1px solid var(--line);
-    background:var(--card); border-radius:7px; cursor:pointer;
+    flex:none; width:26px; height:26px; padding:0; border:none;
+    background:transparent; border-radius:7px; cursor:pointer; margin-right:8px;
     display:flex; align-items:center; justify-content:center;
   }
-  .note-mode-toggle svg{width:15px; height:15px; stroke:var(--ink-soft); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
-  .note-mode-toggle.on{background:var(--fill-strong); border-color:var(--fill-strong);}
-  .note-mode-toggle.on svg{stroke:#fff;}
+  .note-mode-toggle svg{width:16px; height:16px; stroke:var(--ink-faint); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
+  .note-mode-toggle.on svg{stroke:var(--teal);}
   .chk-list{margin-top:6px; display:flex; flex-direction:column; gap:2px;}
   .chk-row{display:flex; align-items:flex-start; gap:8px; padding:5px 2px;}
   .chk-box{
@@ -1548,6 +1548,7 @@ function showEditorTab(name){
   window.scrollTo(0, 0);
   if(name === 'schedule') fitSchedTail();
   if(name === 'materials') ensureAttachmentsLoaded();
+  if(name === 'notes') growNoteAreas();
 }
 async function ensureAttachmentsLoaded(){
   if(!currentTripId || loadedAttTripId === currentTripId) return;
@@ -1602,9 +1603,18 @@ function noteHTML(n){
     ${doneBlock}
   </div>`;
 }
+function autoGrowArea(el){
+  if(!el) return;
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+function growNoteAreas(){
+  document.querySelectorAll('.note-content').forEach(autoGrowArea);
+}
 function renderNotes(){
   document.getElementById('notesContainer').innerHTML = state.notes.map(noteHTML).join('');
   applyModeLock();
+  growNoteAreas();
 }
 function toggleNoteMode(id){
   const n = state.notes.find(x => x.id === id);
@@ -2042,6 +2052,7 @@ function setMode(mode){
   document.body.classList.add('mode-' + mode);
   applyModeLock();
   fitSchedTail();   // 보기/수정 전환 시 카드 높이가 달라짐
+  growNoteAreas(); // 수정 모드로 전환되며 보이게 된 메모 textarea 높이 재계산
   try{ localStorage.setItem('travel-template-mode', mode); }catch(e){}
 }
 
@@ -2394,6 +2405,7 @@ function handleFieldChange(e){
     if(n){
       n[field] = t.value;
       if(field === 'content'){
+        autoGrowArea(t);
         const v = document.getElementById('note-view-' + t.dataset.noteId);
         if(v) v.innerHTML = linkify(t.value);
       }
