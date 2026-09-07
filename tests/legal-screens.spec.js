@@ -75,6 +75,37 @@ test('renderMarkdown: 무한루프 방지 - 구분선 없는 표', async ({ page
   expect(html).toContain('a | b');  // 파이프가 리터럴 텍스트로 포함됨
 });
 
+test('renderMarkdown: 번호 목록(<ol>) 지원', async ({ page }) => {
+  await page.goto('/');
+  const html = await md(page, ['1. 첫째','2. 둘째','3. 셋째'].join('\n'));
+  expect(html).toContain('<ol>');
+  expect(html).toMatch(/<ol>\s*<li>첫째<\/li>\s*<li>둘째<\/li>\s*<li>셋째<\/li>\s*<\/ol>/);
+  expect(html).not.toContain('1. 첫째');   // N. 접두사 제거
+});
+
+test('renderMarkdown: 조문 안 번호 목록은 run-on <p> 가 아니라 <ol>', async ({ page }) => {
+  await page.goto('/');
+  const html = await md(page, [
+    '## 제2조 (정의)',
+    '1. "서비스"란 A 를 말합니다.',
+    '2. "이용자"란 B 를 말합니다.',
+    '',
+    '뒤따르는 일반 문단입니다.',
+  ].join('\n'));
+  expect(html).toMatch(/<ol>\s*<li>[^<]*서비스[^<]*<\/li>\s*<li>[^<]*이용자[^<]*<\/li>\s*<\/ol>/);
+  expect(html).not.toMatch(/<p>[^<]*1\. [^<]*2\. /);   // run-on 문단 아님
+  expect(html).toContain('<p>뒤따르는 일반 문단입니다.</p>');
+});
+
+test('renderMarkdown: 루프 종료 - 공백 없는 "1." 은 문단으로', async ({ page }) => {
+  test.setTimeout(10000);
+  await page.goto('/');
+  const html = await md(page, '1.');   // \d+\.\s+ 에 매칭되지 않음 → 문단, 행업 없이 반환
+  expect(html).toBeDefined();
+  expect(html).toContain('1.');
+  expect(html).not.toContain('<ol>');
+});
+
 const TERMS_MD = ['# 이용약관','','## 제1조','내용 A.','','| K | V |','|---|---|','| a | b |'].join('\n');
 const PRIV_MD  = ['# 개인정보처리방침','','## 1. 수집','내용 B. <script>x</script>'].join('\n');
 
