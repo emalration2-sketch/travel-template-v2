@@ -15,7 +15,7 @@
     --red:#E0556E; --gold:#E3A63C; --teal:#1C7A6F;
     --paper:#F1F6F4; --paper-2:#E1EDE9; --line:#CEDFD9; --card:#FFFFFF; --nav-bg:rgba(241,246,244,.94); --rail-glass:rgba(241,246,244,.68);
     --fill-strong:#16302D;
-    --mode-edit:#1C7A6F; --mode-view:#415A78; --on-main:#FFFFFF;
+    --mode-edit:#415A78; --mode-view:#1C7A6F; --on-main:#FFFFFF;
     --banner-bg:#1C7A6F; --banner-fg:#FFFFFF;
   }
   :root[data-theme="b"]{
@@ -23,7 +23,7 @@
     --red:#C6506A; --gold:#9A7B4E; --teal:#3E6B8A;
     --paper:#F4F3F1; --paper-2:#E9E7E3; --line:#DAD8D3; --card:#FFFFFF; --nav-bg:rgba(244,243,241,.94); --rail-glass:rgba(244,243,241,.68);
     --fill-strong:#1E2124;
-    --mode-edit:#3E6B8A; --mode-view:#2E3236;
+    --mode-edit:#2E3236; --mode-view:#3E6B8A;
     --banner-bg:#2A2D30; --banner-fg:#FFFFFF;
   }
   :root[data-theme="c"]{
@@ -31,7 +31,7 @@
     --red:#E0475F; --gold:#DE9A34; --teal:#35528F;
     --paper:#F2F4F9; --paper-2:#E6EAF4; --line:#D6DCEA; --card:#FFFFFF; --nav-bg:rgba(242,244,249,.94); --rail-glass:rgba(242,244,249,.68);
     --fill-strong:#1B2340;
-    --mode-edit:#35528F; --mode-view:#8A6E2E;
+    --mode-edit:#5B4B8A; --mode-view:#35528F;
     --banner-bg:#1B2340; --banner-fg:#FFFFFF;
   }
   :root[data-theme="d"]{
@@ -39,7 +39,7 @@
     --red:#FF6B85; --gold:#E3A63C; --teal:#33D6C0;
     --paper:#0C1524; --paper-2:#182335; --line:#29374D; --card:#131E30; --nav-bg:rgba(12,21,36,.92); --rail-glass:rgba(19,30,48,.66);
     --fill-strong:#1E2E48;
-    --mode-edit:#33D6C0; --mode-view:#6C7BE0; --on-main:#0C1524;
+    --mode-edit:#6C7BE0; --mode-view:#33D6C0; --on-main:#0C1524;
     --banner-bg:linear-gradient(125deg,#0F1C3E 0%,#123E5E 52%,#0C4F4A 100%); --banner-fg:#FFFFFF;
   }
   :root[data-theme="e"]{
@@ -47,7 +47,7 @@
     --red:#B23A32; --gold:#E89A3C; --teal:#D8583C;
     --paper:#FEF3EC; --paper-2:#FBE3D5; --line:#F1D2C0; --card:#FFFFFF; --nav-bg:rgba(254,243,236,.94); --rail-glass:rgba(254,243,236,.68);
     --fill-strong:#43202F;
-    --mode-edit:#D8583C; --mode-view:#A8703E;
+    --mode-edit:#B44A6B; --mode-view:#D8583C;
     --banner-bg:linear-gradient(120deg,#E8663E 0%,#EF8A3C 55%,#E8A54A 100%); --banner-fg:#FFFFFF;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
@@ -90,7 +90,7 @@
     font-size:12px; font-weight:700; padding:7px 14px; border-radius:999px;
     cursor:pointer; white-space:nowrap; transition:background .12s, color .12s;
   }
-  body.mode-view .mode-seg-opt[data-mode="view"]{ background:var(--mode-view); color:#fff; }
+  body.mode-view .mode-seg-opt[data-mode="view"]{ background:var(--mode-view); color:var(--on-main); }
   body.mode-edit .mode-seg-opt[data-mode="edit"]{ background:var(--mode-edit); color:#fff; }
   .tabs-scroll{
     display:flex; gap:6px; overflow-x:auto; padding:0 16px 10px;
@@ -104,7 +104,7 @@
     background:var(--paper-2); border:1px solid var(--line);
     border-radius:999px; padding:6px 12px; text-decoration:none;
   }
-  .tab.active{background:var(--mode-edit); color:var(--on-main); border-color:var(--mode-edit);}
+  .tab.active{background:var(--teal); color:var(--on-main); border-color:var(--teal);}
 
   /* ---------- HEADER ---------- */
   .header-card{padding-top:18px; padding-bottom:8px;}
@@ -263,7 +263,7 @@
   }
   .note-title:focus{outline:none; border-bottom:1px dashed var(--ink-faint);}
   .note-title::placeholder{color:var(--ink-faint); font-weight:500;}
-  .note-card .item-del{width:26px; height:26px; font-size:15px;}
+  .note-card .item-del{width:26px; height:26px; font-size:15px; display:flex; align-items:center; justify-content:center;}
   .note-content{
     width:100%; margin-top:4px; border:none; background:var(--paper-2);
     border-radius:8px; font-size:12.5px; padding:8px; resize:none; min-height:44px;
@@ -277,14 +277,17 @@
   .note-content-view:empty{display:none;}
   .note-content-view a{color:var(--teal); text-decoration:underline; word-break:break-all;}
   /* ---- 메모 체크리스트 모드 ---- */
-  .note-mode-switch{
-    margin-top:8px; display:inline-flex; align-items:center; gap:5px;
-    background:transparent; border:none; cursor:pointer; padding:5px 2px;
-    font-size:12px; font-weight:600; color:var(--ink-soft);
+  .note-actions{display:flex; align-items:center; gap:16px; margin-top:8px;}
+  .chk-add, .note-mode-switch{
+    display:inline-flex; align-items:center; gap:5px; line-height:1.4;
+    background:transparent; border:none; cursor:pointer; padding:4px 2px;
+    font-size:12px; font-weight:600;
   }
-  .note-mode-switch .nms-ic{width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
+  .chk-add{color:var(--teal);}
+  .note-mode-switch{color:var(--ink-soft);}
+  .note-mode-switch .nms-ic{width:13px; height:13px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
   .chk-list{margin-top:6px; display:flex; flex-direction:column; gap:2px;}
-  .chk-row{display:flex; align-items:flex-start; gap:8px; padding:5px 2px;}
+  .chk-row{display:flex; align-items:flex-start; gap:8px; padding:5px 0;}
   .chk-box{
     flex:none; width:18px; height:18px; margin-top:1px; border:2px solid var(--ink-faint);
     border-radius:5px; background:var(--card); cursor:pointer; appearance:none; -webkit-appearance:none;
@@ -302,11 +305,7 @@
     flex:1; font-size:12.5px; color:var(--ink-soft); padding:1px 0; word-break:break-word; white-space:pre-wrap;
   }
   .chk-row.done .chk-text-view, .chk-row.done .chk-text{color:var(--ink-faint); text-decoration:line-through;}
-  .chk-del{flex:none; width:26px; height:26px; padding:0; border:none; background:transparent; color:var(--ink-faint); font-size:15px; cursor:pointer;}
-  .chk-add{
-    margin-top:4px; align-self:flex-start; background:transparent; border:none; cursor:pointer;
-    font-size:12px; font-weight:600; color:var(--teal); padding:4px 2px;
-  }
+  .chk-del{flex:none; width:26px; height:26px; padding:0; border:none; background:transparent; color:var(--ink-faint); font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center;}
   .note-done-head{
     margin-top:8px; display:flex; align-items:center; gap:6px; cursor:pointer;
     font-size:11.5px; font-weight:600; color:var(--ink-faint); user-select:none;
@@ -524,21 +523,16 @@
   .set-chev{color:#C9CBD8;}
   .set-soon{font-size:10px; color:#B4B8C8; background:var(--paper-2); padding:2px 7px; border-radius:999px;}
   .set-row-val{ display:flex; align-items:center; gap:5px; color:var(--ink-faint); font-size:12px; }
-  .theme-card{ border:1px solid var(--line); border-radius:12px; padding:9px; margin-bottom:9px; background:var(--card); cursor:pointer; }
+  .theme-card{ border:1px solid var(--line); border-radius:12px; padding:9px; margin-bottom:9px; background:var(--card); cursor:pointer; white-space:normal; text-align:left; }
   .theme-card.sel{ border:2px solid var(--teal); padding:8px; }
   .tprev{ position:relative; border-radius:10px; overflow:hidden; border:1px solid var(--tp-line); background:var(--tp-bg); }
-  .tprev-tabs{ display:flex; gap:5px; padding:7px 7px 0; }
+  .tprev-tabs{ display:flex; gap:5px; padding:7px 7px 8px; }
   .tp-tab{ font-size:10.5px; font-weight:600; border-radius:999px; padding:3px 9px; white-space:nowrap;
     background:var(--tp-p2); color:var(--tp-soft); border:1px solid var(--tp-line); }
   .tp-tab.on{ background:var(--tp-acc); color:var(--tp-onacc); border-color:var(--tp-acc); }
-  .tprev-div{ height:3px; margin-top:6px; background:var(--tp-acc); }
-  .tprev-day{ display:flex; align-items:center; gap:8px; padding:8px 9px; background:var(--tp-head); }
-  .tp-idx{ font-family:'Space Mono',monospace; font-size:14px; font-weight:700; color:var(--tp-gold); }
-  .tp-lbl{ font-size:11px; font-weight:600; color:rgba(255,255,255,.92); }
-  .tprev-row{ display:flex; align-items:center; gap:7px; padding:8px 9px; margin:7px; border-radius:7px;
-    border:1px solid var(--tp-line); background:var(--tp-card); }
-  .tp-time{ font-family:'Space Mono',monospace; font-size:10.5px; color:var(--tp-ink); }
-  .tp-place{ font-size:11px; font-weight:600; color:var(--tp-ink); }
+  .tprev-div{ height:3px; background:var(--tp-acc); }
+  .tprev-strip{ display:flex; align-items:center; padding:0 9px; height:20px; background:var(--tp-head); }
+  .tp-idx{ font-family:'Space Mono',monospace; font-size:10px; font-weight:700; color:var(--tp-gold); letter-spacing:.04em; }
   .theme-card.locked .tprev{ opacity:.45; }
   .tprev-lock{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
   .tprev-lock span{ display:inline-flex; align-items:center; gap:5px; background:rgba(18,18,22,.82); color:#fff;
@@ -1163,8 +1157,7 @@ function themeCardHTML(t, cur){
     <div class="tprev tprev-${t.id}">
       <div class="tprev-tabs"><span class="tp-tab on">일정</span><span class="tp-tab">메모</span><span class="tp-tab">지출</span></div>
       <div class="tprev-div"></div>
-      <div class="tprev-day"><span class="tp-idx">01</span><span class="tp-lbl">첫째 날</span></div>
-      <div class="tprev-row"><span class="tp-time">09:00</span><span class="tp-place">공항 도착</span></div>
+      <div class="tprev-strip"><span class="tp-idx">DAY 01</span></div>
       ${lockOverlay}
     </div>
     <div class="theme-foot"><span class="tnm">${t.name}</span><span class="thex">${t.accent}</span><span class="tfoot-sp"></span>${badge}${mark}</div>
@@ -1633,7 +1626,7 @@ function noteHTML(n){
     return `<div class="note-card">${titleRow}
     <textarea class="note-content edit-only" placeholder="내용을 입력하세요" rows="2" data-scope="note" data-note-id="${escapeAttr(n.id)}" data-field="content">${escapeHTML(n.content||'')}</textarea>
     <div class="note-content-view view-only" id="note-view-${n.id}">${linkify(n.content||'')}</div>
-    <button class="note-mode-switch edit-only" data-action="note-toggle-mode" data-note-id="${escapeAttr(n.id)}">${NOTE_SWITCH_ICON}체크리스트로 전환</button>
+    <div class="note-actions edit-only"><button class="note-mode-switch" data-action="note-toggle-mode" data-note-id="${escapeAttr(n.id)}">${NOTE_SWITCH_ICON}체크리스트로 전환</button></div>
   </div>`;
   }
   const items = noteItemsOf(n);
@@ -1648,9 +1641,11 @@ function noteHTML(n){
     : '';
   return `<div class="note-card">${titleRow}
     <div class="chk-list">${undone.map(it => chkRowHTML(n, it)).join('')}</div>
-    <button class="chk-add edit-only" data-action="note-add-item" data-note-id="${escapeAttr(n.id)}">＋ 항목 추가</button>
     ${doneBlock}
-    <button class="note-mode-switch edit-only" data-action="note-toggle-mode" data-note-id="${escapeAttr(n.id)}">${NOTE_SWITCH_ICON}메모로 되돌리기</button>
+    <div class="note-actions edit-only">
+      <button class="chk-add" data-action="note-add-item" data-note-id="${escapeAttr(n.id)}">＋ 항목 추가</button>
+      <button class="note-mode-switch" data-action="note-toggle-mode" data-note-id="${escapeAttr(n.id)}">${NOTE_SWITCH_ICON}메모로 되돌리기</button>
+    </div>
   </div>`;
 }
 function autoGrowArea(el){

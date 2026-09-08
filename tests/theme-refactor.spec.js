@@ -30,8 +30,8 @@ test('nav.tabs 하단 띠가 테마 --mode-edit / --mode-view 를 따른다', as
   const edit = await page.evaluate(() => getComputedStyle(document.querySelector('nav.tabs')).borderBottomColor);
   await page.evaluate(() => setMode('view'));
   const view = await page.evaluate(() => getComputedStyle(document.querySelector('nav.tabs')).borderBottomColor);
-  expect(edit).toBe('rgb(53, 82, 143)');   // c --mode-edit #35528F
-  expect(view).toBe('rgb(138, 110, 46)');  // c --mode-view #8A6E2E
+  expect(edit).toBe('rgb(91, 75, 138)');    // c --mode-edit #5B4B8A (인디고, 스왑됨)
+  expect(view).toBe('rgb(53, 82, 143)');    // c --mode-view #35528F (강조색)
 });
 
 test('아바타 원 배경에 하드코딩 네이비 그라디언트가 없다', async ({ page }) => {
