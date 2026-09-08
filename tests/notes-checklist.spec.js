@@ -90,12 +90,12 @@ test('항목 추가 / 삭제', async ({ page }) => {
   expect(await page.evaluate(() => state.notes[0].items.map(i => i.text))).toEqual(['새 항목']);
 });
 
-test('체크리스트 → 텍스트 되돌리면 항목이 줄바꿈으로 합쳐진다', async ({ page }) => {
+test('체크리스트 → 텍스트 되돌리면 완료 항목에 (완료) 표시가 붙는다', async ({ page }) => {
   await openNotes(page, [{ id:'n1', title:'T', mode:'checklist', items:[
     { id:'i1', text:'하나', done:true }, { id:'i2', text:'둘', done:false },
   ]}]);
   await page.locator('.note-mode-switch[data-note-id="n1"]').click();
-  await expect(page.locator('.note-card .note-content')).toHaveValue('하나\n둘');
+  await expect(page.locator('.note-card .note-content')).toHaveValue('하나 (완료)\n둘');
   expect(await page.evaluate(() => state.notes[0].mode)).toBe('text');
 });
 
@@ -105,9 +105,22 @@ test('완료 상태가 메모↔체크리스트 왕복 후에도 유지된다', 
   ]}]);
   await page.locator('.note-mode-switch[data-note-id="n1"]').click();   // → 텍스트
   await page.locator('.note-mode-switch[data-note-id="n1"]').click();   // → 체크리스트
-  const done = await page.evaluate(() => state.notes[0].items.map(i => i.done));
-  expect(done).toEqual([true, false, true]);
+  const items = await page.evaluate(() => state.notes[0].items.map(i => ({ text:i.text, done:i.done })));
+  expect(items).toEqual([
+    { text:'하나', done:true }, { text:'둘', done:false }, { text:'셋', done:true },
+  ]);
   await expect(page.locator('.note-done-head')).toHaveText(/완료된 항목 2개/);
+});
+
+test('메모에서 (완료) 를 지우면 체크리스트 복귀 시 미완료가 된다', async ({ page }) => {
+  await openNotes(page, [{ id:'n1', title:'T', mode:'checklist', items:[
+    { id:'i1', text:'하나', done:true }, { id:'i2', text:'둘', done:false },
+  ]}]);
+  await page.locator('.note-mode-switch[data-note-id="n1"]').click();   // → 텍스트
+  await page.locator('.note-card .note-content').fill('하나\n둘');       // (완료) 제거
+  await page.locator('.note-mode-switch[data-note-id="n1"]').click();   // → 체크리스트
+  const done = await page.evaluate(() => state.notes[0].items.map(i => i.done));
+  expect(done).toEqual([false, false]);
 });
 
 test('공유 HTML: 체크리스트 메모가 ☑/☐ 로 렌더 (완료는 뒤로)', async ({ page }) => {

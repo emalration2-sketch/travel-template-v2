@@ -15,8 +15,7 @@
     --red:#E0556E; --gold:#E3A63C; --teal:#1C7A6F;
     --paper:#F1F6F4; --paper-2:#E1EDE9; --line:#CEDFD9; --card:#FFFFFF; --nav-bg:rgba(241,246,244,.94); --rail-glass:rgba(241,246,244,.68);
     --fill-strong:#16302D;
-    --main:#1C7A6F;
-    --mode-edit:var(--main); --mode-view:#415A78;
+    --mode-edit:#1C7A6F; --mode-view:#415A78;
     --banner-bg:#1C7A6F; --banner-fg:#FFFFFF;
   }
   :root[data-theme="b"]{
@@ -24,8 +23,7 @@
     --red:#C6506A; --gold:#9A7B4E; --teal:#3E6B8A;
     --paper:#F4F3F1; --paper-2:#E9E7E3; --line:#DAD8D3; --card:#FFFFFF; --nav-bg:rgba(244,243,241,.94); --rail-glass:rgba(244,243,241,.68);
     --fill-strong:#1E2124;
-    --main:#3E6B8A;
-    --mode-edit:var(--main); --mode-view:#5E6773;
+    --mode-edit:#3E6B8A; --mode-view:#2E3236;
     --banner-bg:#2A2D30; --banner-fg:#FFFFFF;
   }
   :root[data-theme="c"]{
@@ -33,8 +31,7 @@
     --red:#E0475F; --gold:#DE9A34; --teal:#35528F;
     --paper:#F2F4F9; --paper-2:#E6EAF4; --line:#D6DCEA; --card:#FFFFFF; --nav-bg:rgba(242,244,249,.94); --rail-glass:rgba(242,244,249,.68);
     --fill-strong:#1B2340;
-    --main:#35528F;
-    --mode-edit:var(--main); --mode-view:#9C7A34;
+    --mode-edit:#35528F; --mode-view:#8A6E2E;
     --banner-bg:#1B2340; --banner-fg:#FFFFFF;
   }
   :root[data-theme="d"]{
@@ -42,8 +39,7 @@
     --red:#FF6B85; --gold:#E3A63C; --teal:#33D6C0;
     --paper:#0C1524; --paper-2:#182335; --line:#29374D; --card:#131E30; --nav-bg:rgba(12,21,36,.92); --rail-glass:rgba(19,30,48,.66);
     --fill-strong:#1E2E48;
-    --main:#0E5C57;
-    --mode-edit:var(--main); --mode-view:#6C7BE0;
+    --mode-edit:#33D6C0; --mode-view:#6C7BE0;
     --banner-bg:linear-gradient(125deg,#0F1C3E 0%,#123E5E 52%,#0C4F4A 100%); --banner-fg:#FFFFFF;
   }
   :root[data-theme="e"]{
@@ -51,8 +47,7 @@
     --red:#B23A32; --gold:#E89A3C; --teal:#D8583C;
     --paper:#FEF3EC; --paper-2:#FBE3D5; --line:#F1D2C0; --card:#FFFFFF; --nav-bg:rgba(254,243,236,.94); --rail-glass:rgba(254,243,236,.68);
     --fill-strong:#43202F;
-    --main:#D8583C;
-    --mode-edit:var(--main); --mode-view:#0E9488;
+    --mode-edit:#D8583C; --mode-view:#A8703E;
     --banner-bg:linear-gradient(120deg,#E8663E 0%,#EF8A3C 55%,#E8A54A 100%); --banner-fg:#FFFFFF;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
@@ -109,7 +104,7 @@
     background:var(--paper-2); border:1px solid var(--line);
     border-radius:999px; padding:6px 12px; text-decoration:none;
   }
-  .tab.active{background:var(--main); color:#fff; border-color:var(--main);}
+  .tab.active{background:var(--fill-strong); color:#fff; border-color:var(--fill-strong);}
 
   /* ---------- HEADER ---------- */
   .header-card{padding-top:18px; padding-bottom:8px;}
@@ -142,7 +137,7 @@
   }
   .sync-row{display:flex; align-items:center; gap:8px; padding-bottom:8px; flex-wrap:wrap;}
   .sync-btn{
-    border:1px solid var(--main); background:var(--card); color:var(--main);
+    border:1px solid var(--teal); background:var(--card); color:var(--teal);
     border-radius:999px; padding:6px 14px; font-size:12px; font-weight:600; cursor:pointer;
   }
 
@@ -152,7 +147,7 @@
     margin:14px 0; overflow:hidden;
   }
   .day-head{
-    background:var(--main); padding:14px 16px; display:flex; align-items:center; gap:12px;
+    background:var(--fill-strong); padding:14px 16px; display:flex; align-items:center; gap:12px;
   }
   .day-index{
     font-family:'Space Mono',monospace; font-size:26px; font-weight:700;
@@ -348,7 +343,7 @@
 
   .exp-summary{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;}
   .sum-card{
-    background:var(--main); color:#fff; border-radius:12px; padding:10px 16px; min-width:90px;
+    background:var(--fill-strong); color:#fff; border-radius:12px; padding:10px 16px; min-width:90px;
   }
   .sum-cur{font-size:10.5px; opacity:.7; font-family:'Space Mono',monospace;}
   .sum-amt{font-family:'Space Mono',monospace; font-size:17px; font-weight:700;}
@@ -518,7 +513,7 @@
 
   /* ===== V2 SETTINGS ===== */
   .set{padding-top:16px; min-height:100vh;}
-  .set-back{border:1px solid var(--main); background:var(--card); color:var(--main); border-radius:999px; padding:6px 14px; font-size:12px; font-weight:600; cursor:pointer; margin-bottom:14px;}
+  .set-back{border:1px solid var(--teal); background:var(--card); color:var(--teal); border-radius:999px; padding:6px 14px; font-size:12px; font-weight:600; cursor:pointer; margin-bottom:14px;}
   .set-account{display:flex; align-items:center; gap:12px; padding:4px 2px 18px; border-bottom:1px solid var(--line);}
   .set-avatar-big{width:52px; height:52px; border-radius:50%; background:var(--fill-strong); color:#fff; display:flex; align-items:center; justify-content:center; font-size:24px; flex:none;}
   .set-avatar-big.emoji{background:var(--paper-2);}
@@ -1584,6 +1579,7 @@ function chkRowHTML(n, it){
   </div>`;
 }
 const NOTE_SWITCH_ICON = '<svg class="nms-ic" viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>';
+const NOTE_DONE_TAG = ' (완료)';
 function noteHTML(n){
   const titleRow = `<div class="note-row">
       <input type="text" class="note-title" placeholder="제목 (예: 준비물, 참고 할 것)" data-scope="note" data-note-id="${escapeAttr(n.id)}" data-field="title" value="${escapeAttr(n.title||'')}">
@@ -1630,16 +1626,18 @@ function toggleNoteMode(id){
   const n = state.notes.find(x => x.id === id);
   if(!n) return;
   if(n.mode === 'checklist'){
-    n.content = noteItemsOf(n).map(i => i.text).join('\n');
+    n.content = noteItemsOf(n).map(i => i.done ? i.text + NOTE_DONE_TAG : i.text).join('\n');
     n.mode = 'text';
-    // n.items 는 남겨둠 — 메모↔체크리스트 왕복 시 완료 상태 보존용(text 모드에선 렌더 안 함)
+    // n.items 는 남겨둠 — 왕복 시 항목 id 연속성용(text 모드에선 렌더 안 함)
   } else {
     const pool = noteItemsOf(n).slice();
     n.items = (n.content || '').split('\n').map(s => s.trim()).filter(Boolean)
-      .map(text => {
+      .map(raw => {
+        let text = raw, done = false;
+        if(text.endsWith(NOTE_DONE_TAG)){ text = text.slice(0, -NOTE_DONE_TAG.length).trim(); done = true; }
         const hit = pool.findIndex(p => p.text === text);
-        if(hit >= 0){ const prev = pool.splice(hit, 1)[0]; return { id: prev.id, text, done: !!prev.done }; }
-        return { id: uid(), text, done: false };
+        const id = hit >= 0 ? pool.splice(hit, 1)[0].id : uid();
+        return { id, text, done };
       });
     n.mode = 'checklist';
   }
