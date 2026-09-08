@@ -1,11 +1,11 @@
 const { test, expect } = require('./support/fixtures');
 
 const EXPECT = {
-  a: { paper:'rgb(241, 246, 244)', teal:'rgb(28, 122, 111)',  fillStrong:'rgb(22, 48, 45)',  modeEdit:'rgb(65, 90, 120)',  modeView:'rgb(28, 122, 111)' },
-  b: { paper:'rgb(244, 243, 241)', teal:'rgb(62, 107, 138)',  fillStrong:'rgb(30, 33, 36)',  modeEdit:'rgb(46, 50, 54)',   modeView:'rgb(62, 107, 138)' },
-  c: { paper:'rgb(242, 244, 249)', teal:'rgb(53, 82, 143)',   fillStrong:'rgb(27, 35, 64)',  modeEdit:'rgb(91, 75, 138)',  modeView:'rgb(53, 82, 143)' },
-  d: { paper:'rgb(12, 21, 36)',    teal:'rgb(51, 214, 192)',  fillStrong:'rgb(30, 46, 72)',  modeEdit:'rgb(108, 123, 224)', modeView:'rgb(51, 214, 192)' },
-  e: { paper:'rgb(254, 243, 236)', teal:'rgb(216, 88, 60)',   fillStrong:'rgb(67, 32, 47)',  modeEdit:'rgb(180, 74, 107)', modeView:'rgb(216, 88, 60)' },
+  a: { paper:'rgb(241, 246, 244)', teal:'rgb(28, 122, 111)',  fillStrong:'#16302D',  modeEdit:'rgb(65, 90, 120)',  modeView:'rgb(28, 122, 111)' },
+  b: { paper:'rgb(244, 243, 241)', teal:'rgb(62, 107, 138)',  fillStrong:'#1E2124',  modeEdit:'rgb(46, 50, 54)',   modeView:'rgb(62, 107, 138)' },
+  c: { paper:'rgb(242, 244, 249)', teal:'rgb(53, 82, 143)',   fillStrong:'#1B2340',  modeEdit:'rgb(91, 75, 138)',  modeView:'rgb(53, 82, 143)' },
+  d: { paper:'rgb(12, 21, 36)',    teal:'rgb(51, 214, 192)',  fillStrong:'#1E2E48',  modeEdit:'rgb(108, 123, 224)', modeView:'rgb(51, 214, 192)' },
+  e: { paper:'rgb(254, 243, 236)', teal:'rgb(216, 88, 60)',   fillStrong:'linear-gradient', modeEdit:'rgb(180, 74, 107)', modeView:'rgb(216, 88, 60)' },
 };
 
 test('5개 테마 토큰이 data-theme 로 적용된다', async ({ page }) => {
@@ -18,14 +18,17 @@ test('5개 테마 토큰이 data-theme 로 적용된다', async ({ page }) => {
       probe.style.cssText = 'color:var(--paper)';
       document.body.appendChild(probe);
       const rgb = k => { probe.style.color = 'var(' + k + ')'; return getComputedStyle(probe).color; };
-      const out = { paper:rgb('--paper'), teal:rgb('--teal'), fillStrong:rgb('--fill-strong'),
+      const out = { paper:rgb('--paper'), teal:rgb('--teal'),
+                    fillStrong:getComputedStyle(document.documentElement).getPropertyValue('--fill-strong').trim(),
                     modeEdit:rgb('--mode-edit'), modeView:rgb('--mode-view') };
       probe.remove();
       return out;
     }, id);
     expect(got.paper, id+' paper').toBe(exp.paper);
     expect(got.teal, id+' teal').toBe(exp.teal);
-    expect(got.fillStrong, id+' fill-strong').toBe(exp.fillStrong);
+    // --fill-strong: a~d 단색 hex, e 는 선셋 그라디언트
+    if(id === 'e') expect(got.fillStrong, id+' fill-strong').toContain(exp.fillStrong);
+    else expect(got.fillStrong.toUpperCase(), id+' fill-strong').toBe(exp.fillStrong);
     expect(got.modeEdit, id+' mode-edit').toBe(exp.modeEdit);
     expect(got.modeView, id+' mode-view').toBe(exp.modeView);
   }

@@ -46,7 +46,7 @@
     --ink:#43202F; --ink-soft:#8A5560; --ink-faint:#BE93A0;
     --red:#B23A32; --gold:#E89A3C; --teal:#D8583C;
     --paper:#FEF3EC; --paper-2:#FBE3D5; --line:#F1D2C0; --card:#FFFFFF; --nav-bg:rgba(254,243,236,.94); --rail-glass:rgba(254,243,236,.68);
-    --fill-strong:#43202F;
+    --fill-strong:linear-gradient(115deg,#B23A32 0%,#D65E3C 100%);
     --mode-edit:#B44A6B; --mode-view:#D8583C;
     --banner-bg:linear-gradient(120deg,#E8663E 0%,#EF8A3C 55%,#E8A54A 100%); --banner-fg:#FFFFFF;
   }
@@ -443,7 +443,7 @@
   .landing-feats{list-style:none; padding:0; margin:0 auto 32px; max-width:300px; text-align:left;}
   .landing-feats li{font-size:12.5px; color:var(--ink-soft); padding:9px 0 9px 22px; position:relative; border-bottom:1px solid var(--line);}
   .landing-feats li::before{content:"·"; position:absolute; left:8px; color:var(--teal); font-weight:700;}
-  .landing-login{border:2px solid var(--fill-strong); background:var(--fill-strong); color:#fff; border-radius:999px; padding:12px 26px; font-size:14px; font-weight:700; cursor:pointer;}
+  .landing-login{border:none; background:var(--fill-strong); color:#fff; border-radius:999px; padding:14px 28px; font-size:14px; font-weight:700; cursor:pointer;}
   .legal{padding-top:16px; padding-bottom:60px;}
   .legal-title{font-family:'Fraunces',serif; font-size:20px; font-weight:700; color:var(--ink); margin:6px 0 14px;}
   .legal-body{font-size:13px; line-height:1.75; color:var(--ink-soft);}
