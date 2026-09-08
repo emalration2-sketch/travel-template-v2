@@ -1172,7 +1172,7 @@ function openThemeModal(){
   const cards = THEME_LIST.map(t => themeCardHTML(t, cur)).join('');
   document.getElementById('v2ModalBody').innerHTML =
     '<div style="font-weight:700;font-size:13px;margin-bottom:6px">컬러 테마</div>' +
-    '<div style="font-size:11px;color:var(--ink-faint);margin-bottom:11px">탭하면 바로 적용됩니다.</div>' +
+    '<div style="font-size:11px;color:var(--ink-faint);margin-bottom:11px">탭하면 바로 적용되고 닫힙니다.</div>' +
     cards;
   document.getElementById('v2ModalActions').innerHTML =
     '<button class="v2-btn-ghost" data-action="v2modal-close">닫기</button>';
@@ -1185,11 +1185,10 @@ function pickTheme(id){
   const t = THEME_LIST.find(x => x.id === id);
   if(t && t.locked){ showMembershipUpsell(id); return; }
   applyTheme(id);
-  document.querySelectorAll('#v2Modal .theme-card').forEach(c =>
-    c.classList.toggle('sel', c.dataset.theme === id));
   saveProfile({ theme: id });
   const v = document.getElementById('setThemeVal');
   if(v) v.textContent = themeName(id);
+  document.getElementById('v2Modal').hidden = true;   // 선택 즉시 닫기
 }
 
 /* ===== V2: MYPAGE ===== */
