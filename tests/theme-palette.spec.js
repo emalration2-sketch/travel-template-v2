@@ -1,11 +1,12 @@
 const { test, expect } = require('./support/fixtures');
 
+// --fill-strong 는 5개 테마 모두 배너 계열 선셋 그라디언트
 const EXPECT = {
-  a: { paper:'rgb(241, 246, 244)', teal:'rgb(28, 122, 111)',  fillStrong:'#16302D',  modeEdit:'rgb(65, 90, 120)',  modeView:'rgb(28, 122, 111)' },
-  b: { paper:'rgb(244, 243, 241)', teal:'rgb(62, 107, 138)',  fillStrong:'#1E2124',  modeEdit:'rgb(46, 50, 54)',   modeView:'rgb(62, 107, 138)' },
-  c: { paper:'rgb(242, 244, 249)', teal:'rgb(53, 82, 143)',   fillStrong:'#1B2340',  modeEdit:'rgb(91, 75, 138)',  modeView:'rgb(53, 82, 143)' },
-  d: { paper:'rgb(12, 21, 36)',    teal:'rgb(51, 214, 192)',  fillStrong:'#1E2E48',  modeEdit:'rgb(108, 123, 224)', modeView:'rgb(51, 214, 192)' },
-  e: { paper:'rgb(254, 243, 236)', teal:'rgb(216, 88, 60)',   fillStrong:'linear-gradient', modeEdit:'rgb(180, 74, 107)', modeView:'rgb(216, 88, 60)' },
+  a: { paper:'rgb(241, 246, 244)', teal:'rgb(28, 122, 111)',  modeEdit:'rgb(65, 90, 120)',  modeView:'rgb(28, 122, 111)' },
+  b: { paper:'rgb(244, 243, 241)', teal:'rgb(62, 107, 138)',  modeEdit:'rgb(46, 50, 54)',   modeView:'rgb(62, 107, 138)' },
+  c: { paper:'rgb(242, 244, 249)', teal:'rgb(53, 82, 143)',   modeEdit:'rgb(91, 75, 138)',  modeView:'rgb(53, 82, 143)' },
+  d: { paper:'rgb(12, 21, 36)',    teal:'rgb(51, 214, 192)',  modeEdit:'rgb(108, 123, 224)', modeView:'rgb(51, 214, 192)' },
+  e: { paper:'rgb(254, 243, 236)', teal:'rgb(216, 88, 60)',   modeEdit:'rgb(180, 74, 107)', modeView:'rgb(216, 88, 60)' },
 };
 
 test('5개 테마 토큰이 data-theme 로 적용된다', async ({ page }) => {
@@ -26,9 +27,7 @@ test('5개 테마 토큰이 data-theme 로 적용된다', async ({ page }) => {
     }, id);
     expect(got.paper, id+' paper').toBe(exp.paper);
     expect(got.teal, id+' teal').toBe(exp.teal);
-    // --fill-strong: a~d 단색 hex, e 는 선셋 그라디언트
-    if(id === 'e') expect(got.fillStrong, id+' fill-strong').toContain(exp.fillStrong);
-    else expect(got.fillStrong.toUpperCase(), id+' fill-strong').toBe(exp.fillStrong);
+    expect(got.fillStrong, id+' fill-strong').toContain('linear-gradient');
     expect(got.modeEdit, id+' mode-edit').toBe(exp.modeEdit);
     expect(got.modeView, id+' mode-view').toBe(exp.modeView);
   }
