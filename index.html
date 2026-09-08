@@ -16,14 +16,16 @@
     --paper:#F1F6F4; --paper-2:#E1EDE9; --line:#CEDFD9; --card:#FFFFFF; --nav-bg:rgba(241,246,244,.94); --rail-glass:rgba(241,246,244,.68);
     --fill-strong:linear-gradient(115deg,#123F39 0%,#1C7A6F 100%);
     --mode-edit:#415A78; --mode-view:#1C7A6F; --on-main:#FFFFFF;
+    --accent:var(--teal); --on-accent:var(--on-main);
     --banner-bg:#1C7A6F; --banner-fg:#FFFFFF;
   }
   :root[data-theme="b"]{
     --ink:#1E2124; --ink-soft:#55585C; --ink-faint:#9A9CA0;
-    --red:#C6506A; --gold:#9A7B4E; --teal:#3E6B8A;
+    --red:#C6506A; --gold:#CBA05C; --teal:#3E6B8A;
     --paper:#F4F3F1; --paper-2:#E9E7E3; --line:#DAD8D3; --card:#FFFFFF; --nav-bg:rgba(244,243,241,.94); --rail-glass:rgba(244,243,241,.68);
     --fill-strong:linear-gradient(115deg,#1E2124 0%,#3C4147 100%);
-    --mode-edit:#2E3236; --mode-view:#3E6B8A;
+    --mode-edit:#6B5222; --mode-view:#CBA05C; --on-main:#1E2124;
+    --accent:#CBA05C;
     --banner-bg:#2A2D30; --banner-fg:#FFFFFF;
   }
   :root[data-theme="c"]{
@@ -104,7 +106,7 @@
     background:var(--paper-2); border:1px solid var(--line);
     border-radius:999px; padding:6px 12px; text-decoration:none;
   }
-  .tab.active{background:var(--teal); color:var(--on-main); border-color:var(--teal);}
+  .tab.active{background:var(--accent); color:var(--on-accent); border-color:var(--accent);}
 
   /* ---------- HEADER ---------- */
   .header-card{padding-top:18px; padding-bottom:8px;}
@@ -524,7 +526,7 @@
   .set-soon{font-size:10px; color:#B4B8C8; background:var(--paper-2); padding:2px 7px; border-radius:999px;}
   .set-row-val{ display:flex; align-items:center; gap:5px; color:var(--ink-faint); font-size:12px; }
   .theme-card{ border:1px solid var(--line); border-radius:12px; padding:9px; margin-bottom:9px; background:var(--card); cursor:pointer; white-space:normal; text-align:left; }
-  .theme-card.sel{ border:2px solid var(--teal); padding:8px; }
+  .theme-card.sel{ border:2px solid var(--accent); padding:8px; }
   .tprev{ position:relative; border-radius:10px; overflow:hidden; border:1px solid var(--tp-line); background:var(--tp-bg); }
   .tprev-tabs{ display:flex; gap:5px; padding:7px 7px 8px; }
   .tp-tab{ font-size:10.5px; font-weight:600; border-radius:999px; padding:3px 9px; white-space:nowrap;
@@ -545,12 +547,12 @@
   .theme-foot .tfoot-sp{ flex:1; }
   .tbadge{ display:inline-flex; align-items:center; gap:4px; background:#E7B44A; color:#3D2A00;
     font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:999px; }
-  .theme-card .tck{ width:22px; height:22px; border-radius:50%; background:var(--teal); color:#fff;
+  .theme-card .tck{ width:22px; height:22px; border-radius:50%; background:var(--accent); color:var(--on-accent);
     font-size:12px; display:none; align-items:center; justify-content:center; flex:none; }
   .theme-card.sel .tck{ display:flex; }
   .theme-card .tck.lock{ display:flex; background:transparent; color:var(--ink-faint); }
   .tprev-a{ --tp-bg:#F1F6F4; --tp-p2:#E1EDE9; --tp-line:#CEDFD9; --tp-card:#FFFFFF; --tp-ink:#16302D; --tp-soft:#47635E; --tp-acc:#1C7A6F; --tp-onacc:#FFFFFF; --tp-gold:#E3A63C; --tp-head:#16302D; }
-  .tprev-b{ --tp-bg:#F4F3F1; --tp-p2:#E9E7E3; --tp-line:#DAD8D3; --tp-card:#FFFFFF; --tp-ink:#1E2124; --tp-soft:#55585C; --tp-acc:#3E6B8A; --tp-onacc:#FFFFFF; --tp-gold:#9A7B4E; --tp-head:#1E2124; }
+  .tprev-b{ --tp-bg:#F4F3F1; --tp-p2:#E9E7E3; --tp-line:#DAD8D3; --tp-card:#FFFFFF; --tp-ink:#1E2124; --tp-soft:#55585C; --tp-acc:#CBA05C; --tp-onacc:#1E2124; --tp-gold:#CBA05C; --tp-head:#1E2124; }
   .tprev-c{ --tp-bg:#F2F4F9; --tp-p2:#E6EAF4; --tp-line:#D6DCEA; --tp-card:#FFFFFF; --tp-ink:#1B2340; --tp-soft:#4A5178; --tp-acc:#35528F; --tp-onacc:#FFFFFF; --tp-gold:#DE9A34; --tp-head:#1B2340; }
   .tprev-d{ --tp-bg:#0C1524; --tp-p2:#182335; --tp-line:#29374D; --tp-card:#131E30; --tp-ink:#EAF2F4; --tp-soft:#9FB2BE; --tp-acc:#33D6C0; --tp-onacc:#0C1524; --tp-gold:#E3A63C; --tp-head:#1E2E48; }
   .tprev-e{ --tp-bg:#FEF3EC; --tp-p2:#FBE3D5; --tp-line:#F1D2C0; --tp-card:#FFFFFF; --tp-ink:#43202F; --tp-soft:#8A5560; --tp-acc:#D8583C; --tp-onacc:#FFFFFF; --tp-gold:#E89A3C; --tp-head:#43202F; }
@@ -1142,7 +1144,7 @@ const ICON_CROWN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l4.
 /* locked: 멤버십 전용 테마. 지금은 전부 false(무료). 멤버십 붙일 때 원하는 테마만 true 로. */
 const THEME_LIST = [
   { id:'a', name:'오션',            accent:'#1C7A6F', locked:false },
-  { id:'b', name:'모노 슬레이트',    accent:'#3E6B8A', locked:false },
+  { id:'b', name:'모노 슬레이트',    accent:'#CBA05C', locked:false },
   { id:'c', name:'미드나잇',        accent:'#35528F', locked:false },
   { id:'d', name:'아쿠아마린 갤럭시', accent:'#33D6C0', locked:false },
   { id:'e', name:'코랄 선라이즈',    accent:'#D8583C', locked:false },
