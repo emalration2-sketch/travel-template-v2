@@ -26,3 +26,25 @@ test('설정 행 → 팝업 5카드 → 탭 시 즉시 적용 + 저장 + 모달 
   await expect(page.locator('#v2Modal')).toBeHidden();
   await expect(page.locator('#setThemeVal')).toContainText('아쿠아마린 갤럭시');
 });
+
+test('멤버십 전용 테마: 뱃지 표시 + 탭해도 적용 안 되고 안내', async ({ page }) => {
+  await toSettings(page);
+  await page.evaluate(() => {
+    THEME_LIST.find(t => t.id === 'e').locked = true;
+    window.__alerts = [];
+    window.alert = m => window.__alerts.push(m);
+  });
+  await page.locator('#setTheme').click();
+
+  const locked = page.locator('#v2Modal .theme-card[data-theme="e"]');
+  await expect(locked).toHaveClass(/locked/);
+  await expect(locked.locator('.tbadge')).toBeVisible();
+  await expect(locked.locator('.tprev-lock')).toBeVisible();
+
+  await locked.click();
+  await expect.poll(() => page.evaluate(() => window.__alerts.length)).toBe(1);
+  expect(await page.evaluate(() => document.documentElement.dataset.theme || 'a')).toBe('a');  // 그대로
+  await expect(locked).not.toHaveClass(/sel/);
+
+  await page.evaluate(() => { THEME_LIST.find(t => t.id === 'e').locked = false; });
+});

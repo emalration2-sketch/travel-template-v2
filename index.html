@@ -15,7 +15,7 @@
     --red:#E0556E; --gold:#E3A63C; --teal:#1C7A6F;
     --paper:#F1F6F4; --paper-2:#E1EDE9; --line:#CEDFD9; --card:#FFFFFF; --nav-bg:rgba(241,246,244,.94); --rail-glass:rgba(241,246,244,.68);
     --fill-strong:#16302D;
-    --mode-edit:#1C7A6F; --mode-view:#415A78;
+    --mode-edit:#1C7A6F; --mode-view:#415A78; --on-main:#FFFFFF;
     --banner-bg:#1C7A6F; --banner-fg:#FFFFFF;
   }
   :root[data-theme="b"]{
@@ -39,7 +39,7 @@
     --red:#FF6B85; --gold:#E3A63C; --teal:#33D6C0;
     --paper:#0C1524; --paper-2:#182335; --line:#29374D; --card:#131E30; --nav-bg:rgba(12,21,36,.92); --rail-glass:rgba(19,30,48,.66);
     --fill-strong:#1E2E48;
-    --mode-edit:#33D6C0; --mode-view:#6C7BE0;
+    --mode-edit:#33D6C0; --mode-view:#6C7BE0; --on-main:#0C1524;
     --banner-bg:linear-gradient(125deg,#0F1C3E 0%,#123E5E 52%,#0C4F4A 100%); --banner-fg:#FFFFFF;
   }
   :root[data-theme="e"]{
@@ -104,7 +104,7 @@
     background:var(--paper-2); border:1px solid var(--line);
     border-radius:999px; padding:6px 12px; text-decoration:none;
   }
-  .tab.active{background:var(--fill-strong); color:#fff; border-color:var(--fill-strong);}
+  .tab.active{background:var(--mode-edit); color:var(--on-main); border-color:var(--mode-edit);}
 
   /* ---------- HEADER ---------- */
   .header-card{padding-top:18px; padding-bottom:8px;}
@@ -503,8 +503,8 @@
   /* ===== V2 MODAL ===== */
   .v2-modal-overlay{position:fixed; inset:0; background:rgba(27,35,64,.45); z-index:120; display:flex; align-items:center; justify-content:center; padding:24px;}
   .v2-modal-overlay[hidden]{display:none;}
-  .v2-modal{background:var(--card); border:1px solid var(--line); border-radius:18px; padding:20px 18px; max-width:340px; width:100%; box-shadow:0 18px 44px rgba(27,35,64,.3);}
-  .v2-modal-body{font-size:13px; color:var(--ink); line-height:1.6; text-align:center; white-space:pre-line;}
+  .v2-modal{background:var(--card); border:1px solid var(--line); border-radius:18px; padding:20px 18px; max-width:340px; width:100%; box-shadow:0 18px 44px rgba(27,35,64,.3); max-height:85vh; display:flex; flex-direction:column;}
+  .v2-modal-body{font-size:13px; color:var(--ink); line-height:1.6; text-align:center; white-space:pre-line; overflow-y:auto;}
   .v2-modal-actions{display:flex; gap:8px; margin-top:16px;}
   .v2-modal-actions button{flex:1; padding:10px; border-radius:12px; font-size:13px; font-weight:700; cursor:pointer;}
   .v2-btn-ghost{border:1px solid var(--line); background:var(--card); color:var(--ink-soft);}
@@ -524,16 +524,42 @@
   .set-chev{color:#C9CBD8;}
   .set-soon{font-size:10px; color:#B4B8C8; background:var(--paper-2); padding:2px 7px; border-radius:999px;}
   .set-row-val{ display:flex; align-items:center; gap:5px; color:var(--ink-faint); font-size:12px; }
-  .theme-card{ display:flex; align-items:center; gap:11px; border:1px solid var(--line);
-    border-radius:12px; padding:11px 12px; margin-bottom:8px; background:var(--card); cursor:pointer; }
-  .theme-card.sel{ border:2px solid var(--teal); padding:10px 11px; }
-  .theme-card .tsw{ display:flex; border-radius:8px; overflow:hidden; border:1px solid var(--line); flex:none; }
-  .theme-card .tsw i{ width:16px; height:34px; display:block; }
-  .theme-card .tmeta{ flex:1; min-width:0; }
-  .theme-card .tnm{ font-size:14px; font-weight:700; color:var(--ink); }
-  .theme-card .tck{ width:20px; height:20px; border-radius:50%; background:var(--teal); color:#fff;
-    font-size:11px; display:none; align-items:center; justify-content:center; flex:none; }
+  .theme-card{ border:1px solid var(--line); border-radius:12px; padding:9px; margin-bottom:9px; background:var(--card); cursor:pointer; }
+  .theme-card.sel{ border:2px solid var(--teal); padding:8px; }
+  .tprev{ position:relative; border-radius:10px; overflow:hidden; border:1px solid var(--tp-line); background:var(--tp-bg); }
+  .tprev-tabs{ display:flex; gap:5px; padding:7px 7px 0; }
+  .tp-tab{ font-size:10.5px; font-weight:600; border-radius:999px; padding:3px 9px; white-space:nowrap;
+    background:var(--tp-p2); color:var(--tp-soft); border:1px solid var(--tp-line); }
+  .tp-tab.on{ background:var(--tp-acc); color:var(--tp-onacc); border-color:var(--tp-acc); }
+  .tprev-div{ height:3px; margin-top:6px; background:var(--tp-acc); }
+  .tprev-day{ display:flex; align-items:center; gap:8px; padding:8px 9px; background:var(--tp-head); }
+  .tp-idx{ font-family:'Space Mono',monospace; font-size:14px; font-weight:700; color:var(--tp-gold); }
+  .tp-lbl{ font-size:11px; font-weight:600; color:rgba(255,255,255,.92); }
+  .tprev-row{ display:flex; align-items:center; gap:7px; padding:8px 9px; margin:7px; border-radius:7px;
+    border:1px solid var(--tp-line); background:var(--tp-card); }
+  .tp-time{ font-family:'Space Mono',monospace; font-size:10.5px; color:var(--tp-ink); }
+  .tp-place{ font-size:11px; font-weight:600; color:var(--tp-ink); }
+  .theme-card.locked .tprev{ opacity:.45; }
+  .tprev-lock{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+  .tprev-lock span{ display:inline-flex; align-items:center; gap:5px; background:rgba(18,18,22,.82); color:#fff;
+    font-size:11px; font-weight:600; padding:5px 11px; border-radius:999px; }
+  .tprev-lock svg, .tbadge svg, .tck.lock svg{ width:13px; height:13px; stroke:currentColor; fill:none;
+    stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .theme-foot{ display:flex; align-items:center; gap:6px; margin-top:8px; }
+  .theme-foot .tnm{ font-size:13px; font-weight:700; color:var(--ink); }
+  .theme-foot .thex{ font-family:'Space Mono',monospace; font-size:10.5px; color:var(--ink-faint); }
+  .theme-foot .tfoot-sp{ flex:1; }
+  .tbadge{ display:inline-flex; align-items:center; gap:4px; background:#E7B44A; color:#3D2A00;
+    font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:999px; }
+  .theme-card .tck{ width:22px; height:22px; border-radius:50%; background:var(--teal); color:#fff;
+    font-size:12px; display:none; align-items:center; justify-content:center; flex:none; }
   .theme-card.sel .tck{ display:flex; }
+  .theme-card .tck.lock{ display:flex; background:transparent; color:var(--ink-faint); }
+  .tprev-a{ --tp-bg:#F1F6F4; --tp-p2:#E1EDE9; --tp-line:#CEDFD9; --tp-card:#FFFFFF; --tp-ink:#16302D; --tp-soft:#47635E; --tp-acc:#1C7A6F; --tp-onacc:#FFFFFF; --tp-gold:#E3A63C; --tp-head:#16302D; }
+  .tprev-b{ --tp-bg:#F4F3F1; --tp-p2:#E9E7E3; --tp-line:#DAD8D3; --tp-card:#FFFFFF; --tp-ink:#1E2124; --tp-soft:#55585C; --tp-acc:#3E6B8A; --tp-onacc:#FFFFFF; --tp-gold:#9A7B4E; --tp-head:#1E2124; }
+  .tprev-c{ --tp-bg:#F2F4F9; --tp-p2:#E6EAF4; --tp-line:#D6DCEA; --tp-card:#FFFFFF; --tp-ink:#1B2340; --tp-soft:#4A5178; --tp-acc:#35528F; --tp-onacc:#FFFFFF; --tp-gold:#DE9A34; --tp-head:#1B2340; }
+  .tprev-d{ --tp-bg:#0C1524; --tp-p2:#182335; --tp-line:#29374D; --tp-card:#131E30; --tp-ink:#EAF2F4; --tp-soft:#9FB2BE; --tp-acc:#33D6C0; --tp-onacc:#0C1524; --tp-gold:#E3A63C; --tp-head:#1E2E48; }
+  .tprev-e{ --tp-bg:#FEF3EC; --tp-p2:#FBE3D5; --tp-line:#F1D2C0; --tp-card:#FFFFFF; --tp-ink:#43202F; --tp-soft:#8A5560; --tp-acc:#D8583C; --tp-onacc:#FFFFFF; --tp-gold:#E89A3C; --tp-head:#43202F; }
   .set-logout{margin-top:92px; width:100%; border:1px solid var(--line); background:var(--card); color:var(--red); border-radius:999px; padding:12px; font-size:12.5px; font-weight:700; cursor:pointer;}
   .set-legal{text-align:center; margin-top:16px; font-size:11.5px; color:var(--ink-faint);}
   .set-legal a{color:var(--ink-soft); text-decoration:underline; margin:0 5px; cursor:pointer;}
@@ -1117,23 +1143,36 @@ async function saveAvatar(){
   renderMypage();
 }
 
+const ICON_LOCK = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+const ICON_CROWN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l4.5 3L12 4l4.5 7L21 8l-1.8 11H4.8z"/></svg>';
+/* locked: 멤버십 전용 테마. 지금은 전부 false(무료). 멤버십 붙일 때 원하는 테마만 true 로. */
 const THEME_LIST = [
-  { id:'a', name:'오션',            sw:['#F1F6F4','#1C7A6F','#16302D'] },
-  { id:'b', name:'모노 슬레이트',    sw:['#F4F3F1','#3E6B8A','#1E2124'] },
-  { id:'c', name:'미드나잇',        sw:['#F2F4F9','#35528F','#1B2340'] },
-  { id:'d', name:'아쿠아마린 갤럭시', sw:['#0C1524','#33D6C0','#EAF2F4'] },
-  { id:'e', name:'코랄 선라이즈',    sw:['#FEF3EC','#D8583C','#43202F'] },
+  { id:'a', name:'오션',            accent:'#1C7A6F', locked:false },
+  { id:'b', name:'모노 슬레이트',    accent:'#3E6B8A', locked:false },
+  { id:'c', name:'미드나잇',        accent:'#35528F', locked:false },
+  { id:'d', name:'아쿠아마린 갤럭시', accent:'#33D6C0', locked:false },
+  { id:'e', name:'코랄 선라이즈',    accent:'#D8583C', locked:false },
 ];
 function themeName(id){ const t = THEME_LIST.find(x => x.id === id); return t ? t.name : '오션'; }
+function themeCardHTML(t, cur){
+  const cls = 'theme-card' + (t.id === cur && !t.locked ? ' sel' : '') + (t.locked ? ' locked' : '');
+  const lockOverlay = t.locked ? `<div class="tprev-lock"><span>${ICON_LOCK}멤버십 전용</span></div>` : '';
+  const badge = t.locked ? `<span class="tbadge">${ICON_CROWN}멤버십</span>` : '';
+  const mark = t.locked ? `<span class="tck lock">${ICON_LOCK}</span>` : '<span class="tck">✓</span>';
+  return `<div class="${cls}" data-theme="${t.id}">
+    <div class="tprev tprev-${t.id}">
+      <div class="tprev-tabs"><span class="tp-tab on">일정</span><span class="tp-tab">메모</span><span class="tp-tab">지출</span></div>
+      <div class="tprev-div"></div>
+      <div class="tprev-day"><span class="tp-idx">01</span><span class="tp-lbl">첫째 날</span></div>
+      <div class="tprev-row"><span class="tp-time">09:00</span><span class="tp-place">공항 도착</span></div>
+      ${lockOverlay}
+    </div>
+    <div class="theme-foot"><span class="tnm">${t.name}</span><span class="thex">${t.accent}</span><span class="tfoot-sp"></span>${badge}${mark}</div>
+  </div>`;
+}
 function openThemeModal(){
   const cur = profile.theme || 'a';
-  const cards = THEME_LIST.map(t =>
-    `<div class="theme-card${t.id === cur ? ' sel' : ''}" data-theme="${t.id}">` +
-      `<span class="tsw">${t.sw.map(c => `<i style="background:${c}"></i>`).join('')}</span>` +
-      `<span class="tmeta"><span class="tnm">${t.name}</span></span>` +
-      `<span class="tck">✓</span>` +
-    `</div>`
-  ).join('');
+  const cards = THEME_LIST.map(t => themeCardHTML(t, cur)).join('');
   document.getElementById('v2ModalBody').innerHTML =
     '<div style="font-weight:700;font-size:13px;margin-bottom:6px">컬러 테마</div>' +
     '<div style="font-size:11px;color:var(--ink-faint);margin-bottom:11px">탭하면 바로 적용됩니다.</div>' +
@@ -1142,7 +1181,12 @@ function openThemeModal(){
     '<button class="v2-btn-ghost" data-action="v2modal-close">닫기</button>';
   document.getElementById('v2Modal').hidden = false;
 }
+function showMembershipUpsell(id){
+  alert('“' + themeName(id) + '” 은(는) 멤버십 전용 테마입니다.\n멤버십은 준비 중이에요.');
+}
 function pickTheme(id){
+  const t = THEME_LIST.find(x => x.id === id);
+  if(t && t.locked){ showMembershipUpsell(id); return; }
   applyTheme(id);
   document.querySelectorAll('#v2Modal .theme-card').forEach(c =>
     c.classList.toggle('sel', c.dataset.theme === id));
