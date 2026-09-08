@@ -23,13 +23,13 @@ test('기존 텍스트 메모는 그대로 렌더 (하위호환)', async ({ page
 
 test('☑ 토글 → content 가 문단 단위로 체크리스트 항목이 된다', async ({ page }) => {
   await openNotes(page, [{ id:'n1', title:'준비물', content:'여권\n\n  충전기  \n우산' }]);
-  await page.locator('.note-mode-toggle[data-note-id="n1"]').click();
+  await page.locator('.note-mode-switch[data-note-id="n1"]').click();
   const rows = page.locator('.chk-list .chk-row');
   await expect(rows).toHaveCount(3);
   await expect(rows.nth(0).locator('.chk-text')).toHaveValue('여권');
   await expect(rows.nth(1).locator('.chk-text')).toHaveValue('충전기');   // trim 됨
   await expect(rows.nth(2).locator('.chk-text')).toHaveValue('우산');
-  await expect(page.locator('.note-mode-toggle[data-note-id="n1"]')).toHaveClass(/on/);
+  await expect(page.locator('.note-mode-switch[data-note-id="n1"]')).toHaveText('메모로 되돌리기');
   const mode = await page.evaluate(() => state.notes[0].mode);
   expect(mode).toBe('checklist');
 });
@@ -94,10 +94,20 @@ test('체크리스트 → 텍스트 되돌리면 항목이 줄바꿈으로 합�
   await openNotes(page, [{ id:'n1', title:'T', mode:'checklist', items:[
     { id:'i1', text:'하나', done:true }, { id:'i2', text:'둘', done:false },
   ]}]);
-  await page.locator('.note-mode-toggle[data-note-id="n1"]').click();
+  await page.locator('.note-mode-switch[data-note-id="n1"]').click();
   await expect(page.locator('.note-card .note-content')).toHaveValue('하나\n둘');
   expect(await page.evaluate(() => state.notes[0].mode)).toBe('text');
-  expect(await page.evaluate(() => state.notes[0].items)).toBeUndefined();
+});
+
+test('완료 상태가 메모↔체크리스트 왕복 후에도 유지된다', async ({ page }) => {
+  await openNotes(page, [{ id:'n1', title:'T', mode:'checklist', items:[
+    { id:'i1', text:'하나', done:true }, { id:'i2', text:'둘', done:false }, { id:'i3', text:'셋', done:true },
+  ]}]);
+  await page.locator('.note-mode-switch[data-note-id="n1"]').click();   // → 텍스트
+  await page.locator('.note-mode-switch[data-note-id="n1"]').click();   // → 체크리스트
+  const done = await page.evaluate(() => state.notes[0].items.map(i => i.done));
+  expect(done).toEqual([true, false, true]);
+  await expect(page.locator('.note-done-head')).toHaveText(/완료된 항목 2개/);
 });
 
 test('공유 HTML: 체크리스트 메모가 ☑/☐ 로 렌더 (완료는 뒤로)', async ({ page }) => {

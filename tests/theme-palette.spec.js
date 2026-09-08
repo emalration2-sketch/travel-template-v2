@@ -1,11 +1,11 @@
 const { test, expect } = require('./support/fixtures');
 
 const EXPECT = {
-  a: { paper:'rgb(241, 246, 244)', teal:'rgb(28, 122, 111)',  fillStrong:'rgb(22, 48, 45)',  modeEdit:'rgb(28, 122, 111)', modeView:'rgb(65, 90, 120)' },
-  b: { paper:'rgb(244, 243, 241)', teal:'rgb(62, 107, 138)',  fillStrong:'rgb(30, 33, 36)',  modeEdit:'rgb(62, 107, 138)', modeView:'rgb(46, 50, 54)' },
-  c: { paper:'rgb(242, 244, 249)', teal:'rgb(53, 82, 143)',   fillStrong:'rgb(27, 35, 64)',  modeEdit:'rgb(53, 82, 143)',  modeView:'rgb(138, 110, 46)' },
-  d: { paper:'rgb(12, 21, 36)',    teal:'rgb(51, 214, 192)',  fillStrong:'rgb(30, 46, 72)',  modeEdit:'rgb(51, 214, 192)', modeView:'rgb(108, 123, 224)' },
-  e: { paper:'rgb(254, 243, 236)', teal:'rgb(216, 88, 60)',   fillStrong:'rgb(67, 32, 47)',  modeEdit:'rgb(216, 88, 60)',  modeView:'rgb(168, 112, 62)' },
+  a: { paper:'rgb(241, 246, 244)', teal:'rgb(28, 122, 111)',  fillStrong:'rgb(22, 48, 45)',  main:'rgb(28, 122, 111)', modeEdit:'rgb(28, 122, 111)', modeView:'rgb(65, 90, 120)' },
+  b: { paper:'rgb(244, 243, 241)', teal:'rgb(62, 107, 138)',  fillStrong:'rgb(30, 33, 36)',  main:'rgb(62, 107, 138)', modeEdit:'rgb(62, 107, 138)', modeView:'rgb(94, 103, 115)' },
+  c: { paper:'rgb(242, 244, 249)', teal:'rgb(53, 82, 143)',   fillStrong:'rgb(27, 35, 64)',  main:'rgb(53, 82, 143)',  modeEdit:'rgb(53, 82, 143)',  modeView:'rgb(156, 122, 52)' },
+  d: { paper:'rgb(12, 21, 36)',    teal:'rgb(51, 214, 192)',  fillStrong:'rgb(30, 46, 72)',  main:'rgb(14, 92, 87)',   modeEdit:'rgb(14, 92, 87)',   modeView:'rgb(108, 123, 224)' },
+  e: { paper:'rgb(254, 243, 236)', teal:'rgb(216, 88, 60)',   fillStrong:'rgb(67, 32, 47)',  main:'rgb(216, 88, 60)',  modeEdit:'rgb(216, 88, 60)',  modeView:'rgb(14, 148, 136)' },
 };
 
 test('5개 테마 토큰이 data-theme 로 적용된다', async ({ page }) => {
@@ -19,13 +19,14 @@ test('5개 테마 토큰이 data-theme 로 적용된다', async ({ page }) => {
       document.body.appendChild(probe);
       const rgb = k => { probe.style.color = 'var(' + k + ')'; return getComputedStyle(probe).color; };
       const out = { paper:rgb('--paper'), teal:rgb('--teal'), fillStrong:rgb('--fill-strong'),
-                    modeEdit:rgb('--mode-edit'), modeView:rgb('--mode-view') };
+                    main:rgb('--main'), modeEdit:rgb('--mode-edit'), modeView:rgb('--mode-view') };
       probe.remove();
       return out;
     }, id);
     expect(got.paper, id+' paper').toBe(exp.paper);
     expect(got.teal, id+' teal').toBe(exp.teal);
     expect(got.fillStrong, id+' fill-strong').toBe(exp.fillStrong);
+    expect(got.main, id+' main').toBe(exp.main);
     expect(got.modeEdit, id+' mode-edit').toBe(exp.modeEdit);
     expect(got.modeView, id+' mode-view').toBe(exp.modeView);
   }

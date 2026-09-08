@@ -13,15 +13,15 @@ async function openEditor(page){
   await expect(page.locator('section[data-screen="editor"]')).toBeVisible();
 }
 
-test('일차 헤더 배경이 테마 --fill-strong 을 따른다', async ({ page }) => {
+test('일차 헤더 배경이 테마 --main(포인트 컬러) 을 따른다', async ({ page }) => {
   await openEditor(page);
-  // 테마 d: fill-strong = #1E2E48 = rgb(30, 46, 72)
+  // 테마 d: --main = #0E5C57 = rgb(14, 92, 87)
   await page.evaluate(() => document.documentElement.dataset.theme = 'd');
   const bg = await page.evaluate(() => {
     const el = document.querySelector('#daysContainer .day-card .day-head') || document.querySelector('.day-head');
     return getComputedStyle(el).backgroundColor;
   });
-  expect(bg).toBe('rgb(30, 46, 72)');
+  expect(bg).toBe('rgb(14, 92, 87)');
 });
 
 test('nav.tabs 하단 띠가 테마 --mode-edit / --mode-view 를 따른다', async ({ page }) => {
@@ -30,8 +30,8 @@ test('nav.tabs 하단 띠가 테마 --mode-edit / --mode-view 를 따른다', as
   const edit = await page.evaluate(() => getComputedStyle(document.querySelector('nav.tabs')).borderBottomColor);
   await page.evaluate(() => setMode('view'));
   const view = await page.evaluate(() => getComputedStyle(document.querySelector('nav.tabs')).borderBottomColor);
-  expect(edit).toBe('rgb(53, 82, 143)');   // c --mode-edit #35528F
-  expect(view).toBe('rgb(138, 110, 46)');  // c --mode-view #8A6E2E
+  expect(edit).toBe('rgb(53, 82, 143)');   // c --mode-edit = --main #35528F
+  expect(view).toBe('rgb(156, 122, 52)');  // c --mode-view #9C7A34
 });
 
 test('아바타 원 배경에 하드코딩 네이비 그라디언트가 없다', async ({ page }) => {
