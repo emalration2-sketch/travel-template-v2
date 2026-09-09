@@ -56,13 +56,15 @@ test('index.html 에 #243057 / #1B2340 하드코딩이 배경으로 남지 않�
   expect(cleaned).not.toContain('#1B2340');
 });
 
-test('style 블록에 background:#fff 하드코딩이 @media print 밖에 남지 않았다', async () => {
+test('style 블록에 background:#fff 하드코딩이 @media print / 표지 밖에 남지 않았다', async () => {
   const fs = require('fs');
   const html = fs.readFileSync(require('path').join(__dirname, '..', 'index.html'), 'utf8');
   // STATIC_CSS 문자열은 </style> 뒤라 이미 제외됨
   let styleBlock = html.slice(0, html.indexOf('</style>'));
-  // @media print{ ... } 블록을 먼저 제거 (인쇄물은 항상 라이트라 #fff 허용)
+  // @media print{ ... } 는 인쇄물이라 라이트 고정 → #fff 허용
   styleBlock = styleBlock.replace(/@media print\{[\s\S]*?\n  \}/, '');
+  // .landing-login 은 로그아웃 표지(테마 무관 고정 브랜드) → 흰 버튼 허용
+  styleBlock = styleBlock.replace(/\.landing-login\{[^}]*\}/, '');
   expect(styleBlock).not.toContain('background:#fff');
   expect(styleBlock).not.toContain('background: #fff');
 });
