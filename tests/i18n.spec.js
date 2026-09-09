@@ -256,3 +256,18 @@ test('공유 HTML: en 라벨 + <html lang="en">', async ({ page }) => {
   expect(html).toMatch(/>\s*Links\s*</);
   expect(html).not.toContain('메모');
 });
+
+test('법적 문서: 언어별 md fetch + -ko 폴백', async ({ page }) => {
+  const seen = [];
+  await page.route('**/docs/legal/*.md', route => {
+    const u = route.request().url();
+    seen.push(u.split('/').pop());
+    if(u.includes('terms-en.md')) return route.fulfill({ status: 404, body: 'nope' });
+    return route.fulfill({ status: 200, headers: { 'content-type':'text/markdown' }, body: '# T\n\nhello' });
+  });
+  await page.goto('/');
+  await page.evaluate(() => { curLang = 'en'; openLegal('terms'); });
+  await expect(page.locator('#legalBody-terms')).toContainText('hello');
+  expect(seen).toEqual(['terms-en.md', 'terms-ko.md']);   // en 시도 → 404 → ko 폴백
+  await page.evaluate(() => { curLang = 'ko'; });   // en 상태가 다른 테스트로 새지 않도록 복구
+});

@@ -915,8 +915,8 @@ function renderMarkdown(md){
 }
 
 const LEGAL_DOCS = {
-  terms:   { file: 'docs/legal/terms-ko.md',   gh: 'https://github.com/emalration2-sketch/travel-template-v2/blob/main/docs/legal/terms-ko.md' },
-  privacy: { file: 'docs/legal/privacy-ko.md', gh: 'https://github.com/emalration2-sketch/travel-template-v2/blob/main/docs/legal/privacy-ko.md' },
+  terms:   { base: 'docs/legal/terms',   gh: 'https://github.com/emalration2-sketch/travel-template-v2/blob/main/docs/legal/terms-ko.md' },
+  privacy: { base: 'docs/legal/privacy', gh: 'https://github.com/emalration2-sketch/travel-template-v2/blob/main/docs/legal/privacy-ko.md' },
 };
 let legalCache = {};
 let legalFrom = 'landing';
@@ -927,18 +927,22 @@ async function openLegal(doc){
   showScreen(doc);
   window.scrollTo(0, 0);
   const body = document.getElementById('legalBody-' + doc);
-  if(legalCache[doc]){ body.innerHTML = legalCache[doc]; return; }
-  body.innerHTML = '<div class="legal-loading">문서를 불러오는 중…</div>';
-  try{
-    const res = await fetch(meta.file, { cache: 'no-cache' });
-    if(!res.ok) throw new Error('HTTP ' + res.status);
-    const html = renderMarkdown(await res.text());
-    legalCache[doc] = html;
-    body.innerHTML = html;
-  }catch(e){
-    body.innerHTML = '<div class="legal-error">문서를 불러오지 못했어요. ' +
-      '<a href="' + meta.gh + '" target="_blank" rel="noopener">GitHub에서 보기</a></div>';
+  const cacheKey = doc + '-' + curLang;
+  if(legalCache[cacheKey]){ body.innerHTML = legalCache[cacheKey]; return; }
+  body.innerHTML = '<div class="legal-loading">' + t('legal.loading') + '</div>';
+  const tryLangs = curLang === 'ko' ? ['ko'] : [curLang, 'ko'];
+  for(const lang of tryLangs){
+    try{
+      const res = await fetch(meta.base + '-' + lang + '.md', { cache: 'no-cache' });
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      const html = renderMarkdown(await res.text());
+      legalCache[cacheKey] = html;
+      body.innerHTML = html;
+      return;
+    }catch(e){ /* try next */ }
   }
+  body.innerHTML = '<div class="legal-error">' + t('legal.error') +
+    '<a href="' + meta.gh + '" target="_blank" rel="noopener">' + t('legal.error.gh') + '</a></div>';
 }
 
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
