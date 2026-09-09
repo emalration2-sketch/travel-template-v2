@@ -1553,8 +1553,8 @@ function v2ModalClose(){ document.getElementById('v2Modal').hidden = true; }
 
 function showLimitModal(){
   v2ModalOpen(
-    '여행계획은 최대 5개까지 저장할 수 있어요.\n멤버십을 변경하여 여행계획을 더 늘려보세요.',
-    '<button class="v2-btn-solid" data-action="v2modal-close">확인</button>'
+    t('alert.tripLimit'),
+    '<button class="v2-btn-solid" data-action="v2modal-close">' + t('common.confirm') + '</button>'
   );
 }
 async function handleNewTrip(){
@@ -1570,9 +1570,9 @@ async function handleNewTrip(){
 
 function showDeleteModal(tripId){
   v2ModalOpen(
-    '이 여행을 삭제할까요?\n되돌릴 수 없습니다.',
-    '<button class="v2-btn-ghost" data-action="v2modal-close">취소</button>' +
-    '<button class="v2-btn-danger" data-action="confirm-delete-trip" data-trip-id="' + escapeAttr(tripId) + '">삭제</button>'
+    t('alert.tripDeleteConfirm'),
+    '<button class="v2-btn-ghost" data-action="v2modal-close">' + t('common.cancel') + '</button>' +
+    '<button class="v2-btn-danger" data-action="confirm-delete-trip" data-trip-id="' + escapeAttr(tripId) + '">' + t('common.delete') + '</button>'
   );
 }
 async function confirmDeleteTrip(tripId){
@@ -1592,7 +1592,7 @@ async function confirmDeleteTrip(tripId){
     trips = prevTrips;
     profile.tripOrder = prevOrder;
     renderMypage();
-    alert('여행 삭제에 실패했어요. 잠시 후 다시 시도해주세요.');
+    alert(t('alert.tripDeleteFail'));
   }
 }
 
@@ -1628,16 +1628,16 @@ async function forceFlush(){
   if(flushTimer || (cacheRead() && cacheRead().dirty)) await flushCloud();
 }
 let unsyncedTimer = null;
-const UNSYNCED_MSGS = ['클라우드 저장 안됨', '인터넷 연결 확인'];
 function startUnsyncedTicker(){
   const el = document.getElementById('syncStatus');
   if(!el) return;
   if(unsyncedTimer) return;                 // 이미 돌고 있음
+  const msgs = [t('sync.notSaved'), t('sync.offline')];
   let i = 0;
-  el.textContent = UNSYNCED_MSGS[0];
+  el.textContent = msgs[0];
   unsyncedTimer = setInterval(() => {
-    i = (i + 1) % UNSYNCED_MSGS.length;
-    el.textContent = UNSYNCED_MSGS[i];
+    i = (i + 1) % msgs.length;
+    el.textContent = msgs[i];
   }, 2000);
 }
 function stopUnsyncedTicker(){
@@ -1655,7 +1655,7 @@ async function openTrip(tripId){
   }
   if(!st){
     try{ st = await loadTrip(tripId); }
-    catch(e){ console.error('여행 열기 실패', e); alert('여행을 여는 데 실패했어요. 잠시 후 다시 시도해주세요.'); return; }
+    catch(e){ console.error('여행 열기 실패', e); alert(t('alert.tripOpenFail')); return; }
   }
   currentTripId = tripId;
   loadedAttTripId = null;
@@ -1708,7 +1708,7 @@ function loginWithGoogle(){
   initFirebase();
   const provider = new firebase.auth.GoogleAuthProvider();
   fbAuth.signInWithPopup(provider).catch(e => {
-    alert('로그인에 실패했어요: ' + e.message);
+    alert(t('alert.loginFail') + e.message);
   });
 }
 function logoutUser(){
@@ -1966,11 +1966,11 @@ function normalizeUrl(u){
 function linkHTML(l){
   return `<div class="link-card">
     <div class="link-edit edit-only">
-      <input type="text" class="link-label" placeholder="버튼 텍스트 (예: 입장권, 지도, 호텔정보 등)" data-scope="link" data-link-id="${l.id}" data-field="label" value="${escapeAttr(l.label||'')}">
-      <input type="text" class="link-url" placeholder="링크 주소 (https://...)" data-scope="link" data-link-id="${l.id}" data-field="url" value="${escapeAttr(l.url||'')}">
+      <input type="text" class="link-label" placeholder="${t('mat.link.label.ph')}" data-scope="link" data-link-id="${l.id}" data-field="label" value="${escapeAttr(l.label||'')}">
+      <input type="text" class="link-url" placeholder="${t('mat.link.url.ph')}" data-scope="link" data-link-id="${l.id}" data-field="url" value="${escapeAttr(l.url||'')}">
       <button class="item-del edit-only" data-action="delete-link" data-link-id="${l.id}">✕</button>
     </div>
-    <a class="link-btn view-only" href="${escapeAttr(normalizeUrl(l.url))}" target="_blank" rel="noopener">${escapeHTML(l.label || '링크')}</a>
+    <a class="link-btn view-only" href="${escapeAttr(normalizeUrl(l.url))}" target="_blank" rel="noopener">${escapeHTML(l.label || t('mat.link.fallback'))}</a>
   </div>`;
 }
 function renderMaterials(){
@@ -1989,7 +1989,7 @@ let loadedAttTripId = null;
 function attThumbHTML(a){
   const src = attachmentsCache[a.id];
   const media = src
-    ? `<img class="att-img" src="${src}" alt="${escapeAttr(a.name || '이미지')}" data-action="att-open" data-att-id="${escapeAttr(a.id)}">`
+    ? `<img class="att-img" src="${src}" alt="${escapeAttr(a.name || t('mat.image.alt'))}" data-action="att-open" data-att-id="${escapeAttr(a.id)}">`
     : `<span class="att-img" data-action="att-open" data-att-id="${escapeAttr(a.id)}"></span>`;
   return `<div class="att-thumb" data-att-id="${escapeAttr(a.id)}">
     <div class="att-img-wrap">
@@ -1997,7 +1997,7 @@ function attThumbHTML(a){
       <button class="att-del edit-only" data-action="att-delete" data-att-id="${escapeAttr(a.id)}">✕</button>
     </div>
     <input class="att-name" data-scope="att" data-att-id="${escapeAttr(a.id)}" data-field="name"
-           value="${escapeAttr(a.name || '')}" placeholder="＋ 이름 입력">
+           value="${escapeAttr(a.name || '')}" placeholder="${t('mat.image.name.ph')}">
   </div>`;
 }
 function openAttachmentViewer(id){
@@ -2038,13 +2038,13 @@ function compressImage(file){
 async function addAttachment(file){
   const atts = state.attachments || (state.attachments = []);
   if(atts.length >= 20){
-    v2ModalOpen('이미지는 여행당 20장까지 추가할 수 있어요.',
-      '<button class="v2-btn-solid" data-action="v2modal-close">확인</button>');
+    v2ModalOpen(t('mat.image.limitAlert'),
+      '<button class="v2-btn-solid" data-action="v2modal-close">' + t('common.confirm') + '</button>');
     return;
   }
   let out;
   try{ out = await compressImage(file); }
-  catch(e){ alert('이미지가 너무 커요. 더 작은 파일을 사용해주세요.'); return; }
+  catch(e){ alert(t('mat.image.tooBig')); return; }
   const id = uid();
   const name = file.name.replace(/\.[^.]+$/, '');
   try{
@@ -2053,7 +2053,7 @@ async function addAttachment(file){
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
   }catch(e){
-    alert('이미지를 추가하지 못했어요. 연결 상태를 확인해주세요.');
+    alert(t('mat.image.addFail'));
     return;
   }
   attachmentsCache[id] = out.dataUrl;
@@ -2062,14 +2062,14 @@ async function addAttachment(file){
   renderMaterials();
 }
 function showAttDeleteModal(id){
-  v2ModalOpen('이 이미지를 삭제할까요?\n되돌릴 수 없습니다.',
-    '<button class="v2-btn-ghost" data-action="v2modal-close">취소</button>' +
-    '<button class="v2-btn-danger" data-action="att-confirm-delete" data-att-id="' + escapeAttr(id) + '">삭제</button>');
+  v2ModalOpen(t('mat.image.deleteConfirm'),
+    '<button class="v2-btn-ghost" data-action="v2modal-close">' + t('common.cancel') + '</button>' +
+    '<button class="v2-btn-danger" data-action="att-confirm-delete" data-att-id="' + escapeAttr(id) + '">' + t('common.delete') + '</button>');
 }
 async function deleteAttachment(id){
   v2ModalClose();
   try{ await tripsCol().doc(currentTripId).collection('att').doc(id).delete(); }
-  catch(e){ alert('삭제하지 못했어요. 연결을 확인해주세요.'); return; }
+  catch(e){ alert(t('mat.image.deleteFail')); return; }
   delete attachmentsCache[id];
   state.attachments = (state.attachments || []).filter(a => a.id !== id);
   save();
@@ -2548,7 +2548,7 @@ function exportPDF(){
   }).catch(() => {
     btns.forEach(b => b.disabled = false);
     window.scrollTo(0, prevScrollY);
-    alert('PDF 생성에 실패했어요. 다시 시도해주세요.');
+    alert(t('alert.pdfFail'));
   });
 }
 async function shareGuide(){

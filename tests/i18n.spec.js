@@ -204,3 +204,37 @@ test('메모 탭 en: placeholder·전환버튼·완료헤더 + (완료) 태그 �
   await page.locator('.note-mode-switch[data-note-id="n3"]').click();
   await expect(page.locator('.note-content[data-note-id="n3"]')).toHaveValue(/ \(done\)$/);
 });
+
+test('자료모음 탭 en: 링크/이미지 placeholder + 동기화 티커 + 여행삭제 모달', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    window.__test.seed('users/u1', { avatarId:'default', tripOrder:['t1'] });
+    window.__test.seed('users/u1/trips/t1', { data: JSON.stringify({ title:'X', travelers:['나'],
+      days:[{ id:'d1', date:'', label:'', items:[] }], notes:[],
+      links:[{ id:'l1', label:'', url:'' }],
+      attachments:[{ id:'a1', name:'' }] }), title:'X', dayCount:1 });
+  });
+  await page.evaluate(() => window.__test.signIn({ uid:'u1', displayName:'K', email:'a@b.com' }));
+  await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
+  await page.evaluate(() => openTrip('t1'));
+  await expect(page.locator('section[data-screen="editor"]')).toBeVisible();
+  await page.locator('#editTabs .tab[data-tab="materials"]').click();
+  await page.evaluate(() => setLang('en'));
+
+  // 링크 라벨 input placeholder
+  await expect(page.locator('#linksContainer .link-label')).toHaveAttribute(
+    'placeholder', 'Button label (e.g. Tickets, Map, Hotel)');
+  // 이미지 이름 input placeholder
+  await expect(page.locator('#attList .att-name')).toHaveAttribute('placeholder', '+ Add a name');
+
+  // 동기화 상태 티커: msgs[0] → msgs[1]
+  await page.evaluate(() => startUnsyncedTicker());
+  await expect(page.locator('#syncStatus')).toHaveText('Not saved to cloud');
+  await page.waitForTimeout(2100);
+  await expect(page.locator('#syncStatus')).toHaveText('Check your connection');
+  await page.evaluate(() => stopUnsyncedTicker());
+
+  // 여행 삭제 모달: #v2ModalBody 텍스트 (\n 은 실제 개행)
+  await page.evaluate(() => showDeleteModal('t1'));
+  await expect(page.locator('#v2ModalBody')).toHaveText('Delete this trip?\nThis can’t be undone.');
+});
