@@ -1853,24 +1853,25 @@ function noteItemsOf(n){ return Array.isArray(n.items) ? n.items : []; }
 
 function chkRowHTML(n, it){
   return `<div class="chk-row${it.done ? ' done' : ''}" data-note-id="${escapeAttr(n.id)}" data-item-id="${escapeAttr(it.id)}">
-    <input type="checkbox" class="chk-box" data-action="note-check" data-note-id="${escapeAttr(n.id)}" data-item-id="${escapeAttr(it.id)}"${it.done ? ' checked' : ''} aria-label="완료">
-    <input type="text" class="chk-text edit-only" data-scope="note-item" data-note-id="${escapeAttr(n.id)}" data-item-id="${escapeAttr(it.id)}" value="${escapeAttr(it.text || '')}" placeholder="항목 내용">
+    <input type="checkbox" class="chk-box" data-action="note-check" data-note-id="${escapeAttr(n.id)}" data-item-id="${escapeAttr(it.id)}"${it.done ? ' checked' : ''} aria-label="${t('note.item.check.aria')}">
+    <input type="text" class="chk-text edit-only" data-scope="note-item" data-note-id="${escapeAttr(n.id)}" data-item-id="${escapeAttr(it.id)}" value="${escapeAttr(it.text || '')}" placeholder="${t('note.item.ph')}">
     <span class="chk-text-view view-only">${escapeHTML(it.text || '')}</span>
-    <button class="chk-del edit-only" data-action="note-del-item" data-note-id="${escapeAttr(n.id)}" data-item-id="${escapeAttr(it.id)}" aria-label="항목 삭제">✕</button>
+    <button class="chk-del edit-only" data-action="note-del-item" data-note-id="${escapeAttr(n.id)}" data-item-id="${escapeAttr(it.id)}" aria-label="${t('note.item.delete.aria')}">✕</button>
   </div>`;
 }
 const NOTE_SWITCH_ICON = '<svg class="nms-ic" viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>';
-const NOTE_DONE_TAG = ' (완료)';
+function noteDoneTag(){ return t('note.doneTag'); }
+const NOTE_DONE_RE = /\s*\((완료|done)\)\s*$/;
 function noteHTML(n){
   const titleRow = `<div class="note-row">
-      <input type="text" class="note-title" placeholder="제목 (예: 준비물, 참고 할 것)" data-scope="note" data-note-id="${escapeAttr(n.id)}" data-field="title" value="${escapeAttr(n.title||'')}">
+      <input type="text" class="note-title" placeholder="${t('note.title.ph')}" data-scope="note" data-note-id="${escapeAttr(n.id)}" data-field="title" value="${escapeAttr(n.title||'')}">
       <button class="item-del edit-only" data-action="delete-note" data-note-id="${escapeAttr(n.id)}">✕</button>
     </div>`;
   if(n.mode !== 'checklist'){
     return `<div class="note-card">${titleRow}
-    <textarea class="note-content edit-only" placeholder="내용을 입력하세요" rows="2" data-scope="note" data-note-id="${escapeAttr(n.id)}" data-field="content">${escapeHTML(n.content||'')}</textarea>
+    <textarea class="note-content edit-only" placeholder="${t('note.content.ph')}" rows="2" data-scope="note" data-note-id="${escapeAttr(n.id)}" data-field="content">${escapeHTML(n.content||'')}</textarea>
     <div class="note-content-view view-only" id="note-view-${n.id}">${linkify(n.content||'')}</div>
-    <div class="note-actions edit-only"><button class="note-mode-switch" data-action="note-toggle-mode" data-note-id="${escapeAttr(n.id)}">${NOTE_SWITCH_ICON}체크리스트로 전환</button></div>
+    <div class="note-actions edit-only"><button class="note-mode-switch" data-action="note-toggle-mode" data-note-id="${escapeAttr(n.id)}">${NOTE_SWITCH_ICON}${t('note.toChecklist')}</button></div>
   </div>`;
   }
   const items = noteItemsOf(n);
@@ -1879,7 +1880,7 @@ function noteHTML(n){
   const collapsed = noteDoneCollapsed.has(n.id);
   const doneBlock = done.length
     ? `<div class="note-done-head${collapsed ? ' collapsed' : ''}" data-action="note-toggle-done" data-note-id="${escapeAttr(n.id)}">
-        <span class="chev">▼</span>완료된 항목 ${done.length}개
+        <span class="chev">▼</span>${t('note.doneHead', { n: done.length })}
       </div>
       <div class="note-done-list">${done.map(it => chkRowHTML(n, it)).join('')}</div>`
     : '';
@@ -1887,8 +1888,8 @@ function noteHTML(n){
     <div class="chk-list">${undone.map(it => chkRowHTML(n, it)).join('')}</div>
     ${doneBlock}
     <div class="note-actions edit-only">
-      <button class="chk-add" data-action="note-add-item" data-note-id="${escapeAttr(n.id)}">＋ 항목 추가</button>
-      <button class="note-mode-switch" data-action="note-toggle-mode" data-note-id="${escapeAttr(n.id)}">${NOTE_SWITCH_ICON}메모로 되돌리기</button>
+      <button class="chk-add" data-action="note-add-item" data-note-id="${escapeAttr(n.id)}">${t('note.addItem')}</button>
+      <button class="note-mode-switch" data-action="note-toggle-mode" data-note-id="${escapeAttr(n.id)}">${NOTE_SWITCH_ICON}${t('note.toMemo')}</button>
     </div>
   </div>`;
 }
@@ -1909,7 +1910,7 @@ function toggleNoteMode(id){
   const n = state.notes.find(x => x.id === id);
   if(!n) return;
   if(n.mode === 'checklist'){
-    n.content = noteItemsOf(n).map(i => i.done ? i.text + NOTE_DONE_TAG : i.text).join('\n');
+    n.content = noteItemsOf(n).map(i => i.done ? i.text + noteDoneTag() : i.text).join('\n');
     n.mode = 'text';
     // n.items 는 남겨둠 — 왕복 시 항목 id 연속성용(text 모드에선 렌더 안 함)
   } else {
@@ -1917,7 +1918,8 @@ function toggleNoteMode(id){
     n.items = (n.content || '').split('\n').map(s => s.trim()).filter(Boolean)
       .map(raw => {
         let text = raw, done = false;
-        if(text.endsWith(NOTE_DONE_TAG)){ text = text.slice(0, -NOTE_DONE_TAG.length).trim(); done = true; }
+        const m = text.match(NOTE_DONE_RE);
+        if(m){ text = text.slice(0, m.index); done = true; }
         const hit = pool.findIndex(p => p.text === text);
         const id = hit >= 0 ? pool.splice(hit, 1)[0].id : uid();
         return { id, text, done };

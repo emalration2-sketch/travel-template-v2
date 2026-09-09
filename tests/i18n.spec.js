@@ -164,3 +164,43 @@ test('일정 탭 en: 일차/항목 템플릿의 placeholder·버튼·aria', asyn
   await expect(page.locator('#daysContainer .tl-memo')).toHaveAttribute('placeholder', 'Note');
   await expect(page.locator('#newTravelerInput')).toHaveAttribute('placeholder', '+ Add name');
 });
+
+test('메모 탭 en: placeholder·전환버튼·완료헤더 + (완료) 태그 언어무관 왕복', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    window.__test.seed('users/u1', { avatarId:'default', tripOrder:['t1'] });
+    window.__test.seed('users/u1/trips/t1', { data: JSON.stringify({ title:'X', travelers:['나'],
+      days:[{ id:'d1', date:'', label:'', items:[] }],
+      notes:[
+        { id:'n1', title:'', content:'' },
+        { id:'n2', title:'T2', mode:'checklist', items:[
+          { id:'a1', text:'x', done:true }, { id:'a2', text:'y', done:true } ] },
+        { id:'n3', title:'T3', mode:'checklist', items:[
+          { id:'b1', text:'하나', done:true } ] },
+      ], links:[], attachments:[] }), title:'X', dayCount:1 });
+  });
+  await page.evaluate(() => window.__test.signIn({ uid:'u1', displayName:'K', email:'a@b.com' }));
+  await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
+  await page.evaluate(() => openTrip('t1'));
+  await expect(page.locator('section[data-screen="editor"]')).toBeVisible();
+  await page.locator('#editTabs .tab[data-tab="notes"]').click();
+  await expect(page.locator('#editView-notes')).toBeVisible();
+
+  // 왕복 1: ko(기본 픽스처)에서 체크리스트 → 메모, content 는 ' (완료)' 로 끝난다
+  await page.locator('.note-mode-switch[data-note-id="n3"]').click();
+  await expect(page.locator('.note-content[data-note-id="n3"]')).toHaveValue(/ \(완료\)$/);
+
+  // en 전환
+  await page.evaluate(() => setLang('en'));
+  await expect(page.locator('.note-title[data-note-id="n1"]')).toHaveAttribute('placeholder', 'Title (e.g. Packing, Notes)');
+  await expect(page.locator('.note-mode-switch[data-note-id="n1"]')).toContainText('Switch to checklist');
+  await expect(page.locator('.note-done-head[data-note-id="n2"]')).toContainText('2 completed');
+
+  // 왕복 2: en 에서 메모 → 체크리스트, ko 태그(완료)를 파서가 인식해 done 유지
+  await page.locator('.note-mode-switch[data-note-id="n3"]').click();
+  await expect(page.locator('.chk-row[data-note-id="n3"][data-item-id="b1"]')).toHaveClass(/done/);
+
+  // 왕복 3: en 에서 체크리스트 → 메모, content 는 ' (done)' 로 끝난다
+  await page.locator('.note-mode-switch[data-note-id="n3"]').click();
+  await expect(page.locator('.note-content[data-note-id="n3"]')).toHaveValue(/ \(done\)$/);
+});
