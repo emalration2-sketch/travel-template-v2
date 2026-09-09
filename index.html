@@ -1393,38 +1393,38 @@ const THEME_LIST = [
   { id:'d', name:'아쿠아마린',       locked:false },
   { id:'e', name:'선라이즈',         locked:false },
 ];
-function themeName(id){ const t = THEME_LIST.find(x => x.id === id); return t ? t.name : '오션'; }
-function themeCardHTML(t, cur){
-  const cls = 'theme-card' + (t.id === cur && !t.locked ? ' sel' : '') + (t.locked ? ' locked' : '');
-  const lockOverlay = t.locked ? `<div class="tprev-lock"><span>${ICON_LOCK}멤버십 전용</span></div>` : '';
-  const badge = t.locked ? `<span class="tbadge">${ICON_CROWN}멤버십</span>` : '';
-  const mark = t.locked ? `<span class="tck lock">${ICON_LOCK}</span>` : '<span class="tck">✓</span>';
-  return `<div class="${cls}" data-theme="${t.id}">
-    <div class="tprev tprev-${t.id}">
+function themeName(id){ return t('theme.' + id); }
+function themeCardHTML(thm, cur){
+  const cls = 'theme-card' + (thm.id === cur && !thm.locked ? ' sel' : '') + (thm.locked ? ' locked' : '');
+  const lockOverlay = thm.locked ? `<div class="tprev-lock"><span>${ICON_LOCK}${t('theme.locked.overlay')}</span></div>` : '';
+  const badge = thm.locked ? `<span class="tbadge">${ICON_CROWN}${t('theme.badge.membership')}</span>` : '';
+  const mark = thm.locked ? `<span class="tck lock">${ICON_LOCK}</span>` : '<span class="tck">✓</span>';
+  return `<div class="${cls}" data-theme="${thm.id}">
+    <div class="tprev tprev-${thm.id}">
       <div class="tprev-tabs"><span class="tp-tab on">일정</span><span class="tp-tab">메모</span><span class="tp-tab">지출</span></div>
       <div class="tprev-div"></div>
       <div class="tprev-strip"></div>
       ${lockOverlay}
     </div>
-    <div class="theme-foot"><span class="tnm">${t.name}</span><span class="tfoot-sp"></span>${badge}${mark}</div>
+    <div class="theme-foot"><span class="tnm">${themeName(thm.id)}</span><span class="tfoot-sp"></span>${badge}${mark}</div>
   </div>`;
 }
 function openThemeModal(){
   const cur = profile.theme || 'a';
-  const cards = THEME_LIST.map(t => themeCardHTML(t, cur)).join('');
+  const cards = THEME_LIST.map(thm => themeCardHTML(thm, cur)).join('');
   document.getElementById('v2ModalBody').innerHTML =
-    '<div style="font-weight:700;font-size:13px;margin-bottom:11px">컬러 테마</div>' +
+    '<div style="font-weight:700;font-size:13px;margin-bottom:11px">' + t('theme.title') + '</div>' +
     cards;
   document.getElementById('v2ModalActions').innerHTML =
-    '<button class="v2-btn-ghost" data-action="v2modal-close">닫기</button>';
+    '<button class="v2-btn-ghost" data-action="v2modal-close">' + t('common.close') + '</button>';
   document.getElementById('v2Modal').hidden = false;
 }
 function showMembershipUpsell(id){
-  alert('“' + themeName(id) + '” 은(는) 멤버십 전용 테마입니다.\n멤버십은 준비 중이에요.');
+  alert(t('theme.locked.alert', { name: themeName(id) }));
 }
 function pickTheme(id){
-  const t = THEME_LIST.find(x => x.id === id);
-  if(t && t.locked){ showMembershipUpsell(id); return; }
+  const thm = THEME_LIST.find(x => x.id === id);
+  if(thm && thm.locked){ showMembershipUpsell(id); return; }
   applyTheme(id);
   saveProfile({ theme: id });
   const v = document.getElementById('setThemeVal');

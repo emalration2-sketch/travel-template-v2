@@ -90,6 +90,49 @@ test('설정 en: 편집에서 온 뒤로가기 + 아바타 모달 제목/초기�
   await expect(page.locator('#v2ModalActions .av-reset')).toHaveText('Reset to default (✈)');
 });
 
+test('테마 피커 en: 카드명/제목/잠금 오버레이/업셀 알림', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => { window.__test.seed('users/u1', { avatarId:'default', tripOrder:[] }); });
+  await page.evaluate(() => window.__test.signIn({ uid:'u1', displayName:'K', email:'a@b.com' }));
+  await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
+  await page.evaluate(() => { renderSettings(); showScreen('settings'); });
+  await page.evaluate(() => setLang('en'));
+
+  // 1) 모달 열기 → 영어 카드명 + 제목
+  await page.evaluate(() => openThemeModal());
+  const body = page.locator('#v2ModalBody');
+  await expect(body).toContainText('Ocean');
+  await expect(body).toContainText('Mono Slate');
+  await expect(body).toContainText('Midnight');
+  await expect(body).toContainText('Aquamarine');
+  await expect(body).toContainText('Sunrise');
+  await expect(body).toContainText('Color theme');
+
+  // 2) #setThemeVal 은 현재 테마(a) 영어명
+  await page.evaluate(() => pickTheme('a'));
+  await expect(page.locator('#setThemeVal')).toHaveText('Ocean');
+
+  // 3) 테마 잠금 → 재오픈 시 오버레이/뱃지 영어
+  await page.evaluate(() => { THEME_LIST.find(x => x.id === 'e').locked = true; });
+  await page.evaluate(() => openThemeModal());
+  const locked = page.locator('#v2Modal .theme-card[data-theme="e"]');
+  await expect(locked.locator('.tprev-lock')).toContainText('Members only');
+  await expect(locked.locator('.tbadge')).toContainText('Membership');
+
+  // 4) alert 스텁 → 잠긴 테마 선택 시 영어 업셀 메시지
+  const msg = await page.evaluate(() => {
+    let captured = '';
+    const orig = window.alert;
+    window.alert = m => { captured = m; };
+    pickTheme('e');
+    window.alert = orig;
+    return captured;
+  });
+  expect(msg).toContain('members-only theme');
+
+  await page.evaluate(() => { THEME_LIST.find(x => x.id === 'e').locked = false; });
+});
+
 test('표지 동의문: ko/en 어순', async ({ page }) => {
   await page.goto('/');
   const ko = await page.locator('.landing-consent').textContent();
