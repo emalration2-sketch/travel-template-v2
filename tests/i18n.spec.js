@@ -61,3 +61,12 @@ test('정적 마크업: en 전환 시 nav/탭/표지/설정 텍스트가 영어'
   await expect(page.locator('#setLang [data-i18n]')).toHaveText('Language');
   await expect(page.locator('#setTheme span[data-i18n]')).toHaveText('Color theme');
 });
+
+test('표지 동의문: ko/en 어순', async ({ page }) => {
+  await page.goto('/');
+  const ko = await page.locator('.landing-consent').textContent();
+  expect(ko.replace(/\s+/g,' ').trim()).toBe('계속하면 이용약관 및 개인정보처리방침에 동의하게 됩니다.');
+  await page.evaluate(() => setLang('en'));
+  const en = await page.locator('.landing-consent').textContent();
+  expect(en.replace(/\s+/g,' ').trim()).toBe('By continuing, you agree to the Terms of Service and Privacy Policy.');
+});
