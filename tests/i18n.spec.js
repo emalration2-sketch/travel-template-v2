@@ -76,6 +76,20 @@ test('마이페이지 en: 무제목 여행 + 날짜 미정', async ({ page }) =>
   await expect(page.locator('.mp-card .mp-dates')).toContainText('3d');
 });
 
+test('설정 en: 편집에서 온 뒤로가기 + 아바타 모달 제목/초기화', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => { window.__test.seed('users/u1', { avatarId:'default', tripOrder:[] }); });
+  await page.evaluate(() => window.__test.signIn({ uid:'u1', displayName:'K', email:'a@b.com' }));
+  await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
+  await page.evaluate(() => { settingsFrom = 'editor'; renderSettings(); showScreen('settings'); });
+  await page.evaluate(() => setLang('en'));
+  await expect(page.locator('#setBack')).toHaveText('← Back to editor');
+
+  await page.evaluate(() => openAvatarModal());
+  await expect(page.locator('#v2ModalBody > div').first()).toHaveText('Choose avatar');
+  await expect(page.locator('#v2ModalActions .av-reset')).toHaveText('Reset to default (✈)');
+});
+
 test('표지 동의문: ko/en 어순', async ({ page }) => {
   await page.goto('/');
   const ko = await page.locator('.landing-consent').textContent();

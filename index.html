@@ -1347,14 +1347,14 @@ function renderSettings(){
   const big = document.getElementById('setAvatarBig');
   big.textContent = avatarEmoji(profile.avatarId);
   big.classList.toggle('emoji', profile.avatarId && profile.avatarId !== 'default');
-  document.getElementById('setName').textContent = (currentUser && currentUser.displayName) || '내 계정';
+  document.getElementById('setName').textContent = (currentUser && currentUser.displayName) || t('settings.account');
   document.getElementById('setEmail').textContent = (currentUser && currentUser.email) || '';
   const tv = document.getElementById('setThemeVal');
   if(tv) tv.textContent = themeName(profile.theme || 'a');
   const lv = document.getElementById('setLangVal');
   if(lv) lv.textContent = langName(curLang);
   const bk = document.getElementById('setBack');
-  if(bk) bk.textContent = (settingsFrom === 'editor') ? '← 편집으로' : '← 내 여행';
+  if(bk) bk.textContent = (settingsFrom === 'editor') ? t('settings.back.editor') : t('settings.back.mytrips');
 }
 let pendingAvatar = null;
 function openAvatarModal(){
@@ -1363,12 +1363,12 @@ function openAvatarModal(){
     `<div class="av-cell${pendingAvatar === a.id ? ' sel' : ''}" data-avatar="${a.id}">${a.glyph}</div>`
   ).join('');
   document.getElementById('v2ModalBody').innerHTML =
-    '<div style="font-weight:700;font-size:13px;margin-bottom:4px">아바타 선택</div>' +
+    '<div style="font-weight:700;font-size:13px;margin-bottom:4px">' + t('avatar.title') + '</div>' +
     '<div class="av-grid">' + grid + '</div>';
   document.getElementById('v2ModalActions').innerHTML =
-    '<button class="v2-btn-ghost" data-action="v2modal-close">취소</button>' +
-    '<button class="av-reset" data-action="avatar-reset">기본(✈)으로</button>' +
-    '<button class="v2-btn-solid" data-action="avatar-save" style="flex:0 0 auto;padding:8px 18px">저장</button>';
+    '<button class="v2-btn-ghost" data-action="v2modal-close">' + t('common.cancel') + '</button>' +
+    '<button class="av-reset" data-action="avatar-reset">' + t('avatar.reset') + '</button>' +
+    '<button class="v2-btn-solid" data-action="avatar-save" style="flex:0 0 auto;padding:8px 18px">' + t('common.save') + '</button>';
   document.getElementById('v2Modal').hidden = false;
 }
 function pickPendingAvatar(id){
@@ -1452,7 +1452,7 @@ function renderMypage(){
   av.textContent = avatarEmoji(profile.avatarId);
   av.classList.toggle('emoji', profile.avatarId && profile.avatarId !== 'default');
   document.getElementById('mpName').textContent =
-    (currentUser && (currentUser.displayName || currentUser.email)) || '내 계정';
+    (currentUser && (currentUser.displayName || currentUser.email)) || t('settings.account');
   const list = orderedTrips();
   document.getElementById('mpCount').textContent = list.length + ' / 5';
   document.getElementById('mpList').innerHTML = list.map((trip, i) => `
