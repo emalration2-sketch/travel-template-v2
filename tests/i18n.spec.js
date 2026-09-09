@@ -20,3 +20,13 @@ test('t(): 보간 + en 누락 시 ko 폴백 + 미존재 키는 키 반환', asyn
   });
   expect(r).toEqual(['Hi A', '한국어만', '__test.missing']);
 });
+
+test('카탈로그: 대표 키가 ko/en 모두 존재', async ({ page }) => {
+  await page.goto('/');
+  const r = await page.evaluate(() => {
+    const keys = ['common.close','tab.schedule','landing.login','settings.language',
+      'note.toChecklist','expense.total','theme.d','share.notes','sync.notSaved'];
+    return keys.map(k => [k, I18N.ko[k] != null, I18N.en[k] != null]);
+  });
+  for (const [k, ko, en] of r) { expect(ko, k + ' ko').toBe(true); expect(en, k + ' en').toBe(true); }
+});

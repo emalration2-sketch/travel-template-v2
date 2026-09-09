@@ -998,7 +998,164 @@ function detectLang(navLang){
   return LANGS.includes(b) ? b : 'en';
 }
 let curLang = LANGS.includes(document.documentElement.lang) ? document.documentElement.lang : 'en';
-const I18N = { ko: {}, en: {} };   // populated in Task 3
+const I18N = {
+  ko: {
+    'common.close':'닫기','common.cancel':'취소','common.save':'저장','common.delete':'삭제',
+    'common.edit':'수정','common.confirm':'확인','common.retry':'다시 시도','common.traveler.me':'나','common.back':'← 뒤로',
+
+    'landing.tagline':'여행의 모든 순간을 한 곳에',
+    'landing.feat.schedule':'날짜별 일정·장소·메모 정리',
+    'landing.feat.expense':'여러 화폐로 항목별 지출 기록',
+    'landing.feat.share':'완성한 계획을 PDF·링크로 공유',
+    'landing.login':'Google로 계속하기',
+    'landing.consent.pre':'계속하면 ','landing.consent.mid':' 및 ','landing.consent.post':'에 동의하게 됩니다.',
+
+    'nav.toMypage':'← 마이페이지','nav.opts.aria':'내 정보 및 옵션',
+    'nav.mode.view':'📖 보기','nav.mode.edit':'✏️ 수정',
+    'tab.schedule':'일정','tab.notes':'메모','tab.expense':'지출','tab.materials':'자료모음',
+
+    'mypage.h':'내 여행','mypage.newTrip':'＋ 새 여행 만들기','mypage.settingsRow':'⚙ 내 정보 및 옵션',
+    'mypage.trip.untitled':'제목 없는 여행','mypage.trip.noDates':'날짜 미정','mypage.trip.dayUnit':'일',
+    'mypage.loadError':'여행 정보를 불러오지 못했어요.',
+
+    'settings.back.mytrips':'← 내 여행','settings.back.editor':'← 편집으로','settings.account':'내 계정',
+    'settings.avatarRow':'아바타 변경','settings.language':'언어','settings.theme':'컬러 테마','settings.logout':'로그아웃',
+    'settings.legal.terms':'이용약관','settings.legal.privacy':'개인정보처리방침',
+
+    'avatar.title':'아바타 선택','avatar.reset':'기본(✈)으로',
+
+    'theme.title':'컬러 테마','theme.a':'오션','theme.b':'모노 슬레이트','theme.c':'미드나잇',
+    'theme.d':'아쿠아마린','theme.e':'선라이즈',
+    'theme.badge.membership':'멤버십','theme.locked.overlay':'멤버십 전용',
+    'theme.locked.alert':'"{name}" 은(는) 멤버십 전용 테마입니다.\n멤버십은 준비 중이에요.',
+
+    'sched.header.ph':'여행 제목을 입력하세요','sched.travelers.add.ph':'+ 이름 추가',
+    'sched.dayRail.aria':'일차 이동','sched.addDay':'＋ 새로운 일차 추가','sched.reset':'초기화',
+    'sched.dayLabel.ph':'일정 제목','sched.addItem':'+ 일정 추가','sched.place.ph':'장소 / 할 일',
+    'sched.expense.aria':'지출 입력','sched.memo.ph':'메모',
+    'sched.day.deleteLastWarn':'최소 하루는 남아있어야 해요.',
+    'sched.day.deleteConfirm':'이 날짜와 모든 일정을 삭제할까요?',
+
+    'note.section':'메모','note.add':'+ 메모 추가',
+    'note.title.ph':'제목 (예: 준비물, 참고 할 것)','note.content.ph':'내용을 입력하세요',
+    'note.toChecklist':'체크리스트로 전환','note.toMemo':'메모로 되돌리기','note.addItem':'＋ 항목 추가',
+    'note.item.ph':'항목 내용','note.item.check.aria':'완료','note.item.delete.aria':'항목 삭제',
+    'note.doneHead':'완료된 항목 {n}개','note.doneTag':' (완료)',
+
+    'expense.section':'지출','expense.total':'합계({cur})',
+    'expense.empty':'아직 기록된 지출이 없어요. 일정의 + 버튼으로 추가해보세요.',
+    'expense.entry.none':'기록 없음',
+    'expense.modal.name.ph':'항목명 (예: 점심)','expense.modal.amount.ph':'금액',
+    'expense.modal.currency.ph':'화폐 단위 직접 입력 (예: 바트)','expense.modal.memo.ph':'메모 (선택)',
+    'expense.modal.add':'＋ 추가','expense.modal.saveEdit':'수정 저장',
+    'expense.currency.other':'기타 (직접입력)','expense.currency.otherShort':'기타','expense.currency.default':'원',
+
+    'mat.section':'자료모음','mat.group.links':'링크','mat.link.add':'+ 링크 추가',
+    'mat.group.images':'이미지','mat.image.add':'+ 이미지 추가',
+    'mat.link.label.ph':'버튼 텍스트 (예: 입장권, 지도, 호텔정보 등)','mat.link.url.ph':'링크 주소 (https://...)',
+    'mat.link.fallback':'링크','mat.image.name.ph':'＋ 이름 입력','mat.image.alt':'이미지',
+    'mat.image.limitAlert':'이미지는 여행당 20장까지 추가할 수 있어요.',
+    'mat.image.tooBig':'이미지가 너무 커요. 더 작은 파일을 사용해주세요.',
+    'mat.image.addFail':'이미지를 추가하지 못했어요. 연결 상태를 확인해주세요.',
+    'mat.image.deleteConfirm':'이 이미지를 삭제할까요?\n되돌릴 수 없습니다.',
+    'mat.image.deleteFail':'삭제하지 못했어요. 연결을 확인해주세요.',
+
+    'view.savePdf':'PDF로 저장','view.share':'공유하기','view.autosave':'로그인한 계정에 자동 저장됩니다',
+    'view.hint.edit':'✏️ [수정모드]에서 모든 항목을 자유롭게 입력·수정할 수 있어요.',
+    'view.hint.view':'📖 [보기모드]에서는 조회만 가능합니다.',
+
+    'sync.notSaved':'클라우드 저장 안됨','sync.offline':'인터넷 연결 확인',
+
+    'alert.tripLimit':'여행계획은 최대 5개까지 저장할 수 있어요.\n멤버십을 변경하여 여행계획을 더 늘려보세요.',
+    'alert.tripDeleteConfirm':'이 여행을 삭제할까요?\n되돌릴 수 없습니다.',
+    'alert.tripDeleteFail':'여행 삭제에 실패했어요. 잠시 후 다시 시도해주세요.',
+    'alert.tripOpenFail':'여행을 여는 데 실패했어요. 잠시 후 다시 시도해주세요.',
+    'alert.loginFail':'로그인에 실패했어요: ','alert.pdfFail':'PDF 생성에 실패했어요. 다시 시도해주세요.',
+
+    'legal.loading':'문서를 불러오는 중…','legal.error':'문서를 불러오지 못했어요. ','legal.error.gh':'GitHub에서 보기',
+
+    'share.defaultTitle':'나의 여행','share.notes':'메모','share.links':'참고 링크',
+    'share.expense':'지출기록','pdf.filename':'여행 일정','pdf.filenameFallback':'나의여행',
+  },
+  en: {
+    'common.close':'Close','common.cancel':'Cancel','common.save':'Save','common.delete':'Delete',
+    'common.edit':'Edit','common.confirm':'OK','common.retry':'Try again','common.traveler.me':'Me','common.back':'← Back',
+
+    'landing.tagline':'Every moment of your trip, in one place',
+    'landing.feat.schedule':'Day-by-day plans, places, and notes',
+    'landing.feat.expense':'Track spending by item in any currency',
+    'landing.feat.share':'Share your finished plan as a PDF or link',
+    'landing.login':'Continue with Google',
+    'landing.consent.pre':'By continuing, you agree to the ','landing.consent.mid':' and ','landing.consent.post':'.',
+
+    'nav.toMypage':'← My trips','nav.opts.aria':'Account and options',
+    'nav.mode.view':'📖 View','nav.mode.edit':'✏️ Edit',
+    'tab.schedule':'Itinerary','tab.notes':'Notes','tab.expense':'Expenses','tab.materials':'Files',
+
+    'mypage.h':'My trips','mypage.newTrip':'+ New trip','mypage.settingsRow':'⚙ Account and options',
+    'mypage.trip.untitled':'Untitled trip','mypage.trip.noDates':'Dates TBD','mypage.trip.dayUnit':'d',
+    'mypage.loadError':'Couldn\\\'t load your trips.',
+
+    'settings.back.mytrips':'← My trips','settings.back.editor':'← Back to editor','settings.account':'My account',
+    'settings.avatarRow':'Change avatar','settings.language':'Language','settings.theme':'Color theme','settings.logout':'Sign out',
+    'settings.legal.terms':'Terms of Service','settings.legal.privacy':'Privacy Policy',
+
+    'avatar.title':'Choose avatar','avatar.reset':'Reset to default (✈)',
+
+    'theme.title':'Color theme','theme.a':'Ocean','theme.b':'Mono Slate','theme.c':'Midnight',
+    'theme.d':'Aquamarine','theme.e':'Sunrise',
+    'theme.badge.membership':'Membership','theme.locked.overlay':'Members only',
+    'theme.locked.alert':'"{name}" is a members-only theme.\nMembership is coming soon.',
+
+    'sched.header.ph':'Enter a trip title','sched.travelers.add.ph':'+ Add name',
+    'sched.dayRail.aria':'Jump to day','sched.addDay':'+ Add a day','sched.reset':'Reset',
+    'sched.dayLabel.ph':'Day title','sched.addItem':'+ Add stop','sched.place.ph':'Place / to-do',
+    'sched.expense.aria':'Add expense','sched.memo.ph':'Note',
+    'sched.day.deleteLastWarn':'You need at least one day.',
+    'sched.day.deleteConfirm':'Delete this day and all its stops?',
+
+    'note.section':'Notes','note.add':'+ Add note',
+    'note.title.ph':'Title (e.g. Packing, Notes)','note.content.ph':'Write something',
+    'note.toChecklist':'Switch to checklist','note.toMemo':'Back to note','note.addItem':'+ Add item',
+    'note.item.ph':'Item','note.item.check.aria':'Done','note.item.delete.aria':'Delete item',
+    'note.doneHead':'{n} completed','note.doneTag':' (done)',
+
+    'expense.section':'Expenses','expense.total':'Total ({cur})',
+    'expense.empty':'No expenses yet. Use the + on a stop to add one.',
+    'expense.entry.none':'No entries',
+    'expense.modal.name.ph':'Item (e.g. Lunch)','expense.modal.amount.ph':'Amount',
+    'expense.modal.currency.ph':'Currency (e.g. Baht)','expense.modal.memo.ph':'Note (optional)',
+    'expense.modal.add':'+ Add','expense.modal.saveEdit':'Save changes',
+    'expense.currency.other':'Other (custom)','expense.currency.otherShort':'Other','expense.currency.default':'USD',
+
+    'mat.section':'Files','mat.group.links':'Links','mat.link.add':'+ Add link',
+    'mat.group.images':'Images','mat.image.add':'+ Add image',
+    'mat.link.label.ph':'Button label (e.g. Tickets, Map, Hotel)','mat.link.url.ph':'Link URL (https://...)',
+    'mat.link.fallback':'Link','mat.image.name.ph':'+ Add a name','mat.image.alt':'Image',
+    'mat.image.limitAlert':'Up to 20 images per trip.',
+    'mat.image.tooBig':'That image is too large. Try a smaller file.',
+    'mat.image.addFail':'Couldn\\\'t add the image. Check your connection.',
+    'mat.image.deleteConfirm':'Delete this image?\\nThis can\'t be undone.',
+    'mat.image.deleteFail':'Couldn\\\'t delete. Check your connection.',
+
+    'view.savePdf':'Save as PDF','view.share':'Share','view.autosave':'Saved automatically to your account',
+    'view.hint.edit':'✏️ In Edit mode you can add and change everything.',
+    'view.hint.view':'📖 View mode is read-only.',
+
+    'sync.notSaved':'Not saved to cloud','sync.offline':'Check your connection',
+
+    'alert.tripLimit':'You can save up to 5 trips.\nUpgrade your membership to add more.',
+    'alert.tripDeleteConfirm':'Delete this trip?\nThis can\\\'t be undone.',
+    'alert.tripDeleteFail':'Couldn\\\'t delete the trip. Please try again.',
+    'alert.tripOpenFail':'Couldn\\\'t open the trip. Please try again.',
+    'alert.loginFail':'Sign-in failed: ','alert.pdfFail':'Couldn\\\'t create the PDF. Please try again.',
+
+    'legal.loading':'Loading…','legal.error':'Couldn\\\'t load the document. ','legal.error.gh':'View on GitHub',
+
+    'share.defaultTitle':'My Trip','share.notes':'Notes','share.links':'Links',
+    'share.expense':'Expenses','pdf.filename':'Itinerary','pdf.filenameFallback':'MyTrip',
+  },
+};
 function t(key, vars){
   let s = (I18N[curLang] && I18N[curLang][key]);
   if(s == null) s = (I18N.ko && I18N.ko[key]);
