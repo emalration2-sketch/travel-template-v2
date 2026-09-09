@@ -634,7 +634,7 @@
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ttv2-theme')||'a';}catch(e){document.documentElement.dataset.theme='a';}</script>
 <script>try{
   var _l=localStorage.getItem('ttv2-lang');
-  if(!_l){var _b=(navigator.language||'').toLowerCase().split('-')[0];_l=(_b==='ko'||_b==='en')?_b:'en';}
+  if(!_l){var _b=(navigator.language||'').toLowerCase().split('-')[0];_l=(_b==='ko'||_b==='en'||_b==='ja')?_b:'en';}  /* keep in sync with LANGS */
   document.documentElement.lang=_l;
 }catch(e){document.documentElement.lang='en';}</script>
 
@@ -1005,7 +1005,7 @@ function applyTheme(t){
 }
 
 /* ===== i18n ===== */
-const LANGS = ['ko','en'];
+const LANGS = ['ko','en','ja'];
 function detectLang(navLang){
   const b = String(navLang || '').toLowerCase().split('-')[0];
   return LANGS.includes(b) ? b : 'en';
@@ -1090,6 +1090,8 @@ const I18N = {
 
     'share.defaultTitle':'나의 여행','share.notes':'메모','share.links':'참고 링크',
     'share.expense':'지출기록','pdf.filename':'여행 일정','pdf.filenameFallback':'나의여행',
+    'share.guideTitle':'여행 가이드',
+    'share.browserFallback':'이 브라우저는 바로 공유가 어려워 파일을 다운로드했어요. 다운로드된 파일을 메신저에 첨부해서 보내주세요.',
   },
   en: {
     'common.close':'Close','common.cancel':'Cancel','common.save':'Save','common.delete':'Delete',
@@ -1169,6 +1171,89 @@ const I18N = {
 
     'share.defaultTitle':'My Trip','share.notes':'Notes','share.links':'Links',
     'share.expense':'Expenses','pdf.filename':'Itinerary','pdf.filenameFallback':'MyTrip',
+    'share.guideTitle':'Travel guide',
+    'share.browserFallback':'This browser can’t share directly, so the file was downloaded. Attach it in your messenger to send.',
+  },
+  ja: {
+    'common.close':'閉じる','common.cancel':'キャンセル','common.save':'保存','common.delete':'削除',
+    'common.edit':'編集','common.confirm':'OK','common.retry':'再試行','common.traveler.me':'自分','common.back':'← 戻る',
+
+    'landing.tagline':'旅のすべての瞬間を、ひとつの場所に',
+    'landing.feat.schedule':'日付ごとに予定・場所・メモを整理',
+    'landing.feat.expense':'複数の通貨で項目ごとに支出を記録',
+    'landing.feat.share':'完成した計画をPDFやリンクで共有',
+    'landing.login':'Googleで続ける',
+    'landing.consent.pre':'続行すると、','landing.consent.mid':' および ','landing.consent.post':' に同意したことになります。',
+
+    'nav.toMypage':'← マイページ','nav.opts.aria':'アカウントとオプション',
+    'nav.mode.view':'📖 表示','nav.mode.edit':'✏️ 編集',
+    'tab.schedule':'旅程','tab.notes':'メモ','tab.expense':'支出','tab.materials':'資料',
+
+    'mypage.h':'マイ旅行','mypage.newTrip':'＋ 新しい旅行を作成','mypage.settingsRow':'⚙ アカウントとオプション',
+    'mypage.trip.untitled':'無題の旅行','mypage.trip.noDates':'日程未定','mypage.trip.dayUnit':'日間',
+    'mypage.loadError':'旅行情報を読み込めませんでした。',
+
+    'settings.back.mytrips':'← マイ旅行','settings.back.editor':'← 編集に戻る','settings.account':'マイアカウント',
+    'settings.avatarRow':'アバターを変更','settings.language':'言語','settings.theme':'カラーテーマ','settings.logout':'ログアウト',
+    'settings.legal.terms':'利用規約','settings.legal.privacy':'プライバシーポリシー',
+
+    'avatar.title':'アバターを選択','avatar.reset':'デフォルト（✈）に戻す',
+
+    'theme.title':'カラーテーマ','theme.a':'オーシャン','theme.b':'モノスレート','theme.c':'ミッドナイト',
+    'theme.d':'アクアマリン','theme.e':'サンライズ',
+    'theme.badge.membership':'メンバーシップ','theme.locked.overlay':'メンバー限定',
+    'theme.locked.alert':'「{name}」はメンバーシップ限定のテーマです。\nメンバーシップは準備中です。',
+
+    'sched.header.ph':'旅行のタイトルを入力してください','sched.travelers.add.ph':'+ 名前を追加',
+    'sched.dayRail.aria':'日付へ移動','sched.addDay':'＋ 新しい日を追加','sched.reset':'リセット',
+    'sched.dayLabel.ph':'日程のタイトル','sched.addItem':'+ 予定を追加','sched.place.ph':'場所 / やること',
+    'sched.expense.aria':'支出を入力','sched.memo.ph':'メモ',
+    'sched.day.deleteLastWarn':'少なくとも1日は残しておく必要があります。',
+    'sched.day.deleteConfirm':'この日付とすべての予定を削除しますか？',
+
+    'note.section':'メモ','note.add':'+ メモを追加',
+    'note.title.ph':'タイトル（例: 持ち物、参考事項）','note.content.ph':'内容を入力してください',
+    'note.toChecklist':'チェックリストに切り替え','note.toMemo':'メモに戻す','note.addItem':'＋ 項目を追加',
+    'note.item.ph':'項目の内容','note.item.check.aria':'完了','note.item.delete.aria':'項目を削除',
+    'note.doneHead':'完了した項目 {n}件','note.doneTag':' (完了)',
+
+    'expense.section':'支出','expense.total':'合計（{cur}）',
+    'expense.empty':'まだ記録された支出がありません。予定の + ボタンで追加してみてください。',
+    'expense.entry.none':'記録なし',
+    'expense.modal.name.ph':'項目名（例: 昼食）','expense.modal.amount.ph':'金額',
+    'expense.modal.currency.ph':'通貨単位を手入力（例: バーツ）','expense.modal.memo.ph':'メモ（任意）',
+    'expense.modal.add':'＋ 追加','expense.modal.saveEdit':'変更を保存',
+    'expense.currency.other':'その他（手入力）','expense.currency.otherShort':'その他','expense.currency.default':'JPY',
+
+    'mat.section':'資料','mat.group.links':'リンク','mat.link.add':'+ リンクを追加',
+    'mat.group.images':'画像','mat.image.add':'+ 画像を追加',
+    'mat.link.label.ph':'ボタンのテキスト（例: 入場券、地図、ホテル情報など）','mat.link.url.ph':'リンクアドレス（https://...）',
+    'mat.link.fallback':'リンク','mat.image.name.ph':'＋ 名前を入力','mat.image.alt':'画像',
+    'mat.image.limitAlert':'画像は1つの旅行につき20枚まで追加できます。',
+    'mat.image.tooBig':'画像が大きすぎます。より小さいファイルを使用してください。',
+    'mat.image.addFail':'画像を追加できませんでした。接続状態を確認してください。',
+    'mat.image.deleteConfirm':'この画像を削除しますか？\n元に戻せません。',
+    'mat.image.deleteFail':'削除できませんでした。接続を確認してください。',
+
+    'view.savePdf':'PDFで保存','view.share':'共有する','view.autosave':'ログイン中のアカウントに自動保存されます',
+    'view.hint.edit':'✏️ [編集モード]ではすべての項目を自由に入力・修正できます。',
+    'view.hint.view':'📖 [表示モード]では閲覧のみ可能です。',
+
+    'sync.notSaved':'クラウドに保存されていません','sync.offline':'インターネット接続を確認',
+
+    'alert.tripLimit':'旅行計画は最大5件まで保存できます。\nメンバーシップを変更して旅行計画をさらに増やしてみてください。',
+    'alert.tripDeleteConfirm':'この旅行を削除しますか？\n元に戻せません。',
+    'alert.tripDeleteFail':'旅行の削除に失敗しました。しばらくしてからもう一度お試しください。',
+    'alert.tripOpenFail':'旅行を開けませんでした。しばらくしてからもう一度お試しください。',
+    'alert.loginFail':'ログインに失敗しました: ','alert.pdfFail':'PDFの作成に失敗しました。もう一度お試しください。',
+    'alert.resetConfirm':'本当にリセットしますか？すべての内容が削除されます。',
+
+    'legal.loading':'ドキュメントを読み込み中…','legal.error':'ドキュメントを読み込めませんでした。 ','legal.error.gh':'GitHubで見る',
+
+    'share.defaultTitle':'私の旅行','share.notes':'メモ','share.links':'参考リンク',
+    'share.expense':'支出記録','pdf.filename':'旅行日程','pdf.filenameFallback':'私の旅行',
+    'share.guideTitle':'旅行ガイド',
+    'share.browserFallback':'このブラウザでは直接共有できないため、ファイルをダウンロードしました。ダウンロードしたファイルをメッセンジャーに添付して送信してください。',
   },
 };
 function t(key, vars){
@@ -1178,7 +1263,7 @@ function t(key, vars){
   if(vars) s = s.replace(/\{(\w+)\}/g, (m, k) => (vars[k] != null ? vars[k] : m));
   return s;
 }
-function langName(l){ return l === 'en' ? 'English' : '한국어'; }
+function langName(l){ return ({ ko:'한국어', en:'English', ja:'日本語' })[l] || l; }
 function applyI18n(root){
   root = root || document;
   root.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.getAttribute('data-i18n')); });
@@ -1867,7 +1952,7 @@ function chkRowHTML(n, it){
 }
 const NOTE_SWITCH_ICON = '<svg class="nms-ic" viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>';
 function noteDoneTag(){ return t('note.doneTag'); }
-const NOTE_DONE_RE = /\s*\((완료|done)\)\s*$/;
+const NOTE_DONE_RE = /\s*\((완료|done|完了)\)\s*$/;
 function noteHTML(n){
   const titleRow = `<div class="note-row">
       <input type="text" class="note-title" placeholder="${t('note.title.ph')}" data-scope="note" data-note-id="${escapeAttr(n.id)}" data-field="title" value="${escapeAttr(n.title||'')}">
@@ -2244,7 +2329,7 @@ const CURRENCIES = [
 ];
 function populateCurrencySelect(selected){
   const sel = document.getElementById('mCurrency');
-  const en = curLang === 'en';
+  const en = curLang !== 'ko';
   sel.innerHTML = CURRENCIES.map(c => {
     const val = en ? c.label : c.symbol;               // en stores ISO code, ko stores symbol
     const txt = en ? c.label : `${c.symbol}(${c.label})`;
@@ -2590,7 +2675,7 @@ async function shareGuide(){
   try{
     const file = new File([blob], fileName, { type:'text/html' });
     if(navigator.canShare && navigator.canShare({ files:[file] })){
-      await navigator.share({ files:[file], title: state.title || '여행 가이드' });
+      await navigator.share({ files:[file], title: state.title || t('share.guideTitle') });
       return;
     }
   }catch(e){}
@@ -2599,7 +2684,7 @@ async function shareGuide(){
   a.href = url; a.download = fileName;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  alert('이 브라우저는 바로 공유가 어려워 파일을 다운로드했어요. 다운로드된 파일을 메신저에 첨부해서 보내주세요.');
+  alert(t('share.browserFallback'));
 }
 
 function resetAll(){
