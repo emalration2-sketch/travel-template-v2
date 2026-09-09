@@ -1183,7 +1183,7 @@ const I18N = {
     'landing.feat.expense':'複数の通貨で項目ごとに支出を記録',
     'landing.feat.share':'完成した計画をPDFやリンクで共有',
     'landing.login':'Googleで続ける',
-    'landing.consent.pre':'続行すると、','landing.consent.mid':' および ','landing.consent.post':' に同意したことになります。',
+    'landing.consent.pre':'続行すると、','landing.consent.mid':'および','landing.consent.post':'に同意したことになります。',
 
     'nav.toMypage':'← マイページ','nav.opts.aria':'アカウントとオプション',
     'nav.mode.view':'📖 表示','nav.mode.edit':'✏️ 編集',
@@ -2343,7 +2343,7 @@ function populateCurrencySelect(selected){
   } else if(selected){
     sel.value = '__custom__'; custom.style.display = ''; custom.value = selected;
   } else {
-    sel.value = t('expense.currency.default');         // '원' (ko) / 'USD' (en) — matches an option value in each locale
+    sel.value = t('expense.currency.default');         // '원' (ko) / 'USD' (en) / 'JPY' (ja) — matches an option value in each locale
     custom.style.display = 'none';
   }
 }
