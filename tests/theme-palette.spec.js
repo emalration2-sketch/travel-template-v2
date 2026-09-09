@@ -6,7 +6,7 @@ const EXPECT = {
   b: { paper:'rgb(244, 243, 241)', teal:'rgb(86, 92, 100)',   modeEdit:'rgb(79, 107, 91)',  modeView:'rgb(86, 92, 100)' },
   c: { paper:'rgb(242, 244, 249)', teal:'rgb(53, 82, 143)',   modeEdit:'rgb(91, 75, 138)',  modeView:'rgb(53, 82, 143)' },
   d: { paper:'rgb(12, 21, 36)',    teal:'rgb(51, 214, 192)',  modeEdit:'rgb(201, 74, 126)', modeView:'rgb(51, 214, 192)' },
-  e: { paper:'rgb(254, 243, 236)', teal:'rgb(216, 88, 60)',   modeEdit:'rgb(180, 74, 107)', modeView:'rgb(216, 88, 60)' },
+  e: { paper:'rgb(254, 243, 236)', teal:'rgb(232, 102, 62)',  modeEdit:'rgb(180, 74, 107)', modeView:'rgb(232, 102, 62)' },
 };
 
 test('5개 테마 토큰이 data-theme 로 적용된다', async ({ page }) => {
@@ -33,7 +33,7 @@ test('5개 테마 토큰이 data-theme 로 적용된다', async ({ page }) => {
   }
 });
 
-test('d/e 배너는 그라디언트, a/b/c 는 단색', async ({ page }) => {
+test('5개 테마 배너가 모두 그라디언트 (일차 헤더와 동일 계열)', async ({ page }) => {
   await page.goto('/');
   const kind = await page.evaluate(() => {
     const r = {};
@@ -43,5 +43,5 @@ test('d/e 배너는 그라디언트, a/b/c 는 단색', async ({ page }) => {
     }
     return r;
   });
-  expect(kind).toEqual({ a:false, b:false, c:false, d:true, e:true });
+  expect(kind).toEqual({ a:true, b:true, c:true, d:true, e:true });
 });

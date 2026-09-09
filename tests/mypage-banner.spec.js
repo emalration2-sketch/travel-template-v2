@@ -22,9 +22,9 @@ test('마이페이지: 이름과 "내 여행" 사이에 Travel Template 배너',
   expect(order.top).toBeLessThan(order.banner);
   expect(order.banner).toBeLessThan(order.h);
 
-  // teal 배경
-  const bg = await page.evaluate(() => getComputedStyle(document.querySelector('.mp-banner')).backgroundColor);
-  expect(bg).toBe('rgb(28, 122, 111)');  // --teal #1C7A6F (theme A)
+  // 배너 = 일차 헤더와 동일한 그라디언트(--banner-bg)
+  const img = await page.evaluate(() => getComputedStyle(document.querySelector('.mp-banner')).backgroundImage);
+  expect(img).toContain('linear-gradient');
 });
 
 test('배너: 태그라인 + 브랜드 골드 ✈ + 테마별 배경', async ({ page }) => {
@@ -44,11 +44,11 @@ test('배너: 태그라인 + 브랜드 골드 ✈ + 테마별 배경', async ({ 
     expect(c, t).toBe('rgb(222, 154, 52)');
   }
 
-  // c = 단색, d = 그라디언트(background-image != none)
+  // 전 테마 배너가 그라디언트 (일차 헤더와 동일 계열)
   const c_img = await page.evaluate(() => { document.documentElement.dataset.theme='c';
     return getComputedStyle(document.querySelector('.mp-banner')).backgroundImage; });
   const d_img = await page.evaluate(() => { document.documentElement.dataset.theme='d';
     return getComputedStyle(document.querySelector('.mp-banner')).backgroundImage; });
-  expect(c_img).toBe('none');
+  expect(c_img).toContain('gradient');
   expect(d_img).toContain('gradient');
 });

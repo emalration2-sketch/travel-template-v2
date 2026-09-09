@@ -20,7 +20,7 @@ test('설정 행 → 팝업 5카드 → 탭 시 즉시 적용 + 저장 + 모달 
   await expect.poll(() => page.evaluate(() => document.documentElement.dataset.theme)).toBe('d');
   await expect(page.locator('#v2Modal')).toBeHidden();   // 선택 즉시 닫힘
   await expect.poll(() => page.evaluate(() => (window.__test.dump()['users/u1']||{}).theme)).toBe('d');
-  await expect(page.locator('#setThemeVal')).toContainText('아쿠아마린 갤럭시');
+  await expect(page.locator('#setThemeVal')).toContainText('아쿠아마린');
 });
 
 test('멤버십 전용 테마: 뱃지 표시 + 탭해도 적용 안 되고 안내', async ({ page }) => {
