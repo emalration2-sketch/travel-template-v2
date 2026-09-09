@@ -141,3 +141,26 @@ test('표지 동의문: ko/en 어순', async ({ page }) => {
   const en = await page.locator('.landing-consent').textContent();
   expect(en.replace(/\s+/g,' ').trim()).toBe('By continuing, you agree to the Terms of Service and Privacy Policy.');
 });
+
+test('일정 탭 en: 일차/항목 템플릿의 placeholder·버튼·aria', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    window.__test.seed('users/u1', { avatarId:'default', tripOrder:['t1'] });
+    window.__test.seed('users/u1/trips/t1', { data: JSON.stringify({ title:'X', travelers:['나'],
+      days:[{ id:'d1', date:'', label:'', items:[{ id:'i1', time:'', place:'', memo:'', expenses:[] }] }],
+      notes:[], links:[], attachments:[] }), title:'X', dayCount:1 });
+  });
+  await page.evaluate(() => window.__test.signIn({ uid:'u1', displayName:'K', email:'a@b.com' }));
+  await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
+  await page.evaluate(() => openTrip('t1'));
+  await expect(page.locator('section[data-screen="editor"]')).toBeVisible();
+
+  await page.evaluate(() => { setLang('en'); });
+
+  await expect(page.locator('#daysContainer .day-label')).toHaveAttribute('placeholder', 'Day title');
+  await expect(page.locator('#daysContainer .add-item')).toHaveText('+ Add stop');
+  await expect(page.locator('#daysContainer .tl-place')).toHaveAttribute('placeholder', 'Place / to-do');
+  await expect(page.locator('#daysContainer .exp-icon')).toHaveAttribute('aria-label', 'Add expense');
+  await expect(page.locator('#daysContainer .tl-memo')).toHaveAttribute('placeholder', 'Note');
+  await expect(page.locator('#newTravelerInput')).toHaveAttribute('placeholder', '+ Add name');
+});

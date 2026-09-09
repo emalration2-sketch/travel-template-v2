@@ -962,7 +962,7 @@ function linkify(text){
 
 function defaultState(){
   return {
-    title:'', travelers:['나'],
+    title:'', travelers:[t('common.traveler.me')],
     days:[{ id:uid(), date:'', label:'', items:[{ id:uid(), time:'', place:'', memo:'', expenses:[] }] }],
     notes:[], links:[], attachments:[]
   };
@@ -1292,7 +1292,7 @@ async function loadTrip(tripId){
   const st = JSON.parse(snap.data().data);
   if(!Array.isArray(st.links)) st.links = [];
   if(!Array.isArray(st.notes)) st.notes = [];
-  if(!Array.isArray(st.travelers)) st.travelers = ['나'];
+  if(!Array.isArray(st.travelers)) st.travelers = [t('common.traveler.me')];
   if(!Array.isArray(st.attachments)) st.attachments = [];
   return st;
 }
@@ -1726,7 +1726,7 @@ function renderTravelers(){
   wrap.innerHTML = state.travelers.map((name, idx) =>
     `<span class="chip">${escapeHTML(name)}<button data-action="delete-traveler" data-idx="${idx}">✕</button></span>`
   ).join('') +
-  `<span class="chip-add"><input id="newTravelerInput" type="text" placeholder="+ 이름 추가"><button data-action="add-traveler">＋</button></span>`;
+  `<span class="chip-add"><input id="newTravelerInput" type="text" placeholder="${t('sched.travelers.add.ph')}"><button data-action="add-traveler">＋</button></span>`;
 }
 function tabLabel(d, idx){
   if(d.date){
@@ -1748,12 +1748,12 @@ function dayCardHTML(d, idx){
           <input type="text" inputmode="numeric" maxlength="10" placeholder="YYYYMMDD" class="day-date" data-scope="day" data-day-id="${d.id}" data-field="date" value="${d.date||''}">
         </div>
         <span class="day-date-view view-only" data-day-id="${d.id}">${escapeHTML(d.date||'')}</span>
-        <input type="text" class="day-label" placeholder="일정 제목" data-scope="day" data-day-id="${d.id}" data-field="label" value="${escapeAttr(d.label||'')}">
+        <input type="text" class="day-label" placeholder="${t('sched.dayLabel.ph')}" data-scope="day" data-day-id="${d.id}" data-field="label" value="${escapeAttr(d.label||'')}">
       </div>
       <button class="day-del edit-only" data-action="delete-day" data-day-id="${d.id}">✕</button>
     </div>
     <div class="tl">${d.items.map(it => itemHTML(d, it)).join('')}</div>
-    <button class="add-item edit-only" data-action="add-item" data-day-id="${d.id}">+ 일정 추가</button>
+    <button class="add-item edit-only" data-action="add-item" data-day-id="${d.id}">${t('sched.addItem')}</button>
   </section>`;
 }
 function hourOptions(sel){
@@ -1779,11 +1779,11 @@ function itemHTML(d, it){
       </div>
       <span class="tl-time-view view-only">${escapeHTML(it.time || '--:--')}</span>
       <span class="tl-dot"></span>
-      <input type="text" class="tl-place" placeholder="장소 / 할 일" data-scope="item" data-day-id="${d.id}" data-item-id="${it.id}" data-field="place" value="${escapeAttr(it.place||'')}">
-      <button class="exp-icon${cnt?' has':''}" id="exp-icon-${d.id}-${it.id}" data-action="open-expense" data-day-id="${d.id}" data-item-id="${it.id}" aria-label="지출 입력">${expIconInner(cnt)}</button>
+      <input type="text" class="tl-place" placeholder="${t('sched.place.ph')}" data-scope="item" data-day-id="${d.id}" data-item-id="${it.id}" data-field="place" value="${escapeAttr(it.place||'')}">
+      <button class="exp-icon${cnt?' has':''}" id="exp-icon-${d.id}-${it.id}" data-action="open-expense" data-day-id="${d.id}" data-item-id="${it.id}" aria-label="${t('sched.expense.aria')}">${expIconInner(cnt)}</button>
       <button class="item-del edit-only" data-action="delete-item" data-day-id="${d.id}" data-item-id="${it.id}">✕</button>
     </div>
-    <textarea class="tl-memo edit-only" placeholder="메모" rows="1" data-scope="item" data-day-id="${d.id}" data-item-id="${it.id}" data-field="memo">${escapeHTML(it.memo||'')}</textarea>
+    <textarea class="tl-memo edit-only" placeholder="${t('sched.memo.ph')}" rows="1" data-scope="item" data-day-id="${d.id}" data-item-id="${it.id}" data-field="memo">${escapeHTML(it.memo||'')}</textarea>
     <div class="tl-memo-view view-only" id="memo-view-${d.id}-${it.id}">${linkify(it.memo||'')}</div>
   </div>`;
 }
@@ -2189,8 +2189,8 @@ function addDay(){
   renderDays(); save();
 }
 function deleteDay(id){
-  if(state.days.length <= 1){ alert('최소 하루는 남아있어야 해요.'); return; }
-  if(!confirm('이 날짜와 모든 일정을 삭제할까요?')) return;
+  if(state.days.length <= 1){ alert(t('sched.day.deleteLastWarn')); return; }
+  if(!confirm(t('sched.day.deleteConfirm'))) return;
   state.days = state.days.filter(d => d.id !== id);
   renderDays(); save();
 }
