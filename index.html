@@ -1442,10 +1442,10 @@ function orderedTrips(){
   trips.forEach(t => { if(!seen[t.id]) out.push(t); });  // tripOrder 누락분 뒤에 붙임
   return out;
 }
-function tripDatesLabel(t){
-  if(!t.startDate) return '날짜 미정 · ' + t.dayCount + '일';
-  const end = t.endDate && t.endDate !== t.startDate ? ' → ' + t.endDate.slice(5) : '';
-  return t.startDate + end + ' · ' + t.dayCount + '일';
+function tripDatesLabel(trip){
+  if(!trip.startDate) return t('mypage.trip.noDates') + ' · ' + trip.dayCount + t('mypage.trip.dayUnit');
+  const end = trip.endDate && trip.endDate !== trip.startDate ? ' → ' + trip.endDate.slice(5) : '';
+  return trip.startDate + end + ' · ' + trip.dayCount + t('mypage.trip.dayUnit');
 }
 function renderMypage(){
   const av = document.getElementById('mpAvatar');
@@ -1455,15 +1455,15 @@ function renderMypage(){
     (currentUser && (currentUser.displayName || currentUser.email)) || '내 계정';
   const list = orderedTrips();
   document.getElementById('mpCount').textContent = list.length + ' / 5';
-  document.getElementById('mpList').innerHTML = list.map((t, i) => `
-    <div class="mp-card" data-trip-id="${escapeAttr(t.id)}" data-action="open-trip">
+  document.getElementById('mpList').innerHTML = list.map((trip, i) => `
+    <div class="mp-card" data-trip-id="${escapeAttr(trip.id)}" data-action="open-trip">
       <span class="mp-arrows">
-        <button data-action="move-up" data-trip-id="${escapeAttr(t.id)}" ${i === 0 ? 'disabled' : ''}>▲</button>
-        <button data-action="move-down" data-trip-id="${escapeAttr(t.id)}" ${i === list.length - 1 ? 'disabled' : ''}>▼</button>
+        <button data-action="move-up" data-trip-id="${escapeAttr(trip.id)}" ${i === 0 ? 'disabled' : ''}>▲</button>
+        <button data-action="move-down" data-trip-id="${escapeAttr(trip.id)}" ${i === list.length - 1 ? 'disabled' : ''}>▼</button>
       </span>
-      <div class="mp-title">${t.title ? escapeHTML(t.title) : '제목 없는 여행'}</div>
-      <div class="mp-dates">${escapeHTML(tripDatesLabel(t))}</div>
-      <button class="mp-del" data-action="delete-trip" data-trip-id="${escapeAttr(t.id)}">✕</button>
+      <div class="mp-title">${trip.title ? escapeHTML(trip.title) : t('mypage.trip.untitled')}</div>
+      <div class="mp-dates">${escapeHTML(tripDatesLabel(trip))}</div>
+      <button class="mp-del" data-action="delete-trip" data-trip-id="${escapeAttr(trip.id)}">✕</button>
     </div>`).join('');
 }
 
@@ -1693,8 +1693,8 @@ async function handleAuthChange(user){
       console.error('프로필/여행 로드 실패', e);
       document.getElementById('mpCount').textContent = '– / 5';
       document.getElementById('mpList').innerHTML =
-        '<div class="mp-load-error">여행 정보를 불러오지 못했어요.<br>' +
-        '<button data-action="retry-load">다시 시도</button></div>';
+        '<div class="mp-load-error">' + t('mypage.loadError') + '<br>' +
+        '<button data-action="retry-load">' + t('common.retry') + '</button></div>';
       showScreen('mypage');
       return;
     }

@@ -62,6 +62,20 @@ test('정적 마크업: en 전환 시 nav/탭/표지/설정 텍스트가 영어'
   await expect(page.locator('#setTheme span[data-i18n]')).toHaveText('Color theme');
 });
 
+test('마이페이지 en: 무제목 여행 + 날짜 미정', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    window.__test.seed('users/u1', { avatarId:'default', tripOrder:['t1'] });
+    window.__test.seed('users/u1/trips/t1', { title:'', startDate:'', endDate:'', dayCount:3 });
+  });
+  await page.evaluate(() => window.__test.signIn({ uid:'u1', displayName:'K', email:'a@b.com' }));
+  await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
+  await page.evaluate(() => setLang('en'));
+  await expect(page.locator('.mp-card .mp-title')).toHaveText('Untitled trip');
+  await expect(page.locator('.mp-card .mp-dates')).toContainText('Dates TBD');
+  await expect(page.locator('.mp-card .mp-dates')).toContainText('3d');
+});
+
 test('표지 동의문: ko/en 어순', async ({ page }) => {
   await page.goto('/');
   const ko = await page.locator('.landing-consent').textContent();
