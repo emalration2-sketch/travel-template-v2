@@ -14,7 +14,7 @@
 <style>
   :root{
     --ink:#16302D; --ink-soft:#47635E; --ink-faint:#8AA39D;
-    --red:#E0556E; --gold:#E3A63C; --teal:#1C7A6F;
+    --red:#E0556E; --gold:#E3A63C; --teal:#1C7A6F; --day-idx:var(--gold);
     --paper:#F1F6F4; --paper-2:#E1EDE9; --line:#CEDFD9; --card:#FFFFFF; --nav-bg:rgba(241,246,244,.94); --rail-glass:rgba(241,246,244,.68);
     --fill-strong:linear-gradient(115deg,#123F39 0%,#1C7A6F 100%);
     --mode-edit:#415A78; --mode-view:#1C7A6F; --on-main:#FFFFFF;
@@ -47,7 +47,7 @@
   }
   :root[data-theme="e"]{
     --ink:#43202F; --ink-soft:#8A5560; --ink-faint:#BE93A0;
-    --red:#B23A32; --gold:#E89A3C; --teal:#E8663E;
+    --red:#B23A32; --gold:#E89A3C; --teal:#E8663E; --day-idx:#F7DFB0;
     --paper:#FEF3EC; --paper-2:#FBE3D5; --line:#F1D2C0; --card:#FFFFFF; --nav-bg:rgba(254,243,236,.94); --rail-glass:rgba(254,243,236,.68);
     --fill-strong:linear-gradient(120deg,#E8663E 0%,#EF8A3C 55%,#E8A54A 100%);
     --mode-edit:#B44A6B; --mode-view:#E8663E;
@@ -154,7 +154,7 @@
   }
   .day-index{
     font-family:'Space Mono',monospace; font-size:23px; font-weight:700;
-    color:var(--gold); flex:none; width:34px;
+    color:var(--day-idx); flex:none; width:34px;
   }
   .day-headfields{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;}
   .day-date{
