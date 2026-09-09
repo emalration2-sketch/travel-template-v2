@@ -50,3 +50,14 @@ test('언어 피커: 설정 행 → 모달 → English → 적용 + 닫힘 + 저
   await expect(page.locator('#setLangVal')).toHaveText('English');
   await expect.poll(() => page.evaluate(() => (window.__test.dump()['users/u1']||{}).lang)).toBe('en');
 });
+
+test('정적 마크업: en 전환 시 nav/탭/표지/설정 텍스트가 영어', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => setLang('en'));
+  await expect(page.locator('section[data-screen="landing"] .landing-login')).toHaveText('Continue with Google');
+  await expect(page.locator('#backToMypage')).toHaveText('← My trips');
+  await expect(page.locator('#editTabs .tab[data-tab="schedule"]')).toHaveText('Itinerary');
+  await expect(page.locator('#editTabs .tab[data-tab="materials"]')).toHaveText('Files');
+  await expect(page.locator('#setLang [data-i18n]')).toHaveText('Language');
+  await expect(page.locator('#setTheme span[data-i18n]')).toHaveText('Color theme');
+});
