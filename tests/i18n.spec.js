@@ -6,7 +6,7 @@ test('detectLang: 주 언어 서브태그로 판정, 미지원은 en', async ({ 
     detectLang('ko-KR'), detectLang('ko'), detectLang('en-US'),
     detectLang('ja'), detectLang('zh-CN'), detectLang(''), detectLang(null),
   ]);
-  expect(r).toEqual(['ko','ko','en','ja','en','en','en']);   // ja now supported; zh-CN still → en
+  expect(r).toEqual(['ko','ko','en','ja','zh','en','en']);   // zh now supported (zh-CN → zh)
 });
 
 test('t(): 보간 + en 누락 시 ko 폴백 + 미존재 키는 키 반환', async ({ page }) => {
@@ -339,21 +339,25 @@ test('Task 12 R1 통화 왕복: en 에서 USD 저장 → ko 재저장해도 curr
 
 /* ── C1: 카탈로그 정합성 ─────────────────────────────────────────── */
 
-test('C1 카탈로그: ko/en/ja 키 집합 동일 + 빈 문자열 값 없음', async ({ page }) => {
+test('C1 카탈로그: ko/en/ja/zh 키 집합 동일 + 빈 문자열 값 없음', async ({ page }) => {
   await page.goto('/');
   const r = await page.evaluate(() => ({
     ko: Object.keys(I18N.ko).sort(),
     en: Object.keys(I18N.en).sort(),
     ja: Object.keys(I18N.ja).sort(),
+    zh: Object.keys(I18N.zh).sort(),
     emptyKo: Object.entries(I18N.ko).filter(([, v]) => v === '').map(([k]) => k),
     emptyEn: Object.entries(I18N.en).filter(([, v]) => v === '').map(([k]) => k),
     emptyJa: Object.entries(I18N.ja).filter(([, v]) => v === '').map(([k]) => k),
+    emptyZh: Object.entries(I18N.zh).filter(([, v]) => v === '').map(([k]) => k),
   }));
   expect(r.ko).toEqual(r.en);
   expect(r.ja).toEqual(r.ko);
+  expect(r.zh).toEqual(r.ko);
   expect(r.emptyKo).toEqual([]);
   expect(r.emptyEn).toEqual([]);
   expect(r.emptyJa).toEqual([]);
+  expect(r.emptyZh).toEqual([]);
 });
 
 /* ── C2: en 모드 한글 스모크 ─────────────────────────────────────── */
@@ -495,4 +499,100 @@ test('ja 스모크: 편집기 탭 4종 + 지출 모달 + 설정 + 테마 모달�
   expect(hasHangul(thmTxt), 'theme modal still has Hangul:\n' + thmTxt).toBe(false);
 
   await page.evaluate(() => { curLang = 'ko'; });
+});
+
+/* ── ZH: 중국어(간체) 로케일 ──────────────────────────────────────── */
+
+test('zh 전환: 편집기·설정·지출 모달 렌더가 중국어 카탈로그 값 + 통화 ISO 코드', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    window.__test.seed('users/u1', { avatarId:'default', tripOrder:['t1'] });
+    window.__test.seed('users/u1/trips/t1', { data: JSON.stringify({ title:'X', travelers:['Me'],
+      days:[{ id:'d1', date:'', label:'', items:[{ id:'i1', time:'', place:'Airport', memo:'',
+        expenses:[{ id:'e1', name:'Coffee', amount:'5', currency:'USD', note:'' }] }] }],
+      notes:[{ id:'n1', title:'Pack', mode:'checklist', items:[
+        { id:'c1', text:'passport', done:true } ] }],
+      links:[{ id:'l1', label:'Map', url:'https://x' }], attachments:[] }), title:'X', dayCount:1 });
+  });
+  await page.evaluate(() => window.__test.signIn({ uid:'u1', displayName:'K', email:'a@b.com' }));
+  await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
+  await page.evaluate(() => openTrip('t1'));
+  await expect(page.locator('section[data-screen="editor"]')).toBeVisible();
+
+  await page.evaluate(() => setLang('zh'));
+
+  // 정적 마크업 + 탭
+  await expect(page.locator('#backToMypage')).toHaveText('← 我的旅行');
+  await expect(page.locator('#editTabs .tab[data-tab="schedule"]')).toHaveText('行程');
+  await expect(page.locator('#editTabs .tab[data-tab="materials"]')).toHaveText('资料');
+
+  // 일정 탭 placeholder/버튼
+  await expect(page.locator('#daysContainer .day-label')).toHaveAttribute('placeholder', '行程标题');
+  await expect(page.locator('#daysContainer .add-item')).toHaveText('+ 添加行程');
+  await expect(page.locator('#daysContainer .tl-place')).toHaveAttribute('placeholder', '地点 / 待办');
+
+  // 지출 탭 합계 pill
+  await page.locator('#editTabs .tab[data-tab="expense"]').click();
+  await expect(page.locator('#editView-expense .sum-cur').first()).toHaveText(/^合计（/);
+
+  // 지출 모달: #mCurrency 옵션이 ISO 코드 (CNY 존재, 한글 심볼 '위안' 없음)
+  await page.evaluate(() => openExpenseModal('d1', 'i1'));
+  await expect(page.locator('#saveExpenseBtn')).toHaveText('＋ 添加');
+  const opts = await page.evaluate(() =>
+    [...document.querySelectorAll('#mCurrency option')].map(o => o.textContent));
+  expect(opts).toContain('CNY');
+  expect(opts).toContain('其他（手动输入）');
+  expect(opts).not.toContain('위안');
+  await page.evaluate(() => closeExpenseModal());
+
+  // 설정 화면 + 언어 피커 행이 中文
+  await page.evaluate(() => { renderSettings(); showScreen('settings'); });
+  await expect(page.locator('#setLang [data-i18n]')).toHaveText('语言');
+  await expect(page.locator('#setLangVal')).toHaveText('中文');
+  await expect(page.locator('#setTheme span[data-i18n]')).toHaveText('配色主题');
+
+  await page.evaluate(() => { setLang('ko'); curLang = 'ko'; });
+});
+
+test('zh 스모크: 편집기 탭 4종 + 지출 모달 + 설정 + 테마 모달에 한글 없음', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    window.__test.seed('users/u1', { avatarId:'default', tripOrder:['t1'] });
+    window.__test.seed('users/u1/trips/t1', { data: JSON.stringify({ title:'X', travelers:['Me'],
+      days:[{ id:'d1', date:'', label:'', items:[{ id:'i1', time:'', place:'Airport', memo:'ride',
+        expenses:[{ id:'e1', name:'Coffee', amount:'5', currency:'USD', note:'' }] }] }],
+      notes:[{ id:'n1', title:'Pack', mode:'checklist', items:[
+        { id:'c1', text:'passport', done:true }, { id:'c2', text:'socks', done:false } ] }],
+      links:[{ id:'l1', label:'Map', url:'https://x' }],
+      attachments:[{ id:'a1', name:'hotel.pdf' }] }), title:'X', dayCount:1 });
+  });
+  await page.evaluate(() => window.__test.signIn({ uid:'u1', displayName:'K', email:'a@b.com' }));
+  await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
+  await page.evaluate(() => openTrip('t1'));
+  await expect(page.locator('section[data-screen="editor"]')).toBeVisible();
+  await page.evaluate(() => setLang('zh'));
+
+  const hasHangulZh = s => /[가-힣]/.test(s || '');
+
+  for (const tab of ['schedule', 'notes', 'expense', 'materials']) {
+    await page.locator(`#editTabs .tab[data-tab="${tab}"]`).click();
+    await expect(page.locator(`#editView-${tab}`)).toBeVisible();
+    const txt = await page.locator(`#editView-${tab}`).innerText();
+    expect(hasHangulZh(txt), `editor tab "${tab}" still has Hangul:\n` + txt).toBe(false);
+  }
+
+  await page.evaluate(() => openExpenseModal('d1', 'i1'));
+  const modalTxt = await page.locator('#modalOverlay').innerText();
+  expect(hasHangulZh(modalTxt), 'expense modal still has Hangul:\n' + modalTxt).toBe(false);
+  await page.evaluate(() => closeExpenseModal());
+
+  await page.evaluate(() => { renderSettings(); showScreen('settings'); });
+  const setTxt = await page.locator('section[data-screen="settings"]').innerText();
+  expect(hasHangulZh(setTxt), 'settings screen still has Hangul:\n' + setTxt).toBe(false);
+
+  await page.evaluate(() => openThemeModal());
+  const thmTxt = await page.locator('#v2Modal').innerText();
+  expect(hasHangulZh(thmTxt), 'theme modal still has Hangul:\n' + thmTxt).toBe(false);
+
+  await page.evaluate(() => { setLang('ko'); curLang = 'ko'; });
 });
