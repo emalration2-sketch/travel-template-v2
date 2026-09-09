@@ -1367,7 +1367,7 @@ function setLang(l, silent){
   try{ localStorage.setItem('ttv2-lang', l); }catch(e){}
   if(changed){ rerenderCurrentScreen(); }
   else { applyI18n(document); const v = document.getElementById('setLangVal'); if(v) v.textContent = langName(l); }
-  if(changed && !silent && currentUser && profileLoaded) saveProfile({ lang: l });
+  if(changed && !silent && currentUser && profileLoaded) saveProfile({ lang: l }).catch(e => console.error('언어 저장 실패', e));
 }
 function langCardHTML(l, cur){
   return `<div class="lang-card${l === cur ? ' sel' : ''}" data-lang="${l}">` +
@@ -1548,9 +1548,10 @@ function pickPendingAvatar(id){
   document.querySelectorAll('#v2Modal .av-cell').forEach(c =>
     c.classList.toggle('sel', c.dataset.avatar === id));
 }
-async function saveAvatar(){
+function saveAvatar(){
   document.getElementById('v2Modal').hidden = true;
-  await saveProfile({ avatarId: pendingAvatar || 'default' });
+  // profile 는 saveProfile 내부에서 동기 패치되므로 즉시 렌더 가능. 쓰기는 백그라운드.
+  saveProfile({ avatarId: pendingAvatar || 'default' }).catch(e => console.error('아바타 저장 실패', e));
   renderSettings();
   renderMypage();
 }
@@ -1598,7 +1599,7 @@ function pickTheme(id){
   const thm = THEME_LIST.find(x => x.id === id);
   if(thm && thm.locked){ showMembershipUpsell(id); return; }
   applyTheme(id);
-  saveProfile({ theme: id });
+  saveProfile({ theme: id }).catch(e => console.error('테마 저장 실패', e));
   const v = document.getElementById('setThemeVal');
   if(v) v.textContent = themeName(id);
   document.getElementById('v2Modal').hidden = true;   // 선택 즉시 닫기
@@ -1607,11 +1608,11 @@ function pickTheme(id){
 /* ===== V2: MYPAGE ===== */
 function orderedTrips(){
   const byId = {};
-  trips.forEach(t => { byId[t.id] = t; });
+  trips.forEach(tr => { byId[tr.id] = tr; });
   const seen = {};
   const out = [];
   profile.tripOrder.forEach(id => { if(byId[id] && !seen[id]){ out.push(byId[id]); seen[id] = 1; } });
-  trips.forEach(t => { if(!seen[t.id]) out.push(t); });  // tripOrder 누락분 뒤에 붙임
+  trips.forEach(tr => { if(!seen[tr.id]) out.push(tr); });  // tripOrder 누락분 뒤에 붙임
   return out;
 }
 function tripDatesLabel(trip){
@@ -1639,7 +1640,7 @@ function renderMypage(){
     </div>`).join('');
 }
 
-function currentOrder(){ return orderedTrips().map(t => t.id); }
+function currentOrder(){ return orderedTrips().map(tr => tr.id); }
 async function moveTrip(tripId, dir){
   const order = currentOrder();
   const i = order.indexOf(tripId);
@@ -1647,7 +1648,7 @@ async function moveTrip(tripId, dir){
   if(i < 0 || j < 0 || j >= order.length) return;
   order.splice(i, 1);
   order.splice(j, 0, tripId);
-  await saveProfile({ tripOrder: order });
+  await saveProfile({ tripOrder: order }).catch(e => console.error('정렬 저장 실패', e));
   renderMypage();
 }
 
@@ -1700,7 +1701,7 @@ function initMypageDrag(){
       swallowNextClick = true;
       const newOrder = [...list.querySelectorAll('.mp-card')].map(c => c.dataset.tripId);
       cleanup();
-      await saveProfile({ tripOrder: newOrder });
+      await saveProfile({ tripOrder: newOrder }).catch(e => console.error('정렬 저장 실패', e));
       renderMypage();
     } else {
       cleanup();
@@ -1797,7 +1798,8 @@ async function flushCloud(){
   }
 }
 async function forceFlush(){
-  if(flushTimer || (cacheRead() && cacheRead().dirty)) await flushCloud();
+  const c = cacheRead();
+  if(flushTimer || (c && c.dirty)) await flushCloud();
 }
 let unsyncedTimer = null;
 function startUnsyncedTicker(){
@@ -1847,8 +1849,8 @@ function goBackToMypage(){
   stopUnsyncedTicker();             // 숨겨진 #syncStatus 대상 setInterval 정리
   // 편집한 여행의 메타(제목·날짜·일수)만 로컬에서 갱신 → 목록 전체 재조회(여행 5개 전문 다운로드) 생략
   if(currentTripId){
-    const t = trips.find(x => x.id === currentTripId);
-    if(t) Object.assign(t, deriveTripMeta(state));
+    const trip = trips.find(x => x.id === currentTripId);
+    if(trip) Object.assign(trip, deriveTripMeta(state));
   }
   renderMypage();                   // 메모리의 trips 로 바로 렌더
   showScreen('mypage');
@@ -2161,7 +2163,7 @@ let loadedAttTripId = null;
 function attThumbHTML(a){
   const src = attachmentsCache[a.id];
   const media = src
-    ? `<img class="att-img" src="${src}" alt="${escapeAttr(a.name || t('mat.image.alt'))}" data-action="att-open" data-att-id="${escapeAttr(a.id)}">`
+    ? `<img class="att-img" src="${escapeAttr(src)}" alt="${escapeAttr(a.name || t('mat.image.alt'))}" data-action="att-open" data-att-id="${escapeAttr(a.id)}">`
     : `<span class="att-img" data-action="att-open" data-att-id="${escapeAttr(a.id)}"></span>`;
   return `<div class="att-thumb" data-att-id="${escapeAttr(a.id)}">
     <div class="att-img-wrap">
