@@ -99,7 +99,7 @@ test('모드 색 띠: 수정=mode-edit, 보기=mode-view', async ({ page }) => {
   await page.evaluate(() => setMode('view'));
   const view = await page.evaluate(() => getComputedStyle(document.querySelector('nav.tabs')).borderBottomColor);
   expect(edit).not.toBe(view);
-  expect(edit).toBe('rgb(65, 90, 120)');    // --mode-edit #415A78 (theme A, 스왑됨)
+  expect(edit).toBe('rgb(51, 56, 62)');     // --mode-edit 차콜 #33383E (전 테마 공통)
   expect(view).toBe('rgb(28, 122, 111)');   // --mode-view #1C7A6F (theme A, 강조색)
 });
 
@@ -116,7 +116,7 @@ test('모드 세그먼트 토글: 활성 쪽만 채워지고 탭하면 전환', 
   await page.evaluate(() => setMode('edit'));
   const editBgOnEdit = await editOpt.evaluate(el => getComputedStyle(el).backgroundColor);
   const viewBgOnEdit = await viewOpt.evaluate(el => getComputedStyle(el).backgroundColor);
-  expect(editBgOnEdit).toBe('rgb(65, 90, 120)');            // --mode-edit 채움 (#415A78)
+  expect(editBgOnEdit).toBe('rgb(51, 56, 62)');             // --mode-edit 채움 (#33383E 차콜)
   expect(viewBgOnEdit).toBe('rgba(0, 0, 0, 0)');            // 비활성 투명
 
   await viewOpt.click();

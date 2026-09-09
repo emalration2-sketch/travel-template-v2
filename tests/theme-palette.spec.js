@@ -1,12 +1,13 @@
 const { test, expect } = require('./support/fixtures');
 
-// --fill-strong 는 5개 테마 모두 배너 계열 선셋 그라디언트
+// --fill-strong 는 5개 테마 모두 배너 계열 그라디언트, --mode-edit 는 5개 모두 차콜 #33383E
+const EDIT = 'rgb(51, 56, 62)';
 const EXPECT = {
-  a: { paper:'rgb(241, 246, 244)', teal:'rgb(28, 122, 111)',  modeEdit:'rgb(65, 90, 120)',  modeView:'rgb(28, 122, 111)' },
-  b: { paper:'rgb(244, 243, 241)', teal:'rgb(86, 92, 100)',   modeEdit:'rgb(79, 107, 91)',  modeView:'rgb(86, 92, 100)' },
-  c: { paper:'rgb(242, 244, 249)', teal:'rgb(53, 82, 143)',   modeEdit:'rgb(91, 75, 138)',  modeView:'rgb(53, 82, 143)' },
-  d: { paper:'rgb(12, 21, 36)',    teal:'rgb(51, 214, 192)',  modeEdit:'rgb(201, 74, 126)', modeView:'rgb(51, 214, 192)' },
-  e: { paper:'rgb(254, 243, 236)', teal:'rgb(232, 102, 62)',  modeEdit:'rgb(180, 74, 107)', modeView:'rgb(232, 102, 62)' },
+  a: { paper:'rgb(241, 246, 244)', teal:'rgb(28, 122, 111)',  modeEdit:EDIT, modeView:'rgb(28, 122, 111)' },
+  b: { paper:'rgb(244, 243, 241)', teal:'rgb(86, 92, 100)',   modeEdit:EDIT, modeView:'rgb(86, 92, 100)' },
+  c: { paper:'rgb(242, 244, 249)', teal:'rgb(53, 82, 143)',   modeEdit:EDIT, modeView:'rgb(53, 82, 143)' },
+  d: { paper:'rgb(12, 21, 36)',    teal:'rgb(51, 214, 192)',  modeEdit:EDIT, modeView:'rgb(51, 214, 192)' },
+  e: { paper:'rgb(254, 243, 236)', teal:'rgb(232, 102, 62)',  modeEdit:EDIT, modeView:'rgb(232, 102, 62)' },
 };
 
 test('5개 테마 토큰이 data-theme 로 적용된다', async ({ page }) => {

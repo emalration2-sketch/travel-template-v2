@@ -31,7 +31,7 @@ test('nav.tabs 하단 띠가 테마 --mode-edit / --mode-view 를 따른다', as
   const edit = await page.evaluate(() => getComputedStyle(document.querySelector('nav.tabs')).borderBottomColor);
   await page.evaluate(() => setMode('view'));
   const view = await page.evaluate(() => getComputedStyle(document.querySelector('nav.tabs')).borderBottomColor);
-  expect(edit).toBe('rgb(91, 75, 138)');    // c --mode-edit #5B4B8A (인디고, 스왑됨)
+  expect(edit).toBe('rgb(51, 56, 62)');     // --mode-edit 차콜 #33383E (전 테마 공통)
   expect(view).toBe('rgb(53, 82, 143)');    // c --mode-view #35528F (강조색)
 });
 
