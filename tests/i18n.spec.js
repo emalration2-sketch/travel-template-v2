@@ -271,3 +271,128 @@ test('법적 문서: 언어별 md fetch + -ko 폴백', async ({ page }) => {
   expect(seen).toEqual(['terms-en.md', 'terms-ko.md']);   // en 시도 → 404 → ko 폴백
   await page.evaluate(() => { curLang = 'ko'; });   // en 상태가 다른 테스트로 새지 않도록 복구
 });
+
+/* ── Task 12: 지출 탭 + 모달 + 통화 선택 ─────────────────────────── */
+
+async function openExpenseEditor(page, expenses){
+  await page.goto('/');
+  await page.evaluate((exps) => {
+    window.__test.seed('users/u1', { avatarId:'default', tripOrder:['t1'] });
+    window.__test.seed('users/u1/trips/t1', { data: JSON.stringify({ title:'X', travelers:['Me'],
+      days:[{ id:'d1', date:'', label:'', items:[{ id:'i1', time:'', place:'Airport', memo:'', expenses:exps }] }],
+      notes:[], links:[], attachments:[] }), title:'X', dayCount:1 });
+  }, expenses || []);
+  await page.evaluate(() => window.__test.signIn({ uid:'u1', displayName:'K', email:'a@b.com' }));
+  await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
+  await page.evaluate(() => openTrip('t1'));
+  await expect(page.locator('section[data-screen="editor"]')).toBeVisible();
+}
+
+test('Task 12 지출 탭 en: 빈 상태 / 합계 pill / 모달 버튼 / 통화 옵션', async ({ page }) => {
+  await openExpenseEditor(page, []);
+  await page.locator('#editTabs .tab[data-tab="expense"]').click();
+  await page.evaluate(() => setLang('en'));
+
+  await expect(page.locator('#editView-expense .empty-hint'))
+    .toHaveText('No expenses yet. Use the + on a stop to add one.');
+
+  await page.evaluate(() => {
+    state.days[0].items[0].expenses.push({ id:'e1', name:'Coffee', amount:'5', currency:'USD', note:'' });
+    renderExpenseTab();
+  });
+  await expect(page.locator('#editView-expense .sum-cur').first()).toHaveText(/^Total \(/);
+
+  await page.evaluate(() => openExpenseModal('d1', 'i1'));
+  await expect(page.locator('#saveExpenseBtn')).toHaveText('+ Add');
+  const opts = await page.evaluate(() =>
+    [...document.querySelectorAll('#mCurrency option')].map(o => o.textContent));
+  expect(opts).toContain('USD');
+  expect(opts).toContain('Other (custom)');
+
+  await page.evaluate(() => { closeExpenseModal(); setLang('ko'); });
+});
+
+test('Task 12 R1 통화 왕복: en 에서 USD 저장 → ko 재저장해도 currency 유지', async ({ page }) => {
+  await openExpenseEditor(page, []);
+  await page.evaluate(() => {
+    setLang('en');
+    openExpenseModal('d1', 'i1');
+    document.getElementById('mName').value = 'Taxi';
+    document.getElementById('mAmount').value = '20';
+    document.getElementById('mCurrency').value = 'USD';
+    saveExpense();
+  });
+  expect(await page.evaluate(() => state.days[0].items[0].expenses[0].currency)).toBe('USD');
+
+  await page.evaluate(() => {
+    setLang('ko');
+    const ex = state.days[0].items[0].expenses[0];
+    editExpense('d1', 'i1', ex.id);
+    saveExpense();               // 필드 변경 없이 재저장
+  });
+  const after = await page.evaluate(() => state.days[0].items[0].expenses[0].currency);
+  expect(after).toBe('USD');     // '' 로도 '원' 으로도 덮이지 않는다
+  expect(after).not.toBe('');
+
+  await page.evaluate(() => { curLang = 'ko'; });
+});
+
+/* ── C1: 카탈로그 정합성 ─────────────────────────────────────────── */
+
+test('C1 카탈로그: ko/en 키 집합 동일 + 빈 문자열 값 없음', async ({ page }) => {
+  await page.goto('/');
+  const r = await page.evaluate(() => ({
+    ko: Object.keys(I18N.ko).sort(),
+    en: Object.keys(I18N.en).sort(),
+    emptyKo: Object.entries(I18N.ko).filter(([, v]) => v === '').map(([k]) => k),
+    emptyEn: Object.entries(I18N.en).filter(([, v]) => v === '').map(([k]) => k),
+  }));
+  expect(r.ko).toEqual(r.en);
+  expect(r.emptyKo).toEqual([]);
+  expect(r.emptyEn).toEqual([]);
+});
+
+/* ── C2: en 모드 한글 스모크 ─────────────────────────────────────── */
+
+test('C2 en 스모크: 편집기 탭 4종 + 지출 모달 + 설정 + 테마 모달에 한글 없음', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    window.__test.seed('users/u1', { avatarId:'default', tripOrder:['t1'] });
+    window.__test.seed('users/u1/trips/t1', { data: JSON.stringify({ title:'X', travelers:['Me'],
+      days:[{ id:'d1', date:'', label:'', items:[{ id:'i1', time:'', place:'Airport', memo:'ride',
+        expenses:[{ id:'e1', name:'Coffee', amount:'5', currency:'USD', note:'' }] }] }],
+      notes:[{ id:'n1', title:'Pack', mode:'checklist', items:[
+        { id:'c1', text:'passport', done:true }, { id:'c2', text:'socks', done:false } ] }],
+      links:[{ id:'l1', label:'Map', url:'https://x' }],
+      attachments:[{ id:'a1', name:'hotel.pdf' }] }), title:'X', dayCount:1 });
+  });
+  await page.evaluate(() => window.__test.signIn({ uid:'u1', displayName:'K', email:'a@b.com' }));
+  await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
+  await page.evaluate(() => openTrip('t1'));
+  await expect(page.locator('section[data-screen="editor"]')).toBeVisible();
+  await page.evaluate(() => setLang('en'));
+
+  const hasHangul = s => /[가-힣]/.test(s || '');
+
+  for (const tab of ['schedule', 'notes', 'expense', 'materials']) {
+    await page.locator(`#editTabs .tab[data-tab="${tab}"]`).click();
+    await expect(page.locator(`#editView-${tab}`)).toBeVisible();
+    const txt = await page.locator(`#editView-${tab}`).innerText();
+    expect(hasHangul(txt), `editor tab "${tab}" still has Hangul:\n` + txt).toBe(false);
+  }
+
+  await page.evaluate(() => openExpenseModal('d1', 'i1'));
+  const modalTxt = await page.locator('#modalOverlay').innerText();
+  expect(hasHangul(modalTxt), 'expense modal still has Hangul:\n' + modalTxt).toBe(false);
+  await page.evaluate(() => closeExpenseModal());
+
+  await page.evaluate(() => { renderSettings(); showScreen('settings'); });
+  const setTxt = await page.locator('section[data-screen="settings"]').innerText();
+  expect(hasHangul(setTxt), 'settings screen still has Hangul:\n' + setTxt).toBe(false);
+
+  await page.evaluate(() => openThemeModal());
+  const thmTxt = await page.locator('#v2Modal').innerText();
+  expect(hasHangul(thmTxt), 'theme modal still has Hangul:\n' + thmTxt).toBe(false);
+
+  await page.evaluate(() => { curLang = 'ko'; });
+});
