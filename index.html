@@ -2527,7 +2527,7 @@ function exportPDF(){
         const ih = im.naturalHeight * imgWidth / im.naturalWidth;
         if(!first && (y + ih + 6 > pageHeight - margin)){ doc.addPage(); y = margin; }
         doc.setFontSize(9);
-        const cap = doc.splitTextToSize(a.name || '이미지', imgWidth);
+        const cap = doc.splitTextToSize(a.name || t('mat.image.alt'), imgWidth);
         doc.text(cap, margin, y + 3);
         y += (cap.length > 1) ? 4 * cap.length : 5;
         doc.addImage(url, 'JPEG', margin, y, imgWidth, ih);
