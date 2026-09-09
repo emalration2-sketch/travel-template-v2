@@ -9,6 +9,7 @@ exports.test = base.test.extend({
     // 실제 Firebase SDK 로드 차단 → 주입한 스텁이 window.firebase 를 유지
     await page.route('**/www.gstatic.com/firebasejs/**', (r) => r.abort());
     await page.addInitScript(STUB);
+    await page.addInitScript(() => { try { localStorage.setItem('ttv2-lang', 'ko'); } catch (e) {} });
     await use(page);
   },
 });
