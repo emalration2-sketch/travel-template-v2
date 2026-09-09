@@ -30,3 +30,23 @@ test('카탈로그: 대표 키가 ko/en 모두 존재', async ({ page }) => {
   });
   for (const [k, ko, en] of r) { expect(ko, k + ' ko').toBe(true); expect(en, k + ' en').toBe(true); }
 });
+
+test('언어 피커: 설정 행 → 모달 → English → 적용 + 닫힘 + 저장', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => { window.__test.seed('users/u1', { avatarId:'default', tripOrder:[] }); });
+  await page.evaluate(() => window.__test.signIn({ uid:'u1', displayName:'K', email:'a@b.com' }));
+  await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
+  await page.evaluate(() => { renderSettings(); showScreen('settings'); });
+
+  await expect(page.locator('#setLang')).not.toHaveClass(/set-disabled/);
+  await expect(page.locator('#setLangVal')).toHaveText('한국어');
+
+  await page.locator('#setLang').click();
+  await page.locator('#v2Modal .lang-card[data-lang="en"]').click();
+
+  await expect(page.locator('#v2Modal')).toBeHidden();
+  expect(await page.evaluate(() => document.documentElement.lang)).toBe('en');
+  expect(await page.evaluate(() => localStorage.getItem('ttv2-lang'))).toBe('en');
+  await expect(page.locator('#setLangVal')).toHaveText('English');
+  await expect.poll(() => page.evaluate(() => (window.__test.dump()['users/u1']||{}).lang)).toBe('en');
+});

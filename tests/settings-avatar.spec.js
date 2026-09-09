@@ -11,7 +11,7 @@ test('상단 바 탭 → 설정, 계정 정보 노출', async ({ page }) => {
   await expect(page.locator('section[data-screen="settings"]')).toBeVisible();
   await expect(page.locator('#setName')).toHaveText('김진');
   await expect(page.locator('#setEmail')).toHaveText('kim@x.com');
-  await expect(page.locator('#setLang')).toContainText('준비 중');
+  await expect(page.locator('#setLang')).toContainText('한국어');
   await expect(page.locator('#setTheme')).toContainText('오션');
 });
 

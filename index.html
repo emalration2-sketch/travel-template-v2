@@ -559,6 +559,13 @@
     font-size:12px; display:none; align-items:center; justify-content:center; flex:none; }
   .theme-card.sel .tck{ display:flex; }
   .theme-card .tck.lock{ display:flex; background:transparent; color:var(--ink-faint); }
+  .lang-card{ display:flex; align-items:center; justify-content:space-between; border:1px solid var(--line);
+    border-radius:12px; padding:13px 14px; margin-bottom:9px; background:var(--card); cursor:pointer; }
+  .lang-card.sel{ border:2px solid var(--accent); padding:12px 13px; }
+  .lang-card .lang-nm{ font-size:14px; font-weight:700; color:var(--ink); }
+  .lang-card .tck{ width:22px; height:22px; border-radius:50%; background:var(--accent); color:var(--on-accent);
+    font-size:12px; display:none; align-items:center; justify-content:center; flex:none; }
+  .lang-card.sel .tck{ display:flex; }
   .tprev-a{ --tp-bg:#F1F6F4; --tp-p2:#E1EDE9; --tp-line:#CEDFD9; --tp-soft:#47635E; --tp-acc:#1C7A6F; --tp-onacc:#FFFFFF; --tp-head:linear-gradient(115deg,#123F39 0%,#1C7A6F 100%); }
   .tprev-b{ --tp-bg:#F4F3F1; --tp-p2:#E9E7E3; --tp-line:#DAD8D3; --tp-soft:#55585C; --tp-acc:#565C64; --tp-onacc:#FFFFFF; --tp-head:linear-gradient(115deg,#1E2124 0%,#3C4147 100%); }
   .tprev-c{ --tp-bg:#F2F4F9; --tp-p2:#E6EAF4; --tp-line:#D6DCEA; --tp-soft:#4A5178; --tp-acc:#35528F; --tp-onacc:#FFFFFF; --tp-head:linear-gradient(115deg,#1B2340 0%,#33406E 100%); }
@@ -683,7 +690,10 @@
       </div>
     </div>
     <div class="set-row" id="setAvatarRow" data-action="open-avatar"><span>아바타 변경</span><span class="set-chev">›</span></div>
-    <div class="set-row set-disabled" id="setLang"><span>언어</span><span class="set-soon">준비 중</span></div>
+    <div class="set-row" id="setLang" data-action="open-lang">
+      <span data-i18n="settings.language">언어</span>
+      <span class="set-row-val"><span id="setLangVal">한국어</span> <span class="set-chev">›</span></span>
+    </div>
     <div class="set-row" id="setTheme" data-action="open-theme">
       <span>컬러 테마</span>
       <span class="set-row-val"><span id="setThemeVal"></span> <span class="set-chev">›</span></span>
@@ -909,7 +919,7 @@ const LEGAL_DOCS = {
   terms:   { file: 'docs/legal/terms-ko.md',   gh: 'https://github.com/emalration2-sketch/travel-template-v2/blob/main/docs/legal/terms-ko.md' },
   privacy: { file: 'docs/legal/privacy-ko.md', gh: 'https://github.com/emalration2-sketch/travel-template-v2/blob/main/docs/legal/privacy-ko.md' },
 };
-const legalCache = {};
+let legalCache = {};
 let legalFrom = 'landing';
 let settingsFrom = 'mypage';
 async function openLegal(doc){
@@ -1170,6 +1180,40 @@ function applyI18n(root){
   root.querySelectorAll('[data-i18n-ph]').forEach(el => { el.setAttribute('placeholder', t(el.getAttribute('data-i18n-ph'))); });
   root.querySelectorAll('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria'))); });
 }
+function rerenderCurrentScreen(){
+  applyI18n(document);
+  if(currentScreen === 'editor'){ rebuildAll(); renderTravelers(); }
+  else if(currentScreen === 'mypage') renderMypage();
+  else if(currentScreen === 'settings') renderSettings();
+  else if(currentScreen === 'terms' || currentScreen === 'privacy'){ legalCache = {}; openLegal(currentScreen); }
+  const v = document.getElementById('setLangVal'); if(v) v.textContent = langName(curLang);
+}
+function setLang(l, silent){
+  if(!LANGS.includes(l)) return;
+  const changed = l !== curLang;
+  curLang = l;
+  document.documentElement.lang = l;
+  try{ localStorage.setItem('ttv2-lang', l); }catch(e){}
+  if(changed){ rerenderCurrentScreen(); }
+  else { applyI18n(document); const v = document.getElementById('setLangVal'); if(v) v.textContent = langName(l); }
+  if(changed && !silent && currentUser && profileLoaded) saveProfile({ lang: l });
+}
+function langCardHTML(l, cur){
+  return `<div class="lang-card${l === cur ? ' sel' : ''}" data-lang="${l}">` +
+    `<span class="lang-nm">${langName(l)}</span><span class="tck">✓</span></div>`;
+}
+function openLangModal(){
+  document.getElementById('v2ModalBody').innerHTML =
+    '<div style="font-weight:700;font-size:13px;margin-bottom:11px">' + t('settings.language') + '</div>' +
+    LANGS.map(l => langCardHTML(l, curLang)).join('');
+  document.getElementById('v2ModalActions').innerHTML =
+    '<button class="v2-btn-ghost" data-action="v2modal-close">' + t('common.close') + '</button>';
+  document.getElementById('v2Modal').hidden = false;
+}
+function pickLang(l){
+  setLang(l);
+  document.getElementById('v2Modal').hidden = true;
+}
 
 let state = defaultState();
 let currentMode = localStorage.getItem('travel-template-mode') || 'edit';
@@ -1194,7 +1238,7 @@ function initFirebase(){
   }catch(e){ console.error('Firebase 초기화 실패', e); }
 }
 /* ===== V2: PROFILE STORE ===== */
-let profile = { avatarId: 'default', tripOrder: [], theme: 'a' };
+let profile = { avatarId: 'default', tripOrder: [], theme: 'a', lang: curLang };
 let profileLoaded = false;
 function profileDoc(){ return fbDb.collection('users').doc(currentUser.uid); }
 async function loadProfile(){
@@ -1205,8 +1249,10 @@ async function loadProfile(){
     avatarId: d.avatarId || 'default',
     tripOrder: Array.isArray(d.tripOrder) ? d.tripOrder.slice() : [],
     theme: THEME_IDS.includes(d.theme) ? d.theme : 'a',
+    lang: LANGS.includes(d.lang) ? d.lang : curLang,
   };
   applyTheme(profile.theme);
+  setLang(profile.lang, true);   // silent = no save loop
   profileLoaded = true;
   return profile;
 }
@@ -1215,7 +1261,7 @@ async function saveProfile(patch){
   Object.assign(profile, patch);
   if(patch.theme) applyTheme(profile.theme);
   await profileDoc().set(
-    { avatarId: profile.avatarId, tripOrder: profile.tripOrder, theme: profile.theme },
+    { avatarId: profile.avatarId, tripOrder: profile.tripOrder, theme: profile.theme, lang: profile.lang },
     { merge: true }
   );
 }
@@ -1306,6 +1352,8 @@ function renderSettings(){
   document.getElementById('setEmail').textContent = (currentUser && currentUser.email) || '';
   const tv = document.getElementById('setThemeVal');
   if(tv) tv.textContent = themeName(profile.theme || 'a');
+  const lv = document.getElementById('setLangVal');
+  if(lv) lv.textContent = langName(curLang);
   const bk = document.getElementById('setBack');
   if(bk) bk.textContent = (settingsFrom === 'editor') ? '← 편집으로' : '← 내 여행';
 }
@@ -2533,6 +2581,8 @@ document.addEventListener('click', e => {
   if(avCell){ pickPendingAvatar(avCell.dataset.avatar); return; }
   const tCard = e.target.closest('#v2Modal .theme-card');
   if(tCard){ pickTheme(tCard.dataset.theme); return; }
+  const lCard = e.target.closest('#v2Modal .lang-card');
+  if(lCard){ pickLang(lCard.dataset.lang); return; }
   if(!btn) return;
   const a = btn.dataset.action;
   if(a === 'edit-tab'){ showEditorTab(btn.dataset.tab); return; }
@@ -2584,6 +2634,7 @@ document.addEventListener('click', e => {
   else if(a === 'open-legal'){ legalFrom = currentScreen; openLegal(btn.dataset.doc); }
   else if(a === 'open-avatar') openAvatarModal();
   else if(a === 'open-theme') openThemeModal();
+  else if(a === 'open-lang') openLangModal();
   else if(a === 'avatar-reset') pickPendingAvatar('default');
   else if(a === 'avatar-save') saveAvatar();
   else if(a === 'v2modal-close') v2ModalClose();
@@ -2687,6 +2738,7 @@ document.addEventListener('input', handleFieldChange);
 document.addEventListener('change', e => { handleFieldChange(e); handleAuxChange(e); });
 
 /* ---------- INIT ---------- */
+applyI18n(document);
 rebuildAll();
 setMode(currentMode);
 initMypageDrag();
