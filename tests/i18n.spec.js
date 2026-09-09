@@ -238,3 +238,21 @@ test('자료모음 탭 en: 링크/이미지 placeholder + 동기화 티커 + 여
   await page.evaluate(() => showDeleteModal('t1'));
   await expect(page.locator('#v2ModalBody')).toHaveText('Delete this trip?\nThis can’t be undone.');
 });
+
+test('공유 HTML: en 라벨 + <html lang="en">', async ({ page }) => {
+  await page.goto('/');
+  const html = await page.evaluate(() => {
+    curLang = 'en';
+    const out = buildStaticGuideHTML({ title:'Kyoto', travelers:['Me'],
+      days:[{ id:'d1', date:'2026-05-01', label:'Day one', items:[
+        { id:'i1', time:'09:00', place:'Airport', memo:'', expenses:[] } ] }],
+      notes:[{ id:'n1', title:'Pack', mode:'text', content:'passport' }],
+      links:[{ id:'l1', label:'', url:'https://x' }] });
+    curLang = 'ko';   // 다른 테스트로 en 상태가 새지 않도록 복구
+    return out;
+  });
+  expect(html).toContain('<html lang="en">');
+  expect(html).toMatch(/>\s*Notes\s*</);
+  expect(html).toMatch(/>\s*Links\s*</);
+  expect(html).not.toContain('메모');
+});

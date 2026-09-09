@@ -2413,22 +2413,22 @@ function buildStaticGuideHTML(s){
     return `<div class="s-note-content">${escapeHTML(n.content||'')}</div>`;
   };
   const notesHTML = s.notes.length
-    ? `<section class="s-block"><div class="s-title">메모</div>${s.notes.map(n => `<div class="s-note"><div class="s-note-title">${escapeHTML(n.title||'')}</div>${noteBody(n)}</div>`).join('')}</section>`
+    ? `<section class="s-block"><div class="s-title">${t('share.notes')}</div>${s.notes.map(n => `<div class="s-note"><div class="s-note-title">${escapeHTML(n.title||'')}</div>${noteBody(n)}</div>`).join('')}</section>`
     : '';
   const linksHTML = (s.links||[]).length
-    ? `<section class="s-block"><div class="s-title">참고 링크</div><div class="s-links">${s.links.map(l => `<a class="s-link-btn" href="${escapeAttr(normalizeUrl(l.url))}" target="_blank" rel="noopener">${escapeHTML(l.label||'링크')}</a>`).join('')}</div></section>`
+    ? `<section class="s-block"><div class="s-title">${t('share.links')}</div><div class="s-links">${s.links.map(l => `<a class="s-link-btn" href="${escapeAttr(normalizeUrl(l.url))}" target="_blank" rel="noopener">${escapeHTML(l.label || t('mat.link.fallback'))}</a>`).join('')}</div></section>`
     : '';
   let all = [];
   s.days.forEach((d, di) => d.items.forEach(it => it.expenses.forEach(ex => all.push(Object.assign({}, ex)))));
   const totals = {};
   all.forEach(ex => { const c=(ex.currency||'').trim()||'-'; totals[c]=(totals[c]||0)+(parseFloat(ex.amount)||0); });
   const expHTML = all.length
-    ? `<section class="s-block"><div class="s-title">지출기록</div><div class="s-sum">${Object.entries(totals).map(([c,sum]) => `<div class="s-sum-card"><div>합계(${escapeHTML(c)})</div><div class="s-sum-amt">${sum.toLocaleString()}</div></div>`).join('')}</div></section>`
+    ? `<section class="s-block"><div class="s-title">${t('share.expense')}</div><div class="s-sum">${Object.entries(totals).map(([c,sum]) => `<div class="s-sum-card"><div>${t('expense.total', { cur: escapeHTML(c) })}</div><div class="s-sum-amt">${sum.toLocaleString()}</div></div>`).join('')}</div></section>`
     : '';
-  return `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${escapeHTML(s.title||'나의 여행')}</title>
+  return `<!DOCTYPE html><html lang="${curLang}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${escapeHTML(s.title || t('share.defaultTitle'))}</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&family=Space+Mono:wght@400;700&family=Noto+Sans+KR:wght@400;600;700&display=swap" rel="stylesheet">
 <style>${STATIC_CSS}</style></head><body>
-<header class="s-header"><h1>${escapeHTML(s.title||'나의 여행')}</h1><div class="s-travelers">${s.travelers.map(escapeHTML).join(' · ')}</div></header>
+<header class="s-header"><h1>${escapeHTML(s.title || t('share.defaultTitle'))}</h1><div class="s-travelers">${s.travelers.map(escapeHTML).join(' · ')}</div></header>
 <main>${daysHTML}${notesHTML}${linksHTML}${expHTML}</main>
 </body></html>`;
 }
@@ -2456,7 +2456,7 @@ async function sharePdf(doc, filename){
       const file = new File([blob], filename, { type:'application/pdf' });
       if(navigator.canShare({ files:[file] })){
         try{
-          await navigator.share({ files:[file], title: state.title || '여행 일정' });
+          await navigator.share({ files:[file], title: state.title || t('pdf.filename') });
           return;
         }catch(e){
           if(e && e.name === 'AbortError') return;   // 사용자가 공유 취소 — 다운로드까지 하지 않음
@@ -2467,7 +2467,7 @@ async function sharePdf(doc, filename){
   doc.save(filename);   // 데스크톱 / 미지원 브라우저
 }
 function exportPDF(){
-  const filename = (state.title || '나의여행') + '.pdf';
+  const filename = (state.title || t('pdf.filenameFallback')) + '.pdf';
   const btns = document.querySelectorAll('.foot-btns button');
   btns.forEach(b => b.disabled = true);
   const prevScrollY = window.scrollY;
@@ -2553,7 +2553,7 @@ function exportPDF(){
 }
 async function shareGuide(){
   const html = buildStaticGuideHTML(state);
-  const fileName = (state.title || '나의여행') + '_완성가이드.html';
+  const fileName = (state.title || t('pdf.filenameFallback')) + '_완성가이드.html';
   const blob = new Blob([html], { type:'text/html' });
   try{
     const file = new File([blob], fileName, { type:'text/html' });
