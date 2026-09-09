@@ -17,7 +17,7 @@
     --red:#E0556E; --gold:#E3A63C; --teal:#1C7A6F; --day-idx:var(--gold);
     --paper:#F1F6F4; --paper-2:#E1EDE9; --line:#CEDFD9; --card:#FFFFFF; --nav-bg:rgba(241,246,244,.94); --rail-glass:rgba(241,246,244,.68);
     --fill-strong:linear-gradient(115deg,#123F39 0%,#1C7A6F 100%);
-    --mode-edit:#33383E; --mode-view:#1C7A6F; --on-main:#FFFFFF;
+    --mode-edit:#33383E; --mode-view:#1C7A6F; --on-main:#FFFFFF; --on-edit:#FFFFFF;
     --accent:var(--teal); --on-accent:var(--on-main);
     --banner-bg:linear-gradient(115deg,#123F39 0%,#1C7A6F 100%); --banner-fg:#FFFFFF;
   }
@@ -26,7 +26,7 @@
     --red:#C6506A; --gold:#DE9A34; --teal:#565C64;
     --paper:#F4F3F1; --paper-2:#E9E7E3; --line:#DAD8D3; --card:#FFFFFF; --nav-bg:rgba(244,243,241,.94); --rail-glass:rgba(244,243,241,.68);
     --fill-strong:linear-gradient(115deg,#1E2124 0%,#3C4147 100%);
-    --mode-edit:#33383E; --mode-view:#565C64;
+    --mode-edit:#33534E; --mode-view:#565C64;
     --banner-bg:linear-gradient(115deg,#1E2124 0%,#3C4147 100%); --banner-fg:#FFFFFF;
   }
   :root[data-theme="c"]{
@@ -42,7 +42,7 @@
     --red:#FF6B85; --gold:#E3A63C; --teal:#33D6C0;
     --paper:#0C1524; --paper-2:#182335; --line:#29374D; --card:#131E30; --nav-bg:rgba(12,21,36,.92); --rail-glass:rgba(19,30,48,.66);
     --fill-strong:linear-gradient(125deg,#0F1C3E 0%,#123E5E 52%,#0C4F4A 100%);
-    --mode-edit:#33383E; --mode-view:#33D6C0; --on-main:#0C1524;
+    --mode-edit:#DCE7EC; --mode-view:#33D6C0; --on-main:#0C1524; --on-edit:#0C1524;
     --banner-bg:linear-gradient(125deg,#0F1C3E 0%,#123E5E 52%,#0C4F4A 100%); --banner-fg:#FFFFFF;
   }
   :root[data-theme="e"]{
@@ -50,7 +50,7 @@
     --red:#B23A32; --gold:#E89A3C; --teal:#E8663E; --day-idx:#F7DFB0;
     --paper:#FEF3EC; --paper-2:#FBE3D5; --line:#F1D2C0; --card:#FFFFFF; --nav-bg:rgba(254,243,236,.94); --rail-glass:rgba(254,243,236,.68);
     --fill-strong:linear-gradient(120deg,#E8663E 0%,#EF8A3C 55%,#E8A54A 100%);
-    --mode-edit:#33383E; --mode-view:#E8663E;
+    --mode-edit:#7A7069; --mode-view:#E8663E;
     --banner-bg:linear-gradient(120deg,#E8663E 0%,#EF8A3C 55%,#E8A54A 100%); --banner-fg:#FFFFFF;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
@@ -94,7 +94,7 @@
     cursor:pointer; white-space:nowrap; transition:background .12s, color .12s;
   }
   body.mode-view .mode-seg-opt[data-mode="view"]{ background:var(--mode-view); color:var(--on-main); }
-  body.mode-edit .mode-seg-opt[data-mode="edit"]{ background:var(--mode-edit); color:#fff; }
+  body.mode-edit .mode-seg-opt[data-mode="edit"]{ background:var(--mode-edit); color:var(--on-edit); }
   .tabs-scroll{
     display:flex; gap:6px; overflow-x:auto; padding:0 16px 10px;
     scrollbar-width:none;
