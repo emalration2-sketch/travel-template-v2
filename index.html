@@ -63,7 +63,16 @@
   @keyframes riseIn{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:translateY(0); } }
   .just-added{ animation:riseIn var(--dur-m) var(--ease); }
   button:not(:disabled){ transition:transform var(--dur-s) var(--ease); }
-  button:not(:disabled):active{ transform:scale(.97); }
+  button:not(:disabled):active{ transform:scale(.95); }
+  @media (hover:hover) and (pointer:fine){
+    button:not(:disabled):hover{ filter:brightness(.96); }
+    .tab:not(.active):hover{ background:var(--line); }
+    .mode-seg-opt:hover{ background:var(--line); }
+    .icon-btn:hover{ background:var(--paper-2); border-radius:50%; }
+    .mp-card:hover{ border-color:var(--teal); box-shadow:0 6px 16px rgba(0,0,0,.08); }
+    .set-row:hover{ background:var(--paper-2); }
+    .mp-new:hover{ box-shadow:0 4px 12px rgba(0,0,0,.1); transform:translateY(-1px); }
+  }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0; padding:0;}
   body{
@@ -469,6 +478,13 @@
   }
   .landing-feats li svg{width:16px; height:16px; flex:none; stroke:#6FE0D0; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
   .landing-login{border:none; background:#fff; color:#0F1C3E; border-radius:999px; padding:14px 28px; font-size:14px; font-weight:700; cursor:pointer;}
+  .landing-guide-link{
+    display:inline-block; margin-top:14px; padding:10px 22px;
+    border:1px solid rgba(255,255,255,.45); border-radius:999px;
+    color:#fff; font-size:13px; font-weight:600; text-decoration:none;
+    transition:background var(--dur-m) var(--ease), border-color var(--dur-m) var(--ease);
+  }
+  .landing-guide-link:hover{ background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.75); }
   .legal{padding-top:16px; padding-bottom:60px;}
   .legal-title{font-family:'Fraunces',serif; font-size:20px; font-weight:700; color:var(--ink); margin:6px 0 14px;}
   .legal-body{font-size:13px; line-height:1.75; color:var(--ink-soft);}
@@ -676,9 +692,9 @@
     </ul>
     <div class="landing-cta">
       <button id="landingLoginBtn" class="landing-login" data-action="login" data-i18n="landing.login">Google로 계속하기</button>
+      <a class="landing-guide-link" href="guide/" target="_blank" rel="noopener" data-i18n="landing.guideLink">사용 가이드 보기</a>
       <p class="landing-consent"><span data-i18n="landing.consent.pre">계속하면 </span><a data-action="open-legal" data-doc="terms" data-i18n="settings.legal.terms">이용약관</a><span data-i18n="landing.consent.mid"> 및 </span><a data-action="open-legal" data-doc="privacy" data-i18n="settings.legal.privacy">개인정보처리방침</a><span data-i18n="landing.consent.post">에 동의하게 됩니다.</span></p>
       <div class="landing-foot">
-        <a class="landing-guide-link" href="guide/" target="_blank" rel="noopener" data-i18n="landing.guideLink">사용 가이드 보기</a>
         <div class="landing-copy">© 2026 Travel Template</div>
       </div>
     </div>
