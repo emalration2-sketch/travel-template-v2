@@ -2138,13 +2138,18 @@ function normalizeUrl(u){
   return u;
 }
 function linkHTML(l){
+  // URL 미입력 상태면 href 를 아예 안 붙인다 — href="#" + target="_blank" 조합은
+  // 모바일 브라우저/인앱 웹뷰에서 표준과 다르게 처리되어(새 탭 대신 새로고침 등)
+  // 로그인 상태에서 앱이 마이페이지로 튕기는 현상으로 이어질 수 있다.
+  const hasUrl = !!(l.url && l.url.trim());
+  const viewAttrs = hasUrl ? ` href="${escapeAttr(normalizeUrl(l.url))}" target="_blank" rel="noopener"` : '';
   return `<div class="link-card">
     <div class="link-edit edit-only">
       <input type="text" class="link-label" placeholder="${t('mat.link.label.ph')}" data-scope="link" data-link-id="${l.id}" data-field="label" value="${escapeAttr(l.label||'')}">
       <input type="text" class="link-url" placeholder="${t('mat.link.url.ph')}" data-scope="link" data-link-id="${l.id}" data-field="url" value="${escapeAttr(l.url||'')}">
       <button class="item-del edit-only" data-action="delete-link" data-link-id="${l.id}">✕</button>
     </div>
-    <a class="link-btn view-only" href="${escapeAttr(normalizeUrl(l.url))}" target="_blank" rel="noopener">${escapeHTML(l.label || t('mat.link.fallback'))}</a>
+    <a class="link-btn view-only"${viewAttrs}>${escapeHTML(l.label || t('mat.link.fallback'))}</a>
   </div>`;
 }
 function renderMaterials(){
@@ -2616,7 +2621,11 @@ function buildStaticGuideHTML(s){
     ? `<section class="s-block"><div class="s-title">${t('share.notes')}</div>${s.notes.map(n => `<div class="s-note"><div class="s-note-title">${escapeHTML(n.title||'')}</div>${noteBody(n)}</div>`).join('')}</section>`
     : '';
   const linksHTML = (s.links||[]).length
-    ? `<section class="s-block"><div class="s-title">${t('share.links')}</div><div class="s-links">${s.links.map(l => `<a class="s-link-btn" href="${escapeAttr(normalizeUrl(l.url))}" target="_blank" rel="noopener">${escapeHTML(l.label || t('mat.link.fallback'))}</a>`).join('')}</div></section>`
+    ? `<section class="s-block"><div class="s-title">${t('share.links')}</div><div class="s-links">${s.links.map(l => {
+        const hasUrl = !!(l.url && l.url.trim());
+        const attrs = hasUrl ? ` href="${escapeAttr(normalizeUrl(l.url))}" target="_blank" rel="noopener"` : '';
+        return `<a class="s-link-btn"${attrs}>${escapeHTML(l.label || t('mat.link.fallback'))}</a>`;
+      }).join('')}</div></section>`
     : '';
   let all = [];
   s.days.forEach((d, di) => d.items.forEach(it => it.expenses.forEach(ex => all.push(Object.assign({}, ex)))));
@@ -2925,7 +2934,20 @@ function handleFieldChange(e){
       const btnEl = card && card.querySelector('.link-btn');
       if(btnEl){
         if(field === 'label') btnEl.textContent = el.value || t('mat.link.fallback');
-        if(field === 'url') btnEl.href = normalizeUrl(el.value);
+        if(field === 'url'){
+          const hasUrl = !!el.value.trim();
+          if(hasUrl){
+            btnEl.setAttribute('href', normalizeUrl(el.value));
+            btnEl.setAttribute('target', '_blank');
+            btnEl.setAttribute('rel', 'noopener');
+          } else {
+            // URL 을 비우면 href 자체를 제거 — href="#" 로 남기면 모바일 브라우저/
+            // 인앱 웹뷰에서 새로고침·이탈로 이어질 수 있다(linkHTML 의 렌더 시점 처리와 동일 원칙).
+            btnEl.removeAttribute('href');
+            btnEl.removeAttribute('target');
+            btnEl.removeAttribute('rel');
+          }
+        }
       }
     }
   } else if(scope === 'att'){
