@@ -22,9 +22,9 @@ test('아바타 변경 → 팝업 → 저장 → 마이페이지 반영 + 영속
   await expect(page.locator('#v2Modal')).toBeVisible();
   await page.locator('#v2Modal [data-avatar="fox"]').click();
   await page.locator('#v2Modal').getByText('저장', { exact: true }).click();
-  await expect(page.locator('#setAvatarBig')).toHaveText('🦊');
+  await expect(page.locator('#setAvatarBig')).toHaveText('🐵');
   await page.locator('#setBack').click();
-  await expect(page.locator('#mpAvatar')).toHaveText('🦊');
+  await expect(page.locator('#mpAvatar')).toHaveText('🐵');
   expect(await page.evaluate(() => window.__test.dump()['users/u1'].avatarId)).toBe('fox');
 });
 

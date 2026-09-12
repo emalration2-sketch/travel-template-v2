@@ -636,7 +636,7 @@
   /* 아바타 팝업 그리드 */
   .av-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px 8px; margin:6px 0 4px;}
   .av-cell{width:100%; aspect-ratio:1; border-radius:50%; background:var(--paper-2); display:flex; align-items:center; justify-content:center; font-size:22px; cursor:pointer;}
-  .av-cell.sel{outline:2.5px solid var(--teal); outline-offset:2px;}
+  .av-cell.sel{box-shadow:inset 0 0 0 2px var(--card), inset 0 0 0 4.5px var(--teal);}
   .av-reset{font-size:10.5px; color:var(--ink-faint); text-decoration:underline; background:none; border:none; cursor:pointer;}
 
   /* ===== EDITOR TABS ===== */
@@ -1621,8 +1621,8 @@ async function deleteTrip(tripId){
 /* ===== V2: SETTINGS ===== */
 const AVATARS = [
   { id: 'default', glyph: '✈' }, { id: 'dog', glyph: '🐶' }, { id: 'cat', glyph: '🐱' },
-  { id: 'rabbit', glyph: '🐰' }, { id: 'tiger', glyph: '🐯' }, { id: 'fox', glyph: '🦊' },
-  { id: 'bear', glyph: '🐻' }, { id: 'panda', glyph: '🐼' }, { id: 'lion', glyph: '🦁' },
+  { id: 'rabbit', glyph: '🐰' }, { id: 'tiger', glyph: '🐯' }, { id: 'fox', glyph: '🐵' },
+  { id: 'bear', glyph: '🐻' }, { id: 'panda', glyph: '🦝' }, { id: 'lion', glyph: '🦁' },
 ];
 function avatarEmoji(id){
   const a = AVATARS.find(x => x.id === id);
