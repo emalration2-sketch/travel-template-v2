@@ -135,8 +135,9 @@
     transition:background var(--dur-m) var(--ease), color var(--dur-m) var(--ease), border-color var(--dur-m) var(--ease);
   }
   .tab.active{background:var(--accent); color:var(--on-accent); border-color:var(--accent);}
+  #editorOptBtn{margin-left:auto;}
   .wing-switch{
-    margin-left:auto; flex:none; width:32px; height:18px; border-radius:999px;
+    flex:none; width:32px; height:18px; border-radius:999px;
     background:var(--paper-2); border:1px solid var(--line); position:relative; cursor:pointer;
     transition:background var(--dur-m) var(--ease), border-color var(--dur-m) var(--ease);
   }
@@ -664,7 +665,8 @@
   .mat-group-title:first-of-type{margin-top:6px;}
   #editView-materials .add-block{margin-top:2px;}
   /* ---------- 즉흥 모드 ---------- */
-  .wing-body{display:flex; flex-direction:column; align-items:center; padding-top:56px; gap:22px;}
+  .wing-body{display:flex; flex-direction:column; align-items:center; padding-top:44px; gap:30px;}
+  .wing-title{font-family:'Fraunces',serif; font-weight:600; font-size:16px; color:var(--ink); text-align:center; margin:0; padding:0 20px;}
   .wing-note{
     position:relative; width:100%; max-width:340px; background:var(--note-bg); border-radius:6px;
     padding:20px 18px 16px; box-shadow:0 10px 22px -9px rgba(0,0,0,.4); opacity:0;
@@ -687,7 +689,7 @@
   @keyframes wingSlideR{from{transform:translateX(140px) rotate(4deg); opacity:0;}to{transform:translateX(0) rotate(1.5deg); opacity:1;}}
   .wing-note.wing-a{animation:wingSlideL .65s cubic-bezier(.22,.85,.3,1) forwards;}
   .wing-note.wing-b{animation:wingSlideR .65s cubic-bezier(.22,.85,.3,1) .15s forwards;}
-  .wing-reroll{align-self:center; font-size:12px; color:var(--ink-soft); background:var(--card); border:1px solid var(--line); border-radius:999px; padding:8px 18px;}
+  .wing-reroll{align-self:center; font-size:12px; color:var(--ink-soft); background:var(--card); border:1px solid var(--line); border-radius:999px; padding:8px 18px; margin-top:10px; margin-bottom:36px;}
   /* 이미지 썸네일 그리드 */
   .att-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:7px;}
   .att-thumb{position:relative; border-radius:10px; overflow:hidden; border:1px solid var(--line); background:var(--card);}
@@ -817,7 +819,6 @@
       <span class="sync-status" id="syncStatus"></span>
     </div>
     <div class="nav-right">
-      <button class="icon-btn" id="editorOptBtn" data-action="go-settings" aria-label="내 정보 및 옵션" data-i18n-aria="nav.opts.aria"><svg viewBox="-2 -2 28 28" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
       <div class="mode-seg">
         <button class="mode-seg-opt" data-mode="view" data-action="set-mode" data-i18n="nav.mode.view">📖 보기</button>
         <button class="mode-seg-opt" data-mode="edit" data-action="set-mode" data-i18n="nav.mode.edit">✏️ 수정</button>
@@ -829,6 +830,7 @@
     <button class="tab" data-action="edit-tab" data-tab="notes" data-i18n="tab.notes">메모</button>
     <button class="tab" data-action="edit-tab" data-tab="expense" data-i18n="tab.expense">지출</button>
     <button class="tab" data-action="edit-tab" data-tab="materials" data-i18n="tab.materials">자료모음</button>
+    <button class="icon-btn" id="editorOptBtn" data-action="go-settings" aria-label="내 정보 및 옵션" data-i18n-aria="nav.opts.aria"><svg viewBox="-2 -2 28 28" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     <div class="wing-switch" id="wingSwitch" data-action="toggle-winging" role="switch" aria-checked="false" aria-label="즉흥 모드" data-i18n-aria="winging.aria"><div class="knob"></div></div>
   </div>
 </nav>
@@ -880,6 +882,7 @@
 
 <div id="editView-winging" hidden>
   <section class="wrap wing-body">
+    <h2 class="wing-title" data-i18n="winging.title">정해진 길을 잠시 벗어나 볼 시간</h2>
     <div class="wing-note wing-a"><span class="q1">&ldquo;</span><p id="wingText1"></p><span class="q2">&ldquo;</span></div>
     <div class="wing-note wing-b"><span class="q1">&ldquo;</span><p id="wingText2"></p><span class="q2">&ldquo;</span></div>
     <button class="wing-reroll" data-action="reroll-winging" data-i18n="winging.reroll">다시 뽑기</button>
@@ -1122,7 +1125,7 @@ const I18N = {
     'nav.toMypage':'← 마이페이지','nav.opts.aria':'내 정보 및 옵션',
     'nav.mode.view':'📖 보기','nav.mode.edit':'✏️ 수정',
     'tab.schedule':'일정','tab.notes':'메모','tab.expense':'지출','tab.materials':'자료모음',
-    'winging.aria':'즉흥 모드','winging.reroll':'다시 뽑기',
+    'winging.aria':'즉흥 모드','winging.reroll':'다시 뽑기','winging.title':'정해진 길을 잠시 벗어나 볼 시간',
 
     'mypage.h':'내 여행','mypage.newTrip':'＋ 새 여행 만들기','mypage.settingsRow':'⚙ 내 정보 및 옵션',
     'mypage.trip.untitled':'제목 없는 여행','mypage.trip.noDates':'날짜 미정','mypage.trip.dayUnit':'일',
@@ -1206,7 +1209,7 @@ const I18N = {
     'nav.toMypage':'← My trips','nav.opts.aria':'Account and options',
     'nav.mode.view':'📖 View','nav.mode.edit':'✏️ Edit',
     'tab.schedule':'Itinerary','tab.notes':'Notes','tab.expense':'Expenses','tab.materials':'Files',
-    'winging.aria':'Winging it mode','winging.reroll':'Draw again',
+    'winging.aria':'Winging it mode','winging.reroll':'Draw again','winging.title':'Time to step off the path for a while',
 
     'mypage.h':'My trips','mypage.newTrip':'+ New trip','mypage.settingsRow':'⚙ Account and options',
     'mypage.trip.untitled':'Untitled trip','mypage.trip.noDates':'Dates TBD','mypage.trip.dayUnit':'d',
@@ -1290,7 +1293,7 @@ const I18N = {
     'nav.toMypage':'← マイページ','nav.opts.aria':'アカウントとオプション',
     'nav.mode.view':'📖 表示','nav.mode.edit':'✏️ 編集',
     'tab.schedule':'旅程','tab.notes':'メモ','tab.expense':'支出','tab.materials':'資料',
-    'winging.aria':'即興モード','winging.reroll':'もう一度引く',
+    'winging.aria':'即興モード','winging.reroll':'もう一度引く','winging.title':'決められた道から少し外れてみる時間',
 
     'mypage.h':'マイ旅行','mypage.newTrip':'＋ 新しい旅行を作成','mypage.settingsRow':'⚙ アカウントとオプション',
     'mypage.trip.untitled':'無題の旅行','mypage.trip.noDates':'日程未定','mypage.trip.dayUnit':'日間',
@@ -1374,7 +1377,7 @@ const I18N = {
     'nav.toMypage':'← 我的旅行','nav.opts.aria':'账户与选项',
     'nav.mode.view':'📖 查看','nav.mode.edit':'✏️ 编辑',
     'tab.schedule':'行程','tab.notes':'备注','tab.expense':'支出','tab.materials':'资料',
-    'winging.aria':'即兴模式','winging.reroll':'重新抽取',
+    'winging.aria':'即兴模式','winging.reroll':'重新抽取','winging.title':'暂时偏离既定路线的时刻',
 
     'mypage.h':'我的旅行','mypage.newTrip':'＋ 创建新旅行','mypage.settingsRow':'⚙ 账户与选项',
     'mypage.trip.untitled':'未命名的旅行','mypage.trip.noDates':'日期待定','mypage.trip.dayUnit':'天',
