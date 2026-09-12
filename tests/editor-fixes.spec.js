@@ -95,8 +95,10 @@ test('마이페이지 카드: user-select none', async ({ page }) => {
 test('모드 색 띠: 수정=mode-edit, 보기=mode-view', async ({ page }) => {
   await openTrip1(page);
   await page.evaluate(() => setMode('edit'));
+  await page.waitForTimeout(260); // nav.tabs border-color 전환 애니메이션(200ms) 완료 대기
   const edit = await page.evaluate(() => getComputedStyle(document.querySelector('nav.tabs')).borderBottomColor);
   await page.evaluate(() => setMode('view'));
+  await page.waitForTimeout(260);
   const view = await page.evaluate(() => getComputedStyle(document.querySelector('nav.tabs')).borderBottomColor);
   expect(edit).not.toBe(view);
   expect(edit).toBe('rgb(51, 56, 62)');     // --mode-edit 차콜 #33383E (전 테마 공통)

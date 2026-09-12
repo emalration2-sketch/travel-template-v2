@@ -28,8 +28,10 @@ test('일차 헤더 배경이 테마 --fill-strong(선셋 그라디언트) 을 �
 test('nav.tabs 하단 띠가 테마 --mode-edit / --mode-view 를 따른다', async ({ page }) => {
   await openEditor(page);
   await page.evaluate(() => { document.documentElement.dataset.theme = 'c'; setMode('edit'); });
+  await page.waitForTimeout(260); // nav.tabs border-color 전환 애니메이션(200ms) 완료 대기
   const edit = await page.evaluate(() => getComputedStyle(document.querySelector('nav.tabs')).borderBottomColor);
   await page.evaluate(() => setMode('view'));
+  await page.waitForTimeout(260);
   const view = await page.evaluate(() => getComputedStyle(document.querySelector('nav.tabs')).borderBottomColor);
   expect(edit).toBe('rgb(51, 56, 62)');     // --mode-edit 차콜 #33383E (전 테마 공통)
   expect(view).toBe('rgb(53, 82, 143)');    // c --mode-view #35528F (강조색)

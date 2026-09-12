@@ -53,6 +53,17 @@
     --mode-edit:#7A7069; --mode-view:#E8663E;
     --banner-bg:linear-gradient(120deg,#E8663E 0%,#EF8A3C 55%,#E8A54A 100%); --banner-fg:#FFFFFF;
   }
+  :root{ --ease:cubic-bezier(.4,0,.2,1); --dur-s:120ms; --dur-m:200ms; }
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{
+      animation-duration:.01ms !important; animation-iteration-count:1 !important;
+      transition-duration:.01ms !important;
+    }
+  }
+  @keyframes riseIn{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:translateY(0); } }
+  .just-added{ animation:riseIn var(--dur-m) var(--ease); }
+  button:not(:disabled){ transition:transform var(--dur-s) var(--ease); }
+  button:not(:disabled):active{ transform:scale(.97); }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0; padding:0;}
   body{
@@ -70,6 +81,7 @@
     background:var(--nav-bg);
     backdrop-filter:blur(6px);
     border-bottom:4px solid var(--mode-edit);
+    transition:border-color var(--dur-m) var(--ease);
   }
   .nav-title{
     display:flex; align-items:center; justify-content:space-between; gap:10px;
@@ -91,7 +103,7 @@
   .mode-seg-opt{
     border:none; background:transparent; color:var(--ink-faint);
     font-size:12px; font-weight:700; padding:7px 14px; border-radius:999px;
-    cursor:pointer; white-space:nowrap; transition:background .12s, color .12s;
+    cursor:pointer; white-space:nowrap; transition:background var(--dur-s) var(--ease), color var(--dur-s) var(--ease);
   }
   body.mode-view .mode-seg-opt[data-mode="view"]{ background:var(--mode-view); color:var(--on-main); }
   body.mode-edit .mode-seg-opt[data-mode="edit"]{ background:var(--mode-edit); color:var(--on-edit); }
@@ -106,6 +118,7 @@
     font-size:12.5px; font-weight:600; color:var(--ink-soft);
     background:var(--paper-2); border:1px solid var(--line);
     border-radius:999px; padding:6px 12px; text-decoration:none;
+    transition:background var(--dur-m) var(--ease), color var(--dur-m) var(--ease), border-color var(--dur-m) var(--ease);
   }
   .tab.active{background:var(--accent); color:var(--on-accent); border-color:var(--accent);}
 
@@ -313,7 +326,7 @@
     margin-top:8px; display:flex; align-items:center; gap:6px; cursor:pointer;
     font-size:11.5px; font-weight:600; color:var(--ink-faint); user-select:none;
   }
-  .note-done-head .chev{transition:transform .15s; font-size:9px;}
+  .note-done-head .chev{transition:transform var(--dur-s) var(--ease); font-size:9px;}
   .note-done-head.collapsed .chev{transform:rotate(-90deg);}
   .note-done-list{display:flex; flex-direction:column; gap:2px; margin-top:2px;}
   .note-done-head.collapsed + .note-done-list{display:none;}
@@ -498,7 +511,8 @@
   .mp-banner .mpb-tag{ font-size:10.5px; opacity:.85; }
   .mp-h{font-family:'Fraunces',serif; font-size:20px; font-weight:700; color:var(--ink); margin:14px 0 3px;}
   .mp-count{font-size:11.5px; color:var(--ink-faint); margin-bottom:12px;}
-  .mp-card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px 12px 12px 40px; margin-bottom:9px; position:relative; cursor:pointer; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;}
+  .mp-card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px 12px 12px 40px; margin-bottom:9px; position:relative; cursor:pointer; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; transition:transform var(--dur-m) var(--ease), box-shadow var(--dur-m) var(--ease), opacity var(--dur-m) var(--ease);}
+  .mp-card:active{transform:scale(.97);}
   .mp-card .mp-title{font-size:14px; font-weight:700; color:var(--ink);}
   .mp-card .mp-dates{font-family:'Space Mono',monospace; font-size:12px; color:var(--ink-soft); font-weight:500; margin-top:3px;}
   .mp-card .mp-arrows{position:absolute; left:8px; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; gap:2px;}
@@ -506,6 +520,16 @@
   .mp-card .mp-arrows button:disabled{opacity:.25; cursor:default;}
   .mp-card .mp-del{position:absolute; top:6px; right:6px; width:26px; height:26px; border:none; background:transparent; color:#C9CBD8; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;}
   .mp-card.dragging{transform:scale(1.03); box-shadow:0 14px 30px rgba(27,35,64,.22); opacity:.95;}
+
+  /* ---------- TOAST ---------- */
+  .mini-toast{
+    position:fixed; left:50%; bottom:26px; transform:translate(-50%,8px);
+    background:var(--ink); color:var(--card); font-size:13px; font-weight:600;
+    padding:10px 18px; border-radius:999px; box-shadow:0 10px 24px rgba(0,0,0,.22);
+    z-index:999; opacity:0; pointer-events:none;
+    transition:opacity var(--dur-m) var(--ease), transform var(--dur-m) var(--ease);
+  }
+  .mini-toast.show{ opacity:1; transform:translate(-50%,0); }
   .mp-new{width:100%; border:1px dashed var(--teal); background:var(--card); color:var(--teal); border-radius:14px; padding:13px; font-size:13px; font-weight:700; cursor:pointer; margin-top:2px;}
   .mp-settings-row{margin-top:12px; text-align:center; font-size:12.5px; color:var(--teal); font-weight:600; padding:10px; border-top:1px solid var(--line); cursor:pointer;}
   .mp-load-error{text-align:center; color:var(--ink-soft); font-size:12.5px; line-height:1.7; padding:24px 8px;}
@@ -530,7 +554,7 @@
   .set-avatar-big.emoji{background:var(--paper-2);}
   .set-name{font-size:14px; font-weight:700; color:var(--ink);}
   .set-email{font-size:11.5px; color:var(--ink-faint); margin-top:2px;}
-  .set-row{display:flex; justify-content:space-between; align-items:center; padding:13px 2px; font-size:12.5px; color:var(--ink-soft); border-bottom:1px solid var(--line); cursor:pointer;}
+  .set-row{display:flex; justify-content:space-between; align-items:center; padding:13px 2px; font-size:12.5px; color:var(--ink-soft); border-bottom:1px solid var(--line); cursor:pointer; text-decoration:none;}
   .set-row.set-disabled{cursor:default; color:var(--ink-faint);}
   .set-chev{color:#C9CBD8;}
   .set-soon{font-size:10px; color:#B4B8C8; background:var(--paper-2); padding:2px 7px; border-radius:999px;}
@@ -591,14 +615,14 @@
     -webkit-backdrop-filter:blur(7px); backdrop-filter:blur(7px);
     box-shadow:0 4px 18px rgba(0,0,0,.14);
     opacity:0; pointer-events:none;
-    transition:opacity .2s ease;
+    transition:opacity var(--dur-m) var(--ease);
   }
   .day-rail[hidden]{display:none;}
   .day-rail.scrolling{opacity:1; pointer-events:auto;}
   .rail-node{position:relative; display:flex; align-items:center; justify-content:center; width:20px; height:24px; flex:none; padding:0; border:none; background:none; cursor:pointer;}
-  .rail-dot{width:8px; height:8px; border-radius:50%; background:var(--ink-faint); opacity:.5; transition:transform .13s, opacity .13s, background .13s;}
+  .rail-dot{width:8px; height:8px; border-radius:50%; background:var(--ink-faint); opacity:.5; transition:transform var(--dur-s) var(--ease), opacity var(--dur-s) var(--ease), background var(--dur-s) var(--ease);}
   .rail-node.active .rail-dot{background:var(--teal); opacity:1; transform:scale(1.6);}
-  .rail-lbl{position:absolute; left:24px; top:50%; white-space:nowrap; font-family:'Space Mono',monospace; font-size:10px; font-weight:700; color:var(--teal); background:var(--card); border:1px solid var(--line); border-radius:999px; padding:2px 8px; box-shadow:0 2px 8px rgba(0,0,0,.16); opacity:0; transform:translateY(-50%); transition:opacity .15s; pointer-events:none;}
+  .rail-lbl{position:absolute; left:24px; top:50%; white-space:nowrap; font-family:'Space Mono',monospace; font-size:10px; font-weight:700; color:var(--teal); background:var(--card); border:1px solid var(--line); border-radius:999px; padding:2px 8px; box-shadow:0 2px 8px rgba(0,0,0,.16); opacity:0; transform:translateY(-50%); transition:opacity var(--dur-s) var(--ease); pointer-events:none;}
   .day-rail.scrolling .rail-node.active .rail-lbl{opacity:1;}
   .sched-tail{height:40vh;}   /* JS(fitSchedTail)가 실제 필요한 높이로 덮어씀; 이건 폴백 */
   .day-card{scroll-margin-top:112px;}   /* sticky 툴바(약 104) + 여유 8 — scrollIntoView 오프셋 */
@@ -654,6 +678,7 @@
       <button id="landingLoginBtn" class="landing-login" data-action="login" data-i18n="landing.login">Google로 계속하기</button>
       <p class="landing-consent"><span data-i18n="landing.consent.pre">계속하면 </span><a data-action="open-legal" data-doc="terms" data-i18n="settings.legal.terms">이용약관</a><span data-i18n="landing.consent.mid"> 및 </span><a data-action="open-legal" data-doc="privacy" data-i18n="settings.legal.privacy">개인정보처리방침</a><span data-i18n="landing.consent.post">에 동의하게 됩니다.</span></p>
       <div class="landing-foot">
+        <a class="landing-guide-link" href="guide/" target="_blank" rel="noopener" data-i18n="landing.guideLink">사용 가이드 보기</a>
         <div class="landing-copy">© 2026 Travel Template</div>
       </div>
     </div>
@@ -697,6 +722,9 @@
       <span data-i18n="settings.theme">컬러 테마</span>
       <span class="set-row-val"><span id="setThemeVal"></span> <span class="set-chev">›</span></span>
     </div>
+    <a class="set-row" id="setGuide" href="guide/" target="_blank" rel="noopener">
+      <span data-i18n="settings.guide">사용 가이드</span><span class="set-chev">›</span>
+    </a>
     <button class="set-logout" id="setLogout" data-action="logout" data-i18n="settings.logout">로그아웃</button>
     <div class="set-legal">
       <a data-action="open-legal" data-doc="terms" data-i18n="settings.legal.terms">이용약관</a>
@@ -1022,6 +1050,7 @@ const I18N = {
     'landing.feat.share':'완성한 계획을 PDF·링크로 공유',
     'landing.login':'Google로 계속하기',
     'landing.consent.pre':'계속하면 ','landing.consent.mid':' 및 ','landing.consent.post':'에 동의하게 됩니다.',
+    'landing.guideLink':'사용 가이드 보기','settings.guide':'사용 가이드',
 
     'nav.toMypage':'← 마이페이지','nav.opts.aria':'내 정보 및 옵션',
     'nav.mode.view':'📖 보기','nav.mode.edit':'✏️ 수정',
@@ -1092,6 +1121,7 @@ const I18N = {
     'share.expense':'지출기록','pdf.filename':'여행 일정','pdf.filenameFallback':'나의여행',
     'share.guideTitle':'여행 가이드',
     'share.browserFallback':'이 브라우저는 바로 공유가 어려워 파일을 다운로드했어요. 다운로드된 파일을 메신저에 첨부해서 보내주세요.',
+    'toast.shareDone':'공유했어요 ✓','toast.pdfSaved':'저장했어요 ✓',
   },
   en: {
     'common.close':'Close','common.cancel':'Cancel','common.save':'Save','common.delete':'Delete',
@@ -1103,6 +1133,7 @@ const I18N = {
     'landing.feat.share':'Share your finished plan as a PDF or link',
     'landing.login':'Continue with Google',
     'landing.consent.pre':'By continuing, you agree to the ','landing.consent.mid':' and ','landing.consent.post':'.',
+    'landing.guideLink':'View the guide','settings.guide':'Guide',
 
     'nav.toMypage':'← My trips','nav.opts.aria':'Account and options',
     'nav.mode.view':'📖 View','nav.mode.edit':'✏️ Edit',
@@ -1173,6 +1204,7 @@ const I18N = {
     'share.expense':'Expenses','pdf.filename':'Itinerary','pdf.filenameFallback':'MyTrip',
     'share.guideTitle':'Travel guide',
     'share.browserFallback':'This browser can’t share directly, so the file was downloaded. Attach it in your messenger to send.',
+    'toast.shareDone':'Shared ✓','toast.pdfSaved':'Saved ✓',
   },
   ja: {
     'common.close':'閉じる','common.cancel':'キャンセル','common.save':'保存','common.delete':'削除',
@@ -1184,6 +1216,7 @@ const I18N = {
     'landing.feat.share':'完成した計画をPDFやリンクで共有',
     'landing.login':'Googleで続ける',
     'landing.consent.pre':'続行すると、','landing.consent.mid':'および','landing.consent.post':'に同意したことになります。',
+    'landing.guideLink':'使い方ガイドを見る','settings.guide':'使い方ガイド',
 
     'nav.toMypage':'← マイページ','nav.opts.aria':'アカウントとオプション',
     'nav.mode.view':'📖 表示','nav.mode.edit':'✏️ 編集',
@@ -1254,6 +1287,7 @@ const I18N = {
     'share.expense':'支出記録','pdf.filename':'旅行日程','pdf.filenameFallback':'私の旅行',
     'share.guideTitle':'旅行ガイド',
     'share.browserFallback':'このブラウザでは直接共有できないため、ファイルをダウンロードしました。ダウンロードしたファイルをメッセンジャーに添付して送信してください。',
+    'toast.shareDone':'共有しました ✓','toast.pdfSaved':'保存しました ✓',
   },
   zh: {
     'common.close':'关闭','common.cancel':'取消','common.save':'保存','common.delete':'删除',
@@ -1265,6 +1299,7 @@ const I18N = {
     'landing.feat.share':'将完成的计划以 PDF 或链接分享',
     'landing.login':'使用 Google 继续',
     'landing.consent.pre':'继续即表示您接受','landing.consent.mid':'和','landing.consent.post':'。',
+    'landing.guideLink':'查看使用指南','settings.guide':'使用指南',
 
     'nav.toMypage':'← 我的旅行','nav.opts.aria':'账户与选项',
     'nav.mode.view':'📖 查看','nav.mode.edit':'✏️ 编辑',
@@ -1335,6 +1370,7 @@ const I18N = {
     'share.expense':'支出记录','pdf.filename':'旅行行程','pdf.filenameFallback':'我的旅行',
     'share.guideTitle':'旅行指南',
     'share.browserFallback':'当前浏览器无法直接分享，文件已下载。请将下载的文件添加到即时通讯工具中发送。',
+    'toast.shareDone':'已分享 ✓','toast.pdfSaved':'已保存 ✓',
   },
 };
 function t(key, vars){
@@ -1946,7 +1982,7 @@ function setExpIcon(el, cnt){ if(!el) return; el.innerHTML = expIconInner(cnt); 
 function itemHTML(d, it){
   const cnt = it.expenses.length;
   const [hh, mm] = (it.time||'').split(':');
-  return `<div class="tl-item">
+  return `<div class="tl-item" data-item-id="${it.id}">
     <div class="tl-row">
       <div class="tl-time-edit edit-only">
         <select data-scope="item" data-day-id="${d.id}" data-item-id="${it.id}" data-field="hour">${hourOptions(hh||'')}</select><span class="tl-colon">:</span><select data-scope="item" data-day-id="${d.id}" data-item-id="${it.id}" data-field="minute">${minuteOptions(mm||'')}</select>
@@ -2042,7 +2078,7 @@ function noteHTML(n){
       <button class="item-del edit-only" data-action="delete-note" data-note-id="${escapeAttr(n.id)}">✕</button>
     </div>`;
   if(n.mode !== 'checklist'){
-    return `<div class="note-card">${titleRow}
+    return `<div class="note-card" data-note-id="${escapeAttr(n.id)}">${titleRow}
     <textarea class="note-content edit-only" placeholder="${t('note.content.ph')}" rows="2" data-scope="note" data-note-id="${escapeAttr(n.id)}" data-field="content">${escapeHTML(n.content||'')}</textarea>
     <div class="note-content-view view-only" id="note-view-${n.id}">${linkify(n.content||'')}</div>
     <div class="note-actions edit-only"><button class="note-mode-switch" data-action="note-toggle-mode" data-note-id="${escapeAttr(n.id)}">${NOTE_SWITCH_ICON}${t('note.toChecklist')}</button></div>
@@ -2058,7 +2094,7 @@ function noteHTML(n){
       </div>
       <div class="note-done-list">${done.map(it => chkRowHTML(n, it)).join('')}</div>`
     : '';
-  return `<div class="note-card">${titleRow}
+  return `<div class="note-card" data-note-id="${escapeAttr(n.id)}">${titleRow}
     <div class="chk-list">${undone.map(it => chkRowHTML(n, it)).join('')}</div>
     ${doneBlock}
     <div class="note-actions edit-only">
@@ -2143,7 +2179,7 @@ function linkHTML(l){
   // 로그인 상태에서 앱이 마이페이지로 튕기는 현상으로 이어질 수 있다.
   const hasUrl = !!(l.url && l.url.trim());
   const viewAttrs = hasUrl ? ` href="${escapeAttr(normalizeUrl(l.url))}" target="_blank" rel="noopener"` : '';
-  return `<div class="link-card">
+  return `<div class="link-card" data-link-id="${escapeAttr(l.id)}">
     <div class="link-edit edit-only">
       <input type="text" class="link-label" placeholder="${t('mat.link.label.ph')}" data-scope="link" data-link-id="${l.id}" data-field="label" value="${escapeAttr(l.label||'')}">
       <input type="text" class="link-url" placeholder="${t('mat.link.url.ph')}" data-scope="link" data-link-id="${l.id}" data-field="url" value="${escapeAttr(l.url||'')}">
@@ -2272,8 +2308,9 @@ function renderExpenseTab(){
   all.forEach(ex => { const cur = (ex.currency||'').trim() || '-'; totals[cur] = (totals[cur]||0) + (parseFloat(ex.amount)||0); });
   const sumEl = document.getElementById('expenseSummary');
   sumEl.innerHTML = Object.keys(totals).length
-    ? Object.entries(totals).map(([cur, sum]) => `<div class="sum-card"><div class="sum-cur">${t('expense.total', { cur: escapeHTML(cur) })}</div><div class="sum-amt">${sum.toLocaleString()}</div></div>`).join('')
+    ? Object.entries(totals).map(([cur, sum]) => `<div class="sum-card"><div class="sum-cur">${t('expense.total', { cur: escapeHTML(cur) })}</div><div class="sum-amt" data-target="${sum}">0</div></div>`).join('')
     : `<div class="empty-hint">${t('expense.empty')}</div>`;
+  sumEl.querySelectorAll('.sum-amt').forEach(el => animateCountUp(el, parseFloat(el.dataset.target || '0')));
   document.getElementById('expenseList').innerHTML = all.map(ex => `<div class="exp-row">
     <div class="exp-top">
       <div class="exp-meta">${escapeHTML(ex.dayLabel)}${ex.place ? ' · ' + escapeHTML(ex.place) : ''}</div>
@@ -2364,10 +2401,48 @@ try{
   rail.addEventListener('pointerleave', () => railHide(900));
 })();
 
+/* ---------- 새 항목 등장 애니메이션 / 토스트 ---------- */
+function flashNew(selector){
+  const el = document.querySelector(selector);
+  if(!el) return;
+  el.classList.add('just-added');
+  el.addEventListener('animationend', () => el.classList.remove('just-added'), { once:true });
+}
+function animateCountUp(el, to, duration=500){
+  if(!isFinite(to)){ el.textContent = '0'; return; }
+  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    el.textContent = to.toLocaleString(); return;
+  }
+  const start = performance.now();
+  function step(now){
+    const p = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(to * eased).toLocaleString();
+    if(p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+let _toastTimer = null;
+function showToast(msg){
+  let el = document.getElementById('miniToast');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'miniToast';
+    el.className = 'mini-toast';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => el.classList.remove('show'), 1800);
+}
+
 /* ---------- ACTIONS ---------- */
 function addDay(){
-  state.days.push({ id:uid(), date:'', label:'', items:[{ id:uid(), time:'', place:'', memo:'', expenses:[] }] });
+  const id = uid();
+  state.days.push({ id, date:'', label:'', items:[{ id:uid(), time:'', place:'', memo:'', expenses:[] }] });
   renderDays(); save();
+  flashNew(`#day-${CSS.escape(id)}`);
 }
 function deleteDay(id){
   if(state.days.length <= 1){ alert(t('sched.day.deleteLastWarn')); return; }
@@ -2377,17 +2452,27 @@ function deleteDay(id){
 }
 function addItem(dayId){
   const d = state.days.find(d => d.id === dayId); if(!d) return;
-  d.items.push({ id:uid(), time:'', place:'', memo:'', expenses:[] });
+  const id = uid();
+  d.items.push({ id, time:'', place:'', memo:'', expenses:[] });
   renderDays(); save();
+  flashNew(`.tl-item[data-item-id="${CSS.escape(id)}"]`);
 }
 function deleteItem(dayId, itemId){
   const d = state.days.find(d => d.id === dayId); if(!d) return;
   d.items = d.items.filter(i => i.id !== itemId);
   renderDays(); save();
 }
-function addNote(){ state.notes.push({ id:uid(), title:'', content:'' }); renderNotes(); save(); }
+function addNote(){
+  const id = uid();
+  state.notes.push({ id, title:'', content:'' }); renderNotes(); save();
+  flashNew(`.note-card[data-note-id="${CSS.escape(id)}"]`);
+}
 function deleteNote(id){ state.notes = state.notes.filter(n => n.id !== id); renderNotes(); save(); }
-function addLink(){ state.links.push({ id:uid(), label:'', url:'' }); renderMaterials(); save(); }
+function addLink(){
+  const id = uid();
+  state.links.push({ id, label:'', url:'' }); renderMaterials(); save();
+  flashNew(`.link-card[data-link-id="${CSS.escape(id)}"]`);
+}
 function deleteLink(id){ state.links = state.links.filter(l => l.id !== id); renderMaterials(); save(); }
 function addTraveler(){
   const inp = document.getElementById('newTravelerInput');
@@ -2666,6 +2751,7 @@ async function sharePdf(doc, filename){
       if(navigator.canShare({ files:[file] })){
         try{
           await navigator.share({ files:[file], title: state.title || t('pdf.filename') });
+          showToast(t('toast.shareDone'));
           return;
         }catch(e){
           if(e && e.name === 'AbortError') return;   // 사용자가 공유 취소 — 다운로드까지 하지 않음
@@ -2674,6 +2760,7 @@ async function sharePdf(doc, filename){
     }
   }catch(e){ console.error('PDF 공유 실패 — 다운로드로 대체', e); }
   doc.save(filename);   // 데스크톱 / 미지원 브라우저
+  showToast(t('toast.pdfSaved'));
 }
 function exportPDF(){
   const filename = (state.title || t('pdf.filenameFallback')) + '.pdf';
@@ -2768,6 +2855,7 @@ async function shareGuide(){
     const file = new File([blob], fileName, { type:'text/html' });
     if(navigator.canShare && navigator.canShare({ files:[file] })){
       await navigator.share({ files:[file], title: state.title || t('share.guideTitle') });
+      showToast(t('toast.shareDone'));
       return;
     }
   }catch(e){}
