@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://emalration2-sketch.github.io/travel-template-v2/guide/sitemap.xml

@@ -1,0 +1,114 @@
+/* Travel Template — 가이드 사이트 공용 스타일 (앱 Ocean 테마 토큰 재사용) */
+:root{
+  --ink:#16302D; --ink-soft:#47635E; --ink-faint:#8AA39D;
+  --teal:#1C7A6F; --gold:#E3A63C; --red:#E0556E;
+  --paper:#F1F6F4; --paper-2:#E1EDE9; --line:#CEDFD9; --card:#FFFFFF;
+  --fill-strong:linear-gradient(115deg,#123F39 0%,#1C7A6F 100%);
+  --maxw:760px;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0; background:var(--paper); color:var(--ink); color-scheme:light;
+  font-family:'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+  line-height:1.65; -webkit-font-smoothing:antialiased;
+}
+a{color:var(--teal);}
+img{max-width:100%; display:block; border-radius:14px;}
+
+.g-header{
+  position:sticky; top:0; z-index:10;
+  background:rgba(241,246,244,.92); backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line);
+}
+.g-header-inner{
+  max-width:var(--maxw); margin:0 auto; padding:14px 20px;
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+}
+.g-brand{
+  display:flex; align-items:center; gap:8px; text-decoration:none; color:var(--ink);
+  font-family:'Fraunces', serif; font-weight:700; font-size:17px;
+}
+.g-brand img{width:26px; height:26px; border-radius:6px;}
+.g-nav-right{display:flex; align-items:center; gap:14px; font-size:13px;}
+.g-lang-switch{color:var(--ink-soft); text-decoration:none; border:1px solid var(--line); border-radius:999px; padding:5px 12px;}
+.g-cta{
+  background:var(--fill-strong); color:#fff; text-decoration:none;
+  padding:8px 16px; border-radius:999px; font-weight:600; font-size:13px;
+  white-space:nowrap;
+}
+
+.g-wrap{max-width:var(--maxw); margin:0 auto; padding:0 20px;}
+
+.g-hero{padding:48px 20px 28px; text-align:center;}
+.g-hero h1{
+  font-family:'Fraunces', serif; font-weight:700; font-size:34px; margin:0 0 12px;
+  letter-spacing:-.01em;
+}
+.g-hero p.g-sub{color:var(--ink-soft); font-size:16px; max-width:520px; margin:0 auto 24px;}
+.g-hero-ctas{display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
+.g-btn{
+  display:inline-block; text-decoration:none; padding:12px 22px; border-radius:12px;
+  font-weight:700; font-size:14.5px;
+}
+.g-btn-solid{background:var(--fill-strong); color:#fff;}
+.g-btn-ghost{background:var(--card); color:var(--ink); border:1px solid var(--line);}
+
+.g-feat-grid{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px;
+  margin:32px 0;
+}
+.g-feat{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:18px;}
+.g-feat h3{margin:0 0 6px; font-size:15px;}
+.g-feat p{margin:0; color:var(--ink-soft); font-size:13.5px;}
+
+article.g-article{padding:36px 20px 60px;}
+article.g-article h1{
+  font-family:'Fraunces', serif; font-weight:700; font-size:28px; margin:0 0 6px;
+}
+article.g-article .g-kicker{
+  color:var(--teal); font-weight:700; font-size:12.5px; letter-spacing:.04em; text-transform:uppercase;
+  margin:0 0 8px;
+}
+article.g-article .g-lede{color:var(--ink-soft); font-size:15.5px; margin:0 0 28px;}
+article.g-article h2{font-family:'Fraunces', serif; font-size:20px; margin:36px 0 10px;}
+article.g-article p{font-size:15px; margin:0 0 14px;}
+article.g-article ul,article.g-article ol{font-size:15px; padding-left:22px; margin:0 0 14px;}
+article.g-article li{margin-bottom:6px;}
+article.g-article .g-shot{margin:20px 0; border:1px solid var(--line); border-radius:16px; overflow:hidden; box-shadow:0 8px 24px -12px rgba(22,48,45,.25);}
+article.g-article .g-shot img{border-radius:0;}
+article.g-article .g-shot-cap{font-size:12.5px; color:var(--ink-faint); text-align:center; padding:8px 12px;}
+article.g-article .g-note{
+  background:var(--paper-2); border-left:3px solid var(--gold); border-radius:0 10px 10px 0;
+  padding:12px 16px; font-size:13.5px; color:var(--ink-soft); margin:18px 0;
+}
+
+.g-toc{
+  background:var(--card); border:1px solid var(--line); border-radius:16px; padding:18px 20px; margin:28px 0;
+}
+.g-toc h2{font-size:14px; margin:0 0 10px; font-family:'Fraunces', serif;}
+.g-toc ul{margin:0; padding-left:0; list-style:none; display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:6px 16px;}
+.g-toc a{font-size:13.5px; text-decoration:none; color:var(--ink);}
+.g-toc a:hover{color:var(--teal);}
+
+details.g-faq{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 18px; margin-bottom:10px;}
+details.g-faq summary{font-weight:700; font-size:14.5px; cursor:pointer;}
+details.g-faq p{margin:10px 0 0; font-size:14px; color:var(--ink-soft);}
+
+.g-footer{
+  border-top:1px solid var(--line); padding:32px 20px 48px; text-align:center;
+  color:var(--ink-faint); font-size:12.5px;
+}
+.g-footer a{color:var(--ink-soft);}
+
+.g-pageend-cta{
+  margin-top:44px; padding:28px 24px; border-radius:20px; text-align:center;
+  background:var(--fill-strong); color:#fff;
+}
+.g-pageend-cta h2{font-family:'Fraunces', serif; margin:0 0 8px; font-size:20px; color:#fff;}
+.g-pageend-cta p{color:rgba(255,255,255,.85); margin:0 0 16px; font-size:14px;}
+.g-pageend-cta .g-btn-solid{background:#fff; color:var(--ink);}
+
+/* 정적/공유용 콘텐츠는 항상 라이트 고정 (공유 HTML·PDF와 같은 프로젝트 관례) —
+   스크린샷이 전부 라이트 모드로 캡처되어 있어서 다크모드를 따라가면 배경과 안 맞음. */
+
