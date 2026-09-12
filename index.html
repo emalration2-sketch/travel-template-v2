@@ -20,6 +20,7 @@
     --mode-edit:#33383E; --mode-view:#1C7A6F; --on-main:#FFFFFF; --on-edit:#FFFFFF;
     --accent:var(--teal); --on-accent:var(--on-main);
     --banner-bg:linear-gradient(115deg,#123F39 0%,#1C7A6F 100%); --banner-fg:#FFFFFF;
+    --note-bg:#E1F0EC;
   }
   :root[data-theme="b"]{
     --ink:#1E2124; --ink-soft:#55585C; --ink-faint:#9A9CA0;
@@ -28,6 +29,7 @@
     --fill-strong:linear-gradient(115deg,#1E2124 0%,#3C4147 100%);
     --mode-edit:#33534E; --mode-view:#565C64;
     --banner-bg:linear-gradient(115deg,#1E2124 0%,#3C4147 100%); --banner-fg:#FFFFFF;
+    --note-bg:#E7E8EA;
   }
   :root[data-theme="c"]{
     --ink:#1B2340; --ink-soft:#4A5178; --ink-faint:#8A90AE;
@@ -36,6 +38,7 @@
     --fill-strong:linear-gradient(115deg,#1B2340 0%,#33406E 100%);
     --mode-edit:#33383E; --mode-view:#35528F;
     --banner-bg:linear-gradient(115deg,#1B2340 0%,#33406E 100%); --banner-fg:#FFFFFF;
+    --note-bg:#E4E9F5;
   }
   :root[data-theme="d"]{
     --ink:#EAF2F4; --ink-soft:#9FB2BE; --ink-faint:#61748A;
@@ -44,6 +47,7 @@
     --fill-strong:linear-gradient(125deg,#0F1C3E 0%,#123E5E 52%,#0C4F4A 100%);
     --mode-edit:#DCE7EC; --mode-view:#33D6C0; --on-main:#0C1524; --on-edit:#0C1524;
     --banner-bg:linear-gradient(125deg,#0F1C3E 0%,#123E5E 52%,#0C4F4A 100%); --banner-fg:#FFFFFF;
+    --note-bg:#123330;
   }
   :root[data-theme="e"]{
     --ink:#43202F; --ink-soft:#8A5560; --ink-faint:#BE93A0;
@@ -52,6 +56,7 @@
     --fill-strong:linear-gradient(120deg,#E8663E 0%,#EF8A3C 55%,#E8A54A 100%);
     --mode-edit:#7A7069; --mode-view:#E8663E;
     --banner-bg:linear-gradient(120deg,#E8663E 0%,#EF8A3C 55%,#E8A54A 100%); --banner-fg:#FFFFFF;
+    --note-bg:#FBE3D6;
   }
   :root{ --ease:cubic-bezier(.4,0,.2,1); --dur-s:120ms; --dur-m:200ms; }
   @media (prefers-reduced-motion: reduce){
@@ -117,9 +122,9 @@
   body.mode-view .mode-seg-opt[data-mode="view"]{ background:var(--mode-view); color:var(--on-main); }
   body.mode-edit .mode-seg-opt[data-mode="edit"]{ background:var(--mode-edit); color:var(--on-edit); }
   .tabs-scroll{
-    display:flex; gap:6px; overflow-x:auto; padding:0 16px 10px;
+    display:flex; align-items:center; gap:6px; overflow-x:auto; padding:0 16px 10px;
     scrollbar-width:none;
-    max-width:640px; margin:0 auto; justify-content:center;
+    max-width:640px; margin:0 auto; justify-content:flex-start;
   }
   .tabs-scroll::-webkit-scrollbar{display:none;}
   .tab{
@@ -130,6 +135,18 @@
     transition:background var(--dur-m) var(--ease), color var(--dur-m) var(--ease), border-color var(--dur-m) var(--ease);
   }
   .tab.active{background:var(--accent); color:var(--on-accent); border-color:var(--accent);}
+  .wing-switch{
+    margin-left:auto; flex:none; width:32px; height:18px; border-radius:999px;
+    background:var(--paper-2); border:1px solid var(--line); position:relative; cursor:pointer;
+    transition:background var(--dur-m) var(--ease), border-color var(--dur-m) var(--ease);
+  }
+  .wing-switch .knob{
+    position:absolute; top:1.5px; left:1.5px; width:13px; height:13px; border-radius:50%;
+    background:var(--card); border:1px solid var(--line);
+    transition:transform var(--dur-m) var(--ease), background var(--dur-m) var(--ease), border-color var(--dur-m) var(--ease);
+  }
+  .wing-switch.on{background:var(--paper-2); border-color:var(--gold);}
+  .wing-switch.on .knob{transform:translateX(14px); background:var(--gold); border-color:var(--gold);}
 
   /* ---------- HEADER ---------- */
   .header-card{padding-top:18px; padding-bottom:8px;}
@@ -646,6 +663,31 @@
   .mat-group-title{font-size:11px; font-weight:700; color:var(--ink-faint); letter-spacing:.03em; margin:16px 2px 8px; text-transform:uppercase;}
   .mat-group-title:first-of-type{margin-top:6px;}
   #editView-materials .add-block{margin-top:2px;}
+  /* ---------- 즉흥 모드 ---------- */
+  .wing-body{display:flex; flex-direction:column; align-items:center; padding-top:56px; gap:22px;}
+  .wing-note{
+    position:relative; width:100%; max-width:340px; background:var(--note-bg); border-radius:6px;
+    padding:20px 18px 16px; box-shadow:0 10px 22px -9px rgba(0,0,0,.4); opacity:0;
+  }
+  .wing-note .q1, .wing-note .q2{
+    position:absolute; font-family:'Fraunces',serif; font-weight:700; font-size:34px; line-height:1;
+    color:var(--gold); opacity:.9;
+  }
+  .wing-note .q1{top:-2px; left:10px;}
+  .wing-note .q2{bottom:-14px; right:12px; transform:rotate(180deg);}
+  .wing-note p{
+    position:relative; z-index:1; margin:8px 6px 0;
+    font-family:'Fraunces',serif; font-weight:500; font-size:13px; color:var(--ink);
+    text-align:center; line-height:1.8em; word-break:keep-all; overflow-wrap:normal;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; text-overflow:ellipsis;
+    background-image:linear-gradient(transparent, transparent calc(1.8em - 1.5px), var(--gold) calc(1.8em - 1.5px));
+    background-size:100% 1.8em; background-repeat:repeat-y; background-position:0 -2px;
+  }
+  @keyframes wingSlideL{from{transform:translateX(-140px) rotate(-4deg); opacity:0;}to{transform:translateX(0) rotate(-1.5deg); opacity:1;}}
+  @keyframes wingSlideR{from{transform:translateX(140px) rotate(4deg); opacity:0;}to{transform:translateX(0) rotate(1.5deg); opacity:1;}}
+  .wing-note.wing-a{animation:wingSlideL .65s cubic-bezier(.22,.85,.3,1) forwards;}
+  .wing-note.wing-b{animation:wingSlideR .65s cubic-bezier(.22,.85,.3,1) .15s forwards;}
+  .wing-reroll{align-self:center; font-size:12px; color:var(--ink-soft); background:var(--card); border:1px solid var(--line); border-radius:999px; padding:8px 18px;}
   /* 이미지 썸네일 그리드 */
   .att-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:7px;}
   .att-thumb{position:relative; border-radius:10px; overflow:hidden; border:1px solid var(--line); background:var(--card);}
@@ -787,6 +829,7 @@
     <button class="tab" data-action="edit-tab" data-tab="notes" data-i18n="tab.notes">메모</button>
     <button class="tab" data-action="edit-tab" data-tab="expense" data-i18n="tab.expense">지출</button>
     <button class="tab" data-action="edit-tab" data-tab="materials" data-i18n="tab.materials">자료모음</button>
+    <div class="wing-switch" id="wingSwitch" data-action="toggle-winging" role="switch" aria-checked="false" aria-label="즉흥 모드" data-i18n-aria="winging.aria"><div class="knob"></div></div>
   </div>
 </nav>
 
@@ -832,6 +875,14 @@
     <div id="attList" class="att-grid"></div>
     <button class="add-block edit-only" id="attAddBtn" data-action="add-attachment" data-i18n="mat.image.add">+ 이미지 추가</button>
     <input type="file" id="attFileInput" accept="image/*" hidden>
+  </section>
+</div>
+
+<div id="editView-winging" hidden>
+  <section class="wrap wing-body">
+    <div class="wing-note wing-a"><span class="q1">&ldquo;</span><p id="wingText1"></p><span class="q2">&ldquo;</span></div>
+    <div class="wing-note wing-b"><span class="q1">&ldquo;</span><p id="wingText2"></p><span class="q2">&ldquo;</span></div>
+    <button class="wing-reroll" data-action="reroll-winging" data-i18n="winging.reroll">다시 뽑기</button>
   </section>
 </div>
 
@@ -1071,6 +1122,7 @@ const I18N = {
     'nav.toMypage':'← 마이페이지','nav.opts.aria':'내 정보 및 옵션',
     'nav.mode.view':'📖 보기','nav.mode.edit':'✏️ 수정',
     'tab.schedule':'일정','tab.notes':'메모','tab.expense':'지출','tab.materials':'자료모음',
+    'winging.aria':'즉흥 모드','winging.reroll':'다시 뽑기',
 
     'mypage.h':'내 여행','mypage.newTrip':'＋ 새 여행 만들기','mypage.settingsRow':'⚙ 내 정보 및 옵션',
     'mypage.trip.untitled':'제목 없는 여행','mypage.trip.noDates':'날짜 미정','mypage.trip.dayUnit':'일',
@@ -1154,6 +1206,7 @@ const I18N = {
     'nav.toMypage':'← My trips','nav.opts.aria':'Account and options',
     'nav.mode.view':'📖 View','nav.mode.edit':'✏️ Edit',
     'tab.schedule':'Itinerary','tab.notes':'Notes','tab.expense':'Expenses','tab.materials':'Files',
+    'winging.aria':'Winging it mode','winging.reroll':'Draw again',
 
     'mypage.h':'My trips','mypage.newTrip':'+ New trip','mypage.settingsRow':'⚙ Account and options',
     'mypage.trip.untitled':'Untitled trip','mypage.trip.noDates':'Dates TBD','mypage.trip.dayUnit':'d',
@@ -1237,6 +1290,7 @@ const I18N = {
     'nav.toMypage':'← マイページ','nav.opts.aria':'アカウントとオプション',
     'nav.mode.view':'📖 表示','nav.mode.edit':'✏️ 編集',
     'tab.schedule':'旅程','tab.notes':'メモ','tab.expense':'支出','tab.materials':'資料',
+    'winging.aria':'即興モード','winging.reroll':'もう一度引く',
 
     'mypage.h':'マイ旅行','mypage.newTrip':'＋ 新しい旅行を作成','mypage.settingsRow':'⚙ アカウントとオプション',
     'mypage.trip.untitled':'無題の旅行','mypage.trip.noDates':'日程未定','mypage.trip.dayUnit':'日間',
@@ -1320,6 +1374,7 @@ const I18N = {
     'nav.toMypage':'← 我的旅行','nav.opts.aria':'账户与选项',
     'nav.mode.view':'📖 查看','nav.mode.edit':'✏️ 编辑',
     'tab.schedule':'行程','tab.notes':'备注','tab.expense':'支出','tab.materials':'资料',
+    'winging.aria':'即兴模式','winging.reroll':'重新抽取',
 
     'mypage.h':'我的旅行','mypage.newTrip':'＋ 创建新旅行','mypage.settingsRow':'⚙ 账户与选项',
     'mypage.trip.untitled':'未命名的旅行','mypage.trip.noDates':'日期待定','mypage.trip.dayUnit':'天',
@@ -1461,7 +1516,7 @@ function initFirebase(){
   }catch(e){ console.error('Firebase 초기화 실패', e); }
 }
 /* ===== V2: PROFILE STORE ===== */
-let profile = { avatarId: 'default', tripOrder: [], theme: 'a', lang: curLang };
+let profile = { avatarId: 'default', tripOrder: [], theme: 'a', lang: curLang, wingingDate: '', wingingPicks: [] };
 let profileLoaded = false;
 function profileDoc(){ return fbDb.collection('users').doc(currentUser.uid); }
 async function loadProfile(){
@@ -1473,6 +1528,8 @@ async function loadProfile(){
     tripOrder: Array.isArray(d.tripOrder) ? d.tripOrder.slice() : [],
     theme: THEME_IDS.includes(d.theme) ? d.theme : 'a',
     lang: LANGS.includes(d.lang) ? d.lang : curLang,
+    wingingDate: typeof d.wingingDate === 'string' ? d.wingingDate : '',
+    wingingPicks: Array.isArray(d.wingingPicks) ? d.wingingPicks.slice(0, 2) : [],
   };
   applyTheme(profile.theme);
   setLang(profile.lang, true);   // silent = no save loop
@@ -1484,7 +1541,8 @@ async function saveProfile(patch){
   Object.assign(profile, patch);
   if(patch.theme) applyTheme(profile.theme);
   await profileDoc().set(
-    { avatarId: profile.avatarId, tripOrder: profile.tripOrder, theme: profile.theme, lang: profile.lang },
+    { avatarId: profile.avatarId, tripOrder: profile.tripOrder, theme: profile.theme, lang: profile.lang,
+      wingingDate: profile.wingingDate, wingingPicks: profile.wingingPicks },
     { merge: true }
   );
 }
@@ -2071,6 +2129,160 @@ async function ensureAttachmentsLoaded(){
     loadedAttTripId = currentTripId;
   }catch(e){ console.error('첨부 로드 실패', e); }
   renderMaterials();
+}
+
+/* ===== 즉흥 모드 ===== */
+const WINGING_PROMPTS = [
+  "가방 안에서 아무 물건이나 하나 꺼내어, 그 물건과 가장 어울리지 않는 장소를 배경으로 인증샷 찍기",
+  "주변에서 가장 색감이 튀는 '빨간색' 사물 3가지를 1분 안에 찾아 연속으로 촬영하기",
+  "카메라를 바닥에 바짝 붙여서 사람이 아닌 '개미의 시선'으로 현재 거리 풍경 한 컷 담기",
+  "유리 쇼윈도나 거울에 비친 내 모습과 너머의 풍경을 겹쳐서 이중 노출 느낌의 사진 찍기",
+  "피사체를 화면 정중앙이 아닌 극단적인 구석에 두고 넓은 여백을 살려 풍경 찍기",
+  "주변에서 가장 오래되거나 폰트가 독특한 간판 하나를 찾아 정면에서 촬영하기",
+  "관광 명소를 등지고 서서, 그 명소를 바라보고 있는 사람들의 뒷모습 풍경 찍기",
+  "화면에 사람이 단 한 명도 걸리지 않는 완벽한 찰나의 순간을 기다렸다가 셔터 누르기",
+  "건물 외벽의 벽돌, 대리석, 혹은 철제 구조물의 질감이 잘 드러나게 손끝을 대고 근접 촬영하기",
+  "햇빛이 가장 선명하게 드리우는 '빛과 그림자'의 경계선 지점을 찾아 사진 남기기",
+  "눈앞에 보이는 대형 체인점이 아닌, 골목 안쪽의 가장 허름하고 오래된 로컬 카페 들어가기",
+  "메뉴판을 보지 않고 직원에게 \"오늘 날씨에 가장 어울리는 음료 아무거나 주세요\"라고 주문하기",
+  "음료가 나오면 마실 때까지 스마트폰을 화면이 바닥을 향하도록 완전히 뒤집어두기",
+  "편의점에 들어가 가장 패키징이 현란하거나 처음 보는 외국어 음료수 골라 마시기",
+  "계산을 마치고 나올 때 직원에게 평소보다 조금 더 밝은 목소리로 고마움 전하기",
+  "영수증 뒷면에 오늘 여행을 관통하는 단어 딱 3개만 손글씨로 꾹꾹 눌러 적기",
+  "기념품 샵에서 나를 위한 물건이 아닌 '가장 쓸데없고 웃긴' 소품 찾아 인증하기",
+  "카페 창가 자리에 앉아 지나가는 사람들의 신발 색상 통계 혼자 내보기",
+  "음료가 나오는 동안 냅킨 위에 지금 눈앞의 풍경을 아주 단순한 선으로 크로키하기",
+  "지갑 속 동전을 모두 꺼내어 나라별 디자인과 크기를 나란히 진열해 사진 찍기",
+  "음악 앱을 셔플 재생해서 나오는 첫 번째 곡의 분위기에 맞춰 다음 이동 방향 결정하기",
+  "지금 스마트폰 시계의 분(minute) 단위 끝자리가 홀수면 직진, 짝수면 우회전하기",
+  "빨간색 자동차가 3대 지나갈 때까지 안전한 인도에 잠시 멈춰 서서 구경하기",
+  "혼자 가위바위보를 해서 이기면 디저트 추가, 지면 가벼운 스트레칭 하기",
+  "동전을 던져 앞면이 나오면 눈앞의 빵집, 뒷면이 나오면 소품샵 구경하기",
+  "연락처에서 무작위로 한 명을 골라 지금 눈앞의 하늘 사진 뜬금없이 전송하기",
+  "가장 최근에 받은 메시지의 첫 번째 단어를 지도 앱에 검색해 주변 건물 구경하기",
+  "자판기나 매점에서 동전을 털어 가장 생소한 캔 음료 뽑아 마시기",
+  "타이머 1분을 맞추고 알람이 울릴 때 내 눈앞에 있는 가장 큰 간판 사진 찍기",
+  "횡단보도 초록 불이 켜질 때 가장 먼저 발을 내딛는 보행자의 걸음걸이 속도에 맞춰 1분 걷기",
+  "주변에서 가장 채도가 낮은 '무채색(회색 콘크리트)' 질감만 모아서 사진 찍기",
+  "가로수나 화분에 피어 있는 아주 작은 들꽃이나 풀잎 하나 근접 촬영하기",
+  "철제 가로등이나 표지판에 비친 햇빛의 반사광 포인트 찾아내기",
+  "도심 속 가로수 그늘 아래서 초록 잎 사이로 스며드는 햇살 사진 찍기",
+  "보도블록의 반복되는 패턴이나 질감이 가장 마음에 드는 곳 한 컷 남기기",
+  "하늘과 맞닿아 있는 건물 스카이라인의 실루엣만 깔끔하게 따서 찍기",
+  "오늘 하루의 여행을 상징하는 대표 컬러를 하나 선정해 그 색의 사물 찍기",
+  "거울, 쇼윈도, 혹은 물웅덩이에 반사된 풍경만 담아내기",
+  "현재 위치에서 반경 20m 내에 가장 오래된 타이포그래피 찾아내기",
+  "주변에서 채도가 가장 높은 '노란색' 사물 3가지 연속으로 촬영하기",
+  "박물관, 미술관, 혹은 대형 쇼핑몰의 천장 조명 구조가 가장 멋진 곳 찾아내기",
+  "실내 공간에서 가장 오래되어 보이거나 클래식한 가구 또는 소품 사진 찍기",
+  "대형 건물의 로비 인포메이션 맵을 한참 들여다보며 구조 파악하기",
+  "에스컬레이터를 타고 올라갈 때 정면이 아닌 양옆의 인테리어 디자인 감상하기",
+  "쇼핑몰 디스플레이 윈도우 중 가장 연극 무대처럼 연출된 곳 사진 찍기",
+  "실내 공간에서 바닥 타일의 패턴이나 색감이 가장 독특한 지점 찾아내기",
+  "미술관이나 갤러리에서 작품 설명 글씨체를 꼼꼼히 읽어보기",
+  "대형 서점에 들어가 베스트셀러 코너의 책 제목들을 훑으며 요즘 트렌드 읽기",
+  "실내 휴게 공간에 앉아 오가는 사람들이 들고 있는 쇼핑백 브랜드 유추해 보기",
+  "건물 내부의 비상구 표지판 디자인 국가별 차이점 관찰하기",
+  "3분 동안 스마트폰 메모장에 이번 여행의 테마곡 가사 짓기",
+  "5분 동안 주변 사물 5개를 활용해 가장 예쁜 미니 정물화 구도 짜보기",
+  "타이머 3분을 맞춰두고 그 안에 가방 속 물건들을 완벽하게 재정렬하기",
+  "5분 동안 오늘 찍은 사진들의 구도를 점검하고 마음에 안 드는 것 정리하기",
+  "3분 동안 눈을 감고 오늘 겪었던 가장 유쾌했던 순간 머릿속으로 리플레이하기",
+  "알람을 10분 뒤에 맞추고 그동안 편안한 자세로 눈 감고 휴식하기",
+  "5분 동안 지도 앱을 켜고 현재 위치 주변의 대칭적인 도로 구조 찾아보기",
+  "타이머 2분 동안 단 한 마디도 하지 않고 주변 소음만 집중해서 듣기",
+  "3분 동안 양손을 가볍게 털고 손목과 발목 스트레칭 집중적으로 하기",
+  "5분 동안 오늘 지출한 금액을 꼼꼼하게 정산하고 예산 잔액 확인하기",
+  "카페 계산대 직원에게 미소 지으며 \"오늘 하루도 좋은 하루 보내세요\"라고 인사하기",
+  "길을 묻거나 상점에 들어갈 때 현지 언어로 된 감사 인사 먼저 건네기",
+  "숙소 로비나 안내 데스크에 비치된 여행 안내 팜플렛 중 가장 예쁜 디자인 가져오기",
+  "상점 주인이 입고 있거나 착용한 소품 중 센스 있는 것 하나 자연스럽게 칭찬하기",
+  "로컬 서점이나 소품샵에서 점원에게 가장 인기 있는 소형 기념품 하나 물어보기",
+  "식당에서 계산을 마치고 나올 때 요리사가 들을 수 있게 엄지척 들어주기",
+  "동행이 있다면 서로에게 오늘 가장 웃겼던 해프닝 하나씩 이야기해 주기",
+  "관광 안내소에 들러 오늘의 날씨와 어울리는 추천 코스 짧게 안내받기",
+  "길을 걷다 만난 귀여운 반려동물을 멀리서 눈인사로 반겨주기",
+  "카페에서 다른 손님이 주문한 음료 비주얼을 슬쩍 보고 나중에 나도 같은 것 시켜보기",
+  "사람들이 오가는 광장이나 공원의 벤치에 앉아 깊게 심호흡 10번 하기",
+  "눈을 반쯤 감고 주변에서 들려오는 자연의 소리나 백색소음 3가지 구별해 내기",
+  "바람의 방향을 얼굴로 느끼며 가장 아늑하고 그늘진 명당자리 찾아 10분 머물기",
+  "아무것도 사지 않고, 찍지 않고, 오직 그 장소에 '존재'만 하는 15분 보내기",
+  "코끝으로 느껴지는 지금 이 공간의 냄새를 3가지 형용사로 정의해 보기",
+  "하늘을 바라보며 목과 어깨의 긴장을 풀어주는 느린 스트레칭 하기",
+  "분수대나 안전한 수변 공간을 찾아 물결이 일렁이는 패턴 3분간 관찰하기",
+  "바닥에 떨어진 낙엽이나 나뭇잎 중 대칭이 가장 예쁜 것 하나 주워 수첩에 끼우기",
+  "스마트폰 갤러리를 켜고 오늘 찍은 사진 중 가장 마음에 드는 것 1장 흑백으로 보정하기",
+  "현재 풍경과 가장 어울리는 플레이리스트 곡 하나 골라 눈 감고 감상하기",
+  "카메라로 오늘 하루 중 가장 인상적인 순간을 단 3장만 신중하게 찍기",
+  "우체국이나 호텔 프런트를 통해 한국에 있는 나 자신에게 짧은 엽서 한 장 부치기",
+  "길거리나 상점에서 나눠주는 감각적인 플라이어 하나 수집하기",
+  "눈을 감고 주변의 소리를 1분 동안 음성 메모로 녹음해 두기",
+  "오늘 방문한 장소들의 입장권이나 영수증을 모아 한 장의 콜라주처럼 사진 찍기",
+  "수첩을 펴고 오늘 가장 많이 들은 현지 단어나 표현 3가지 적어보기",
+  "여행 책자나 가이드북을 펼쳐 내일 가고 싶은 곳의 페이지를 손가락으로 무작위 지목하기",
+  "스마트폰 메모장에 오늘 하루를 관통하는 단 하나의 문장 작성하기",
+  "지금 눈앞의 풍경을 아주 단순한 선으로 냅킨에 크로키하기",
+  "카메라 렌즈 필터 효과를 바꿔서 평소와 전혀 다른 색감으로 현재 풍경 1장 남기기",
+  "다음 일정으로 이동하기 전, 벤치에 앉아 시원하게 물 한 모금 마시기",
+  "신발 끈을 다시 단단하게 고쳐 묶으며 발걸음 가볍게 정비하기",
+  "동행이 있다면 서로의 오늘 컨디션과 기분 상태 가볍게 체크해 주기",
+  "지도 앱을 켜서 다음 목적지까지의 경로 중 가장 큰 대로변 코스로 재설정하기",
+  "가방의 지퍼가 모두 잘 닫혀 있는지 소지품 최종 점검 하기",
+  "오늘 수집한 미션 배지나 사진 갤러리 열어 가볍게 하트 누르며 자화자찬하기",
+  "잠시 발을 멈추고 심호흡을 크게 세 번 하며 다음 장소로 향하는 마인드 세팅 하기",
+  "길을 걷다 잠시 멈춰 서서 오늘 찍은 사진 중 가장 웃음 지어지는 사진 한 장 넘겨보기",
+  "무작위로 아무 골목이나 골라 진입한 뒤, 딱 50걸음만 걷고 멈춰서 주변 풍경 구경하기",
+];
+let wingFromTab = 'schedule';
+function todayLocalStr(){
+  const d = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+}
+function pickTwoWingingIndices(){
+  const idx = [...Array(WINGING_PROMPTS.length).keys()];
+  const i1 = Math.floor(Math.random() * idx.length);
+  const first = idx.splice(i1, 1)[0];
+  const i2 = Math.floor(Math.random() * idx.length);
+  const second = idx.splice(i2, 1)[0];
+  return [first, second];
+}
+function setNewWingingPicks(){
+  profile.wingingDate = todayLocalStr();
+  profile.wingingPicks = pickTwoWingingIndices();
+  saveProfile({ wingingDate: profile.wingingDate, wingingPicks: profile.wingingPicks }).catch(e => console.error('즉흥 모드 저장 실패', e));
+}
+function displayWingingPicks(animate){
+  document.getElementById('wingText1').textContent = WINGING_PROMPTS[profile.wingingPicks[0]] || '';
+  document.getElementById('wingText2').textContent = WINGING_PROMPTS[profile.wingingPicks[1]] || '';
+  if(animate){
+    document.querySelectorAll('#editView-winging .wing-note').forEach(n => {
+      n.style.animation = 'none'; void n.offsetWidth; n.style.animation = '';
+    });
+  }
+}
+function renderWinging(animate){
+  if(profile.wingingDate !== todayLocalStr() || profile.wingingPicks.length !== 2) setNewWingingPicks();
+  displayWingingPicks(animate);
+}
+function toggleWinging(){
+  const sw = document.getElementById('wingSwitch');
+  const isOn = sw.classList.contains('on');
+  if(isOn){
+    sw.classList.remove('on');
+    sw.setAttribute('aria-checked', 'false');
+    showEditorTab(wingFromTab);
+  } else {
+    wingFromTab = currentEditorTab;
+    sw.classList.add('on');
+    sw.setAttribute('aria-checked', 'true');
+    showEditorTab('winging');
+    renderWinging(true);
+  }
+}
+function rerollWinging(){
+  setNewWingingPicks();
+  displayWingingPicks(true);
 }
 
 /* 완료 섹션 접힘 상태 — 메모리 전용(저장 안 함) */
@@ -2900,6 +3112,8 @@ document.addEventListener('click', e => {
   if(!btn) return;
   const a = btn.dataset.action;
   if(a === 'edit-tab'){ showEditorTab(btn.dataset.tab); return; }
+  if(a === 'toggle-winging'){ toggleWinging(); return; }
+  if(a === 'reroll-winging'){ rerollWinging(); return; }
   if(a === 'jump-day'){ showRail(); scrollToDay(btn.dataset.dayId); return; }
   if(a === 'add-day') addDay();
   else if(a === 'delete-day') deleteDay(btn.dataset.dayId);
