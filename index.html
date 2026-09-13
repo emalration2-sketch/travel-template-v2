@@ -3023,40 +3023,56 @@ function exportPDF(){
       let y = margin;
       let first = true;
 
-      const sections = [];
+      // "섹션"을 일차 카드 전체처럼 큰 덩어리로 잡으면, 페이지 경계가 하필 그 덩어리 중간을
+      // 지날 때 일정 항목 하나가 위/아래 페이지로 반쪽씩 잘려 보인다. 그래서 각 섹션을 더 작은
+      // "그룹"으로 나눈다 — 그룹 안 요소들은 서로 간격 없이 딱 붙여 이어붙이되(같은 카드처럼 보이게),
+      // 페이지가 모자라면 요소와 요소 "사이"에서만 넘어가도록 한다. 요소 자체(일정 항목 하나)가
+      // 페이지보다 큰 극단적인 경우에만(예: 메모가 아주 긴 항목) 최후 수단으로 픽셀 단위로 자른다.
+      const sectionGroups = [];
       const headerEl = document.querySelector('.header-card');
-      if(headerEl) sections.push(headerEl);
-      document.querySelectorAll('#daysContainer .day-card').forEach(el => sections.push(el));
+      if(headerEl) sectionGroups.push([headerEl]);
+      document.querySelectorAll('#daysContainer .day-card').forEach(dayCard => {
+        const group = [];
+        const head = dayCard.querySelector('.day-head');
+        if(head) group.push(head);
+        dayCard.querySelectorAll('.tl-item').forEach(item => group.push(item));
+        if(group.length) sectionGroups.push(group);
+      });
       [
         document.querySelector('#editView-notes section'),
         document.querySelector('#editView-expense section'),
         document.getElementById('linksContainer'),
-      ].forEach(sec => { if(sec) sections.push(sec); });
+      ].forEach(sec => { if(sec) sectionGroups.push([sec]); });
 
-      for(const sec of sections){
-        const canvas = await window.html2canvas(sec, { scale: 2, useCORS: true, backgroundColor: paperBg });
-        if(canvas.height === 0 || canvas.width === 0) continue;
-        // 섹션(일차 카드 등)을 통째로 한 장의 이미지로 넣으면, 한 페이지보다 큰 섹션은 아래로
-        // 잘려서 사라지고, 반대로 남은 공간에 안 맞으면 페이지를 통째로 새로 넘겨 빈 공간이 크게 남았다.
-        // 페이지 경계에 맞춰 픽셀 단위로 잘라 이어붙이면 두 문제 다 해결된다(내용 유실 없음 + 여백 최소화).
-        const pxPerMm = canvas.width / imgWidth;
-        let srcY = 0;
-        let remainingPx = canvas.height;
-        while(remainingPx > 0){
-          let availableMm = pageHeight - margin - y;
-          if(availableMm < 5){ doc.addPage(); y = margin; availableMm = pageHeight - margin * 2; }
-          const sliceMm = Math.min(availableMm, remainingPx / pxPerMm);
-          const slicePx = Math.max(1, Math.round(sliceMm * pxPerMm));
-          const sliceCanvas = document.createElement('canvas');
-          sliceCanvas.width = canvas.width;
-          sliceCanvas.height = slicePx;
-          sliceCanvas.getContext('2d').drawImage(canvas, 0, srcY, canvas.width, slicePx, 0, 0, canvas.width, slicePx);
-          doc.addImage(sliceCanvas.toDataURL('image/jpeg', 0.95), 'JPEG', margin, y, imgWidth, sliceMm);
-          y += sliceMm;
-          srcY += slicePx;
-          remainingPx -= slicePx;
-          first = false;
-          if(remainingPx > 0){ doc.addPage(); y = margin; }
+      for(const group of sectionGroups){
+        for(const sec of group){
+          const canvas = await window.html2canvas(sec, { scale: 2, useCORS: true, backgroundColor: paperBg });
+          if(canvas.height === 0 || canvas.width === 0) continue;
+          const pxPerMm = canvas.width / imgWidth;
+          let srcY = 0;
+          let remainingPx = canvas.height;
+          while(remainingPx > 0){
+            let availableMm = pageHeight - margin - y;
+            // 이 요소(항목 하나) 전체가 남은 공간엔 안 맞아도 새 페이지 전체에는 맞으면,
+            // 굳이 지금 자르지 말고 통째로 다음 페이지로 넘긴다 — 항목 중간이 잘리는 걸 막는 핵심.
+            const wholeMm = remainingPx / pxPerMm;
+            const fitsFreshPage = wholeMm <= pageHeight - margin * 2;
+            if(availableMm < 5 || (fitsFreshPage && wholeMm > availableMm)){
+              doc.addPage(); y = margin; availableMm = pageHeight - margin * 2;
+            }
+            const sliceMm = Math.min(availableMm, remainingPx / pxPerMm);
+            const slicePx = Math.max(1, Math.round(sliceMm * pxPerMm));
+            const sliceCanvas = document.createElement('canvas');
+            sliceCanvas.width = canvas.width;
+            sliceCanvas.height = slicePx;
+            sliceCanvas.getContext('2d').drawImage(canvas, 0, srcY, canvas.width, slicePx, 0, 0, canvas.width, slicePx);
+            doc.addImage(sliceCanvas.toDataURL('image/jpeg', 0.95), 'JPEG', margin, y, imgWidth, sliceMm);
+            y += sliceMm;
+            srcY += slicePx;
+            remainingPx -= slicePx;
+            first = false;
+            if(remainingPx > 0){ doc.addPage(); y = margin; }
+          }
         }
         y += 4;
       }
