@@ -2118,6 +2118,11 @@ function showEditorTab(name){
   document.querySelectorAll('#editTabs .tab[data-tab]').forEach(t => {
     t.classList.toggle('active', t.dataset.tab === name);
   });
+  const wingSwitch = document.getElementById('wingSwitch');
+  if(wingSwitch){
+    wingSwitch.classList.toggle('on', name === 'winging');
+    wingSwitch.setAttribute('aria-checked', name === 'winging' ? 'true' : 'false');
+  }
   window.scrollTo(0, 0);
   if(name === 'schedule') fitSchedTail();
   if(name === 'materials') ensureAttachmentsLoaded();
@@ -2269,16 +2274,10 @@ function renderWinging(animate){
   displayWingingPicks(animate);
 }
 function toggleWinging(){
-  const sw = document.getElementById('wingSwitch');
-  const isOn = sw.classList.contains('on');
-  if(isOn){
-    sw.classList.remove('on');
-    sw.setAttribute('aria-checked', 'false');
+  if(currentEditorTab === 'winging'){
     showEditorTab(wingFromTab);
   } else {
     wingFromTab = currentEditorTab;
-    sw.classList.add('on');
-    sw.setAttribute('aria-checked', 'true');
     showEditorTab('winging');
     renderWinging(true);
   }

@@ -49,6 +49,24 @@ test('같은 날 다시 열면 같은 미션 2개가 유지된다', async ({ pag
   await expect(page.locator('#wingText2')).toHaveText(first2);
 });
 
+test('즉흥 모드 중 다른 탭을 누르면 스위치가 꺼진 상태로 보이고, 한 번만 눌러도 재진입된다', async ({ page }) => {
+  await openEditor(page);
+  await page.locator('#wingSwitch').click();
+  await expect(page.locator('#editView-winging')).toBeVisible();
+  await expect(page.locator('#wingSwitch')).toHaveClass(/on/);
+
+  // 즉흥 모드가 켜진 채로 다른 탭(메모)을 누름 — 스위치 상태도 같이 꺼져야 함
+  await page.locator('#editTabs .tab[data-tab="notes"]').click();
+  await expect(page.locator('#editView-notes')).toBeVisible();
+  await expect(page.locator('#editView-winging')).toBeHidden();
+  await expect(page.locator('#wingSwitch')).not.toHaveClass(/on/);
+
+  // 이 상태에서 스위치를 한 번만 눌러도 즉시 즉흥 모드로 재진입해야 함 (두 번 눌러야 하면 버그)
+  await page.locator('#wingSwitch').click();
+  await expect(page.locator('#editView-winging')).toBeVisible();
+  await expect(page.locator('#wingSwitch')).toHaveClass(/on/);
+});
+
 test('다시 뽑기를 누르면 미션이 계정 프로필에도 저장된다', async ({ page }) => {
   await openEditor(page);
   await page.locator('#wingSwitch').click();
