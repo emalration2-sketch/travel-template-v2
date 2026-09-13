@@ -19,6 +19,7 @@ Operator: [operator name / individual or business name — to be set at launch]
 | Google account authentication (mandatory) | Email address, name (display name), profile photo URL, Google account unique identifier (UID) | Provided by Google when the user logs in with "Continue with Google" |
 | Generated in the course of using the Service | Travel titles, itineraries, notes, expense records, reference links; attached images; display settings (theme, avatar) | Entered or uploaded directly by the user |
 | Automatically generated information | Data synchronization time (timestamp) | Automatically generated when using the Service |
+| Service usage statistics (Google Analytics) | Device/browser information, access logs, usage behavior, approximate location (country/region level) | Automatically collected when using the Service |
 
 - The Operator does not collect sensitive information such as resident registration numbers, payment information or location information (GPS). (When paid features are introduced in the future, payment-related information will go through separate notice and consent procedures.)
 - Images attached by a user may contain personal information (such as a name on an airline ticket), and these are stored at the user's choice and responsibility.
@@ -27,6 +28,7 @@ Operator: [operator name / individual or business name — to be set at launch]
 
 - Login and account identification; storing, viewing and synchronizing travel data per account
 - Performing functions necessary to provide the Service (PDF generation, link sharing, retaining display settings)
+- Improving the Service through usage statistics analysis (Google Analytics)
 - Operating and maintaining the Service and responding to inquiries
 - Fulfilling statutory obligations and responding to disputes
 
@@ -50,6 +52,7 @@ For the provision of the Service, the Operator entrusts the processing of person
 | Entrustee | Entrusted work | Items transferred | Country, time and method of transfer | Retention period |
 |---|---|---|---|---|
 | Google LLC (Google Firebase) | Account authentication (Firebase Authentication), data storage (Cloud Firestore) | All items in Section 1 above | Transmitted from time to time over the network when using the Service. The database region is asia-northeast3 (Seoul). However, due to the nature of Google's global infrastructure, some processing such as authentication and backup may take place outside the Republic of Korea. | Until termination of the entrustment contract or withdrawal of membership |
+| Google LLC (Google Analytics) | Service usage statistics analysis | Device/browser information, access logs, usage behavior | Automatically collected when using the Service and transmitted to servers abroad | Until the purpose of use is achieved or the entrustment contract ends |
 
 - Matters concerning Google's processing of personal information are governed by the Google Privacy Policy ([https://policies.google.com/privacy](https://policies.google.com/privacy)).
 - If a user does not want the cross-border transfer, the user may discontinue use of the Service, but in that case the core functions of the Service cannot be used.
@@ -76,7 +79,8 @@ Users may exercise the following rights at any time.
 
 ## 9. Cookies and Local Storage
 
-- The Service does not use cookies for user identification.
+- The Service itself does not use cookies for user identification.
+- However, the Service uses Google Analytics to analyze usage statistics, which may involve cookies and similar technologies. The information collected through this is anonymous statistical information that cannot identify a specific individual. Users may refuse cookies in their browser settings or install the [Google Analytics Opt-out Browser Add-on](https://tools.google.com/dlpage/gaoptout) to opt out of collection. Note that refusing cookies may make some parts of the Service harder to use.
 - The browser's local storage (localStorage) is used to store display settings (the selected color theme, view/edit mode) and a temporary copy of the trip being edited. These do not identify individuals and are stored only in the user's browser. They are removed when site data is deleted in the browser settings.
 
 ## 10. Personal Information Protection Officer
