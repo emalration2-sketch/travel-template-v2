@@ -76,7 +76,12 @@ test('exportPDF 첨부 이미지 루프 — 각 첨부가 doc.addImage 로 삽�
     window.__pdfImages = [];
     window.__pdfSaved = false;
     window.loadPdfLibs = async () => {
-      window.html2canvas = async () => ({ width: 10, height: 10, toDataURL: () => 'data:image/jpeg;base64,AA' });
+      // 실제 html2canvas 처럼 진짜 <canvas> 를 리턴해야 exportPDF 의 페이지-분할 drawImage 가 동작한다
+      window.html2canvas = async () => {
+        const c = document.createElement('canvas');
+        c.width = 10; c.height = 10;
+        return c;
+      };
       window.jspdf = { jsPDF: function(){ return {
         internal:{ pageSize:{ getWidth:()=>210, getHeight:()=>297 } },
         addImage(...args){ window.__pdfImages.push(args); },

@@ -3036,15 +3036,29 @@ function exportPDF(){
       for(const sec of sections){
         const canvas = await window.html2canvas(sec, { scale: 2, useCORS: true, backgroundColor: paperBg });
         if(canvas.height === 0 || canvas.width === 0) continue;
-        const imgHeight = canvas.height * imgWidth / canvas.width;
-        if(!first && (y + imgHeight > pageHeight - margin)){
-          doc.addPage();
-          y = margin;
+        // 섹션(일차 카드 등)을 통째로 한 장의 이미지로 넣으면, 한 페이지보다 큰 섹션은 아래로
+        // 잘려서 사라지고, 반대로 남은 공간에 안 맞으면 페이지를 통째로 새로 넘겨 빈 공간이 크게 남았다.
+        // 페이지 경계에 맞춰 픽셀 단위로 잘라 이어붙이면 두 문제 다 해결된다(내용 유실 없음 + 여백 최소화).
+        const pxPerMm = canvas.width / imgWidth;
+        let srcY = 0;
+        let remainingPx = canvas.height;
+        while(remainingPx > 0){
+          let availableMm = pageHeight - margin - y;
+          if(availableMm < 5){ doc.addPage(); y = margin; availableMm = pageHeight - margin * 2; }
+          const sliceMm = Math.min(availableMm, remainingPx / pxPerMm);
+          const slicePx = Math.max(1, Math.round(sliceMm * pxPerMm));
+          const sliceCanvas = document.createElement('canvas');
+          sliceCanvas.width = canvas.width;
+          sliceCanvas.height = slicePx;
+          sliceCanvas.getContext('2d').drawImage(canvas, 0, srcY, canvas.width, slicePx, 0, 0, canvas.width, slicePx);
+          doc.addImage(sliceCanvas.toDataURL('image/jpeg', 0.95), 'JPEG', margin, y, imgWidth, sliceMm);
+          y += sliceMm;
+          srcY += slicePx;
+          remainingPx -= slicePx;
+          first = false;
+          if(remainingPx > 0){ doc.addPage(); y = margin; }
         }
-        const imgData = canvas.toDataURL('image/jpeg', 0.95);
-        doc.addImage(imgData, 'JPEG', margin, y, imgWidth, imgHeight);
-        y += imgHeight + 4;
-        first = false;
+        y += 4;
       }
 
       for(const a of (state.attachments || [])){
