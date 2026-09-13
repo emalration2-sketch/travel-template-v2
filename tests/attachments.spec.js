@@ -43,6 +43,19 @@ test('썸네일 탭 → 뷰어 열림, 닫기 → 그리드', async ({ page }) =
   await expect(page.locator('#attViewer')).toBeHidden();
 });
 
+test('뷰어를 열면 핀치줌이 풀리고, 닫으면 다시 잠긴다', async ({ page }) => {
+  await openMaterials(page, [{id:'a1',name:'탑승권'}]);
+  await page.evaluate(() => { attachmentsCache['a1'] = 'data:image/jpeg;base64,/9j/4AAQSkZJRg=='; renderMaterials(); });
+  const viewportContent = () => page.locator('meta[name="viewport"]').getAttribute('content');
+  expect(await viewportContent()).toContain('user-scalable=no');
+  await page.locator('.att-thumb[data-att-id="a1"] .att-img').click();
+  await expect(page.locator('#attViewer')).toBeVisible();
+  expect(await viewportContent()).not.toContain('user-scalable=no');
+  await page.locator('#attViewerClose').click();
+  await expect(page.locator('#attViewer')).toBeHidden();
+  expect(await viewportContent()).toContain('user-scalable=no');
+});
+
 test('뷰 모드: 썸네일 탭 → 뷰어 (비활성 캡션은 폴스루)', async ({ page }) => {
   await openMaterials(page, [{id:'a1',name:'탑승권'}]);
   await page.evaluate(() => { attachmentsCache['a1'] = 'data:image/jpeg;base64,/9j/4AAQSkZJRg=='; renderMaterials(); });

@@ -697,7 +697,7 @@
   .att-thumb .att-img{width:100%; height:100%; object-fit:cover; display:block; cursor:pointer;}
   .att-thumb .att-del{position:absolute; top:4px; right:4px; width:28px; height:28px; padding:0; border:none; border-radius:50%; background:rgba(27,35,64,.78); color:#fff; font-size:14px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;}
   /* 보기모드: 캡션은 이미지 위 은은한 오버레이 라벨 */
-  .att-thumb .att-name{position:absolute; left:0; right:0; bottom:0; width:100%; border:none; text-align:center; font-size:9.5px; color:#fff; background:linear-gradient(transparent,rgba(0,0,0,.62)); padding:12px 5px 4px;}
+  .att-thumb .att-name{position:absolute; left:0; right:0; bottom:0; width:100%; border:none; text-align:center; font-size:9.5px; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.85), 0 0 2px rgba(0,0,0,.7); background:linear-gradient(transparent,rgba(0,0,0,.78) 60%); padding:16px 5px 4px;}
   .att-thumb .att-name:disabled{-webkit-text-fill-color:#fff; color:#fff; pointer-events:none;}
   /* 수정모드: 캡션은 사진 아래 눈에 띄는 입력칸 */
   body.mode-edit .att-thumb .att-name{position:static; width:auto; margin:5px; padding:5px 7px; background:var(--card); border:1px solid var(--line); border-radius:6px; color:var(--ink); font-size:11px; text-align:left;}
@@ -708,7 +708,7 @@
   #attViewer{position:fixed; inset:0; z-index:130; background:#000; display:flex; align-items:center; justify-content:center;}
   #attViewer[hidden]{display:none;}
   #attViewer img{max-width:100%; max-height:100%; object-fit:contain; touch-action:pinch-zoom;}
-  #attViewerClose{position:absolute; top:14px; right:16px; width:34px; height:34px; border-radius:50%; border:none; background:rgba(255,255,255,.15); color:#fff; font-size:15px; cursor:pointer;}
+  #attViewerClose{position:absolute; top:14px; right:16px; width:34px; height:34px; border-radius:50%; border:none; background:rgba(0,0,0,.55); box-shadow:0 0 0 1px rgba(255,255,255,.25); color:#fff; font-size:15px; cursor:pointer;}
   .reset-link{ display:block; margin:18px auto 4px; padding:4px 10px; background:none; border:none;
     font-size:11px; color:var(--ink-faint); text-decoration:underline; cursor:pointer; }
   body.mode-view nav.tabs{ border-bottom-color:var(--mode-view); }
@@ -2453,10 +2453,16 @@ function openAttachmentViewer(id){
   if(!url) return;
   document.getElementById('attViewerImg').src = url;
   document.getElementById('attViewer').hidden = false;
+  // 평소엔 입력 중 실수로 화면이 확대/축소되는 걸 막아뒀지만(user-scalable=no),
+  // 사진을 크게 보는 뷰어에서만은 핀치줌으로 확대할 수 있어야 하므로 잠시 풀어준다.
+  const vp = document.querySelector('meta[name="viewport"]');
+  if(vp) vp.setAttribute('content', 'width=device-width, initial-scale=1.0, viewport-fit=cover');
 }
 function closeAttachmentViewer(){
   document.getElementById('attViewer').hidden = true;
   document.getElementById('attViewerImg').src = '';
+  const vp = document.querySelector('meta[name="viewport"]');
+  if(vp) vp.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
 }
 function compressImage(file){
   return new Promise((resolve, reject) => {
