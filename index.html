@@ -938,6 +938,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics-compat.js"></script>
 <script>
 let modalDayId = null, modalItemId = null, editingExpenseId = null;
 let currentTripId = null;
@@ -1506,7 +1507,8 @@ const firebaseConfig = {
   projectId: "travel-template-9ccfc",
   storageBucket: "travel-template-9ccfc.firebasestorage.app",
   messagingSenderId: "767720403435",
-  appId: "1:767720403435:web:84877d0b03f4cea39b69ae"
+  appId: "1:767720403435:web:84877d0b03f4cea39b69ae",
+  measurementId: "G-6DKS04J40Y"
 };
 let fbAuth = null, fbDb = null, currentUser = null;
 function initFirebase(){
@@ -1517,6 +1519,7 @@ function initFirebase(){
     fbDb = firebase.firestore();
     fbAuth.onAuthStateChanged(handleAuthChange);
   }catch(e){ console.error('Firebase 초기화 실패', e); }
+  try{ if(firebase.analytics) firebase.analytics(); }catch(e){ console.error('Analytics 초기화 실패', e); }
 }
 /* ===== V2: PROFILE STORE ===== */
 let profile = { avatarId: 'default', tripOrder: [], theme: 'a', lang: curLang, wingingDate: '', wingingPicks: [] };
