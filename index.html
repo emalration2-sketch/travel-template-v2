@@ -376,6 +376,7 @@
   }
   .link-edit input::placeholder{color:var(--ink-faint);}
   .link-edit .item-del{align-self:flex-end;}
+  .link-edit .row-arrows{align-self:flex-start; flex-direction:row; gap:4px;}
   .link-btn{
     display:block; background:var(--paper-2); border:1px solid var(--line);
     border-radius:12px; padding:14px; font-size:13.5px; font-weight:700;
@@ -553,6 +554,10 @@
   .mp-card .mp-arrows button{border:none; background:transparent; color:var(--ink-faint); font-size:11px; line-height:1; cursor:pointer; padding:2px;}
   .mp-card .mp-arrows button:disabled{opacity:.25; cursor:default;}
   .mp-card .mp-del{position:absolute; top:6px; right:6px; width:26px; height:26px; border:none; background:transparent; color:#C9CBD8; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;}
+  /* 일정 항목/메모/링크 순서 변경 화살표 — 마이페이지 여행 목록의 .mp-arrows 와 같은 패턴 */
+  .row-arrows{display:flex; flex-direction:column; gap:0; flex:none;}
+  .row-arrows button{border:none; background:transparent; color:var(--ink-faint); font-size:10px; line-height:1; cursor:pointer; padding:2px;}
+  .row-arrows button:disabled{opacity:.25; cursor:default;}
 
   /* ---------- TOAST ---------- */
   .mini-toast{
@@ -1977,7 +1982,7 @@ function dayCardHTML(d, idx){
       </div>
       <button class="day-del edit-only" data-action="delete-day" data-day-id="${d.id}">✕</button>
     </div>
-    <div class="tl">${d.items.map(it => itemHTML(d, it)).join('')}</div>
+    <div class="tl">${d.items.map((it, idx) => itemHTML(d, it, idx, d.items.length)).join('')}</div>
     <button class="add-item edit-only" data-action="add-item" data-day-id="${d.id}">${t('sched.addItem')}</button>
   </section>`;
 }
@@ -1994,11 +1999,15 @@ function minuteOptions(sel){
 const EXP_COINS_SVG = '<svg class="exp-coins" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14c0 1.657 2.686 3 6 3s6 -1.343 6 -3s-2.686 -3 -6 -3s-6 1.343 -6 3z"/><path d="M9 14v4c0 1.656 2.686 3 6 3s6 -1.344 6 -3v-4"/><path d="M3 6c0 1.072 1.144 2.062 3 2.598s4.144 .536 6 0c1.856 -.536 3 -1.526 3 -2.598c0 -1.072 -1.144 -2.062 -3 -2.598s-4.144 -.536 -6 0c-1.856 .536 -3 1.526 -3 2.598z"/><path d="M3 6v10c0 .888 .772 1.45 2 2"/><path d="M3 11c0 .888 .772 1.45 2 2"/></svg>';
 function expIconInner(cnt){ return EXP_COINS_SVG + (cnt ? `<span class="exp-cnt">${cnt}</span>` : ''); }
 function setExpIcon(el, cnt){ if(!el) return; el.innerHTML = expIconInner(cnt); el.classList.toggle('has', cnt > 0); }
-function itemHTML(d, it){
+function itemHTML(d, it, idx, total){
   const cnt = it.expenses.length;
   const [hh, mm] = (it.time||'').split(':');
   return `<div class="tl-item" data-item-id="${it.id}">
     <div class="tl-row">
+      <span class="row-arrows edit-only">
+        <button data-action="move-item-up" data-day-id="${d.id}" data-item-id="${it.id}" ${idx===0?'disabled':''}>▲</button>
+        <button data-action="move-item-down" data-day-id="${d.id}" data-item-id="${it.id}" ${idx===total-1?'disabled':''}>▼</button>
+      </span>
       <div class="tl-time-edit edit-only">
         <select data-scope="item" data-day-id="${d.id}" data-item-id="${it.id}" data-field="hour">${hourOptions(hh||'')}</select><span class="tl-colon">:</span><select data-scope="item" data-day-id="${d.id}" data-item-id="${it.id}" data-field="minute">${minuteOptions(mm||'')}</select>
       </div>
@@ -2240,8 +2249,13 @@ function chkRowHTML(n, it){
 const NOTE_SWITCH_ICON = '<svg class="nms-ic" viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>';
 function noteDoneTag(){ return t('note.doneTag'); }
 const NOTE_DONE_RE = /\s*\((완료|done|完了|完成)\)\s*$/;
-function noteHTML(n){
+function noteHTML(n, idx, arr){
+  const total = arr ? arr.length : 1;
   const titleRow = `<div class="note-row">
+      <span class="row-arrows edit-only">
+        <button data-action="move-note-up" data-note-id="${escapeAttr(n.id)}" ${idx===0?'disabled':''}>▲</button>
+        <button data-action="move-note-down" data-note-id="${escapeAttr(n.id)}" ${idx===total-1?'disabled':''}>▼</button>
+      </span>
       <input type="text" class="note-title" placeholder="${t('note.title.ph')}" data-scope="note" data-note-id="${escapeAttr(n.id)}" data-field="title" value="${escapeAttr(n.title||'')}">
       <button class="item-del edit-only" data-action="delete-note" data-note-id="${escapeAttr(n.id)}">✕</button>
     </div>`;
@@ -2341,14 +2355,19 @@ function normalizeUrl(u){
   if(!/^https?:\/\//i.test(u)) return 'https://' + u;
   return u;
 }
-function linkHTML(l){
+function linkHTML(l, idx, arr){
   // URL 미입력 상태면 href 를 아예 안 붙인다 — href="#" + target="_blank" 조합은
   // 모바일 브라우저/인앱 웹뷰에서 표준과 다르게 처리되어(새 탭 대신 새로고침 등)
   // 로그인 상태에서 앱이 마이페이지로 튕기는 현상으로 이어질 수 있다.
   const hasUrl = !!(l.url && l.url.trim());
   const viewAttrs = hasUrl ? ` href="${escapeAttr(normalizeUrl(l.url))}" target="_blank" rel="noopener"` : '';
+  const total = arr ? arr.length : 1;
   return `<div class="link-card" data-link-id="${escapeAttr(l.id)}">
     <div class="link-edit edit-only">
+      <span class="row-arrows">
+        <button data-action="move-link-up" data-link-id="${l.id}" ${idx===0?'disabled':''}>▲</button>
+        <button data-action="move-link-down" data-link-id="${l.id}" ${idx===total-1?'disabled':''}>▼</button>
+      </span>
       <input type="text" class="link-label" placeholder="${t('mat.link.label.ph')}" data-scope="link" data-link-id="${l.id}" data-field="label" value="${escapeAttr(l.label||'')}">
       <input type="text" class="link-url" placeholder="${t('mat.link.url.ph')}" data-scope="link" data-link-id="${l.id}" data-field="url" value="${escapeAttr(l.url||'')}">
       <button class="item-del edit-only" data-action="delete-link" data-link-id="${l.id}">✕</button>
@@ -2636,18 +2655,43 @@ function deleteItem(dayId, itemId){
   d.items = d.items.filter(i => i.id !== itemId);
   renderDays(); save();
 }
+function moveItem(dayId, itemId, dir){
+  const d = state.days.find(d => d.id === dayId); if(!d) return;
+  const i = d.items.findIndex(it => it.id === itemId);
+  const j = i + dir;
+  if(i < 0 || j < 0 || j >= d.items.length) return;
+  const [it] = d.items.splice(i, 1);
+  d.items.splice(j, 0, it);
+  renderDays(); save();
+}
 function addNote(){
   const id = uid();
   state.notes.push({ id, title:'', content:'' }); renderNotes(); save();
   flashNew(`.note-card[data-note-id="${CSS.escape(id)}"]`);
 }
 function deleteNote(id){ state.notes = state.notes.filter(n => n.id !== id); renderNotes(); save(); }
+function moveNote(noteId, dir){
+  const i = state.notes.findIndex(n => n.id === noteId);
+  const j = i + dir;
+  if(i < 0 || j < 0 || j >= state.notes.length) return;
+  const [n] = state.notes.splice(i, 1);
+  state.notes.splice(j, 0, n);
+  renderNotes(); save();
+}
 function addLink(){
   const id = uid();
   state.links.push({ id, label:'', url:'' }); renderMaterials(); save();
   flashNew(`.link-card[data-link-id="${CSS.escape(id)}"]`);
 }
 function deleteLink(id){ state.links = state.links.filter(l => l.id !== id); renderMaterials(); save(); }
+function moveLink(linkId, dir){
+  const i = state.links.findIndex(l => l.id === linkId);
+  const j = i + dir;
+  if(i < 0 || j < 0 || j >= state.links.length) return;
+  const [l] = state.links.splice(i, 1);
+  state.links.splice(j, 0, l);
+  renderMaterials(); save();
+}
 function addTraveler(){
   const inp = document.getElementById('newTravelerInput');
   const v = inp.value.trim(); if(!v) return;
@@ -3095,6 +3139,8 @@ document.addEventListener('click', e => {
   else if(a === 'delete-day') deleteDay(btn.dataset.dayId);
   else if(a === 'add-item') addItem(btn.dataset.dayId);
   else if(a === 'delete-item') deleteItem(btn.dataset.dayId, btn.dataset.itemId);
+  else if(a === 'move-item-up') moveItem(btn.dataset.dayId, btn.dataset.itemId, -1);
+  else if(a === 'move-item-down') moveItem(btn.dataset.dayId, btn.dataset.itemId, 1);
   else if(a === 'open-expense') openExpenseModal(btn.dataset.dayId, btn.dataset.itemId);
   else if(a === 'edit-expense') editExpense(btn.dataset.dayId, btn.dataset.itemId, btn.dataset.expId);
   else if(a === 'close-modal') closeExpenseModal();
@@ -3102,6 +3148,8 @@ document.addEventListener('click', e => {
   else if(a === 'delete-expense') deleteExpenseEntry(btn.dataset.dayId, btn.dataset.itemId, btn.dataset.expId);
   else if(a === 'add-note') addNote();
   else if(a === 'delete-note') deleteNote(btn.dataset.noteId);
+  else if(a === 'move-note-up') moveNote(btn.dataset.noteId, -1);
+  else if(a === 'move-note-down') moveNote(btn.dataset.noteId, 1);
   else if(a === 'note-toggle-mode') toggleNoteMode(btn.dataset.noteId);
   else if(a === 'note-add-item') noteAddItem(btn.dataset.noteId);
   else if(a === 'note-del-item') noteDelItem(btn.dataset.noteId, btn.dataset.itemId);
@@ -3109,6 +3157,8 @@ document.addEventListener('click', e => {
   else if(a === 'note-check'){ /* checkbox 는 change 이벤트(handleAuxChange)에서 처리 */ }
   else if(a === 'add-link') addLink();
   else if(a === 'delete-link') deleteLink(btn.dataset.linkId);
+  else if(a === 'move-link-up') moveLink(btn.dataset.linkId, -1);
+  else if(a === 'move-link-down') moveLink(btn.dataset.linkId, 1);
   else if(a === 'att-open') openAttachmentViewer(btn.dataset.attId);
   else if(a === 'att-delete') showAttDeleteModal(btn.dataset.attId);
   else if(a === 'att-confirm-delete') deleteAttachment(btn.dataset.attId);
