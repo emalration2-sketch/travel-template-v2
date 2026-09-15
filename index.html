@@ -243,8 +243,8 @@
   .tl-time-edit select:disabled{opacity:1; -webkit-text-fill-color:var(--ink); color:var(--ink);}
   .tl-colon{font-family:'Space Mono',monospace; font-size:15px; font-weight:700; color:var(--ink-faint);}
   .tl-time-view{
-    flex:none; font-family:'Space Mono',monospace; font-size:12px; color:var(--ink);
-    min-width:44px;
+    flex:none; font-family:'Space Mono',monospace; font-size:12px; font-weight:700; color:var(--ink);
+    min-width:44px; background:var(--paper-2); border-radius:8px; padding:4px 8px;
   }
   .tl-dot{flex:none; width:6px; height:6px; border-radius:50%; background:var(--red);}
   .tl-place{
@@ -273,8 +273,8 @@
   .tl-memo:focus{outline:1px solid var(--line);}
   .tl-memo::placeholder{color:var(--ink-faint);}
   .tl-memo-view{
-    background:var(--paper-2); border-radius:8px; font-size:12.5px; color:var(--ink-soft);
-    padding:6px 8px; margin-top:4px; white-space:pre-wrap; word-break:break-word;
+    font-size:12.5px; color:var(--ink-soft);
+    padding:2px 0; margin-top:4px; white-space:pre-wrap; word-break:break-word;
   }
   .tl-memo-view:empty{display:none;}
   .tl-memo-view a{color:var(--teal); text-decoration:underline; word-break:break-all;}
