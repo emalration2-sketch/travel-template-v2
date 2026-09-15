@@ -228,8 +228,7 @@
   }
 
   .tl{padding:4px 16px 2px;}
-  .tl-item{border-top:1px solid var(--line); padding:10px 0; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;}
-  .tl-item.dragging{background:var(--card); box-shadow:0 14px 30px rgba(27,35,64,.22); opacity:.95; position:relative; z-index:5;}
+  .tl-item{border-top:1px solid var(--line); padding:10px 0;}
   .tl-item:first-child{border-top:none;}
   .tl-row{display:flex; align-items:center; gap:7px;}
   .tl-time-edit{
@@ -299,9 +298,7 @@
   .note-card{
     background:var(--card); border:1px solid var(--line); border-radius:14px;
     padding:10px 12px; margin-bottom:10px;
-    user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;
   }
-  .note-card.dragging{box-shadow:0 14px 30px rgba(27,35,64,.22); opacity:.95; position:relative; z-index:5;}
   .note-row{display:flex; align-items:center; gap:8px;}
   .note-title{
     flex:1; min-width:0; border:none; background:transparent; font-size:14px; font-weight:700;
@@ -369,8 +366,6 @@
     display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));
     gap:10px; margin-bottom:10px;
   }
-  .link-card{user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;}
-  .link-card.dragging{box-shadow:0 14px 30px rgba(27,35,64,.22); opacity:.95; border-radius:14px; position:relative; z-index:5;}
   .link-edit{
     display:flex; flex-direction:column; gap:6px; background:var(--card);
     border:1px solid var(--line); border-radius:14px; padding:10px 12px;
@@ -558,7 +553,6 @@
   .mp-card .mp-arrows button{border:none; background:transparent; color:var(--ink-faint); font-size:11px; line-height:1; cursor:pointer; padding:2px;}
   .mp-card .mp-arrows button:disabled{opacity:.25; cursor:default;}
   .mp-card .mp-del{position:absolute; top:6px; right:6px; width:26px; height:26px; border:none; background:transparent; color:#C9CBD8; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;}
-  .mp-card.dragging{box-shadow:0 14px 30px rgba(27,35,64,.22); opacity:.95; position:relative; z-index:5;}
 
   /* ---------- TOAST ---------- */
   .mini-toast{
@@ -1773,98 +1767,6 @@ async function moveTrip(tripId, dir){
   renderMypage();
 }
 
-// 롱프레스(500ms) → 드래그로 형제 요소 순서를 바꾸는 범용 헬퍼.
-// container: 이벤트를 위임할 안정적인 조상(재렌더링에도 그대로 유지되는 엘리먼트).
-// itemSelector: 드래그 가능한 개별 항목의 클래스(예: '.mp-card').
-// excludeSelector: 이 셀렉터 안에서 누르면 드래그를 시작하지 않음(버튼/입력칸 등).
-// onDrop(orderedEls): 롱프레스 드래그로 순서가 바뀌었을 때 호출. 실제 데이터 반영은 호출자 책임.
-//   (같은 부모 안의 형제끼리만 재배치하므로, 일차별 .tl 처럼 컨테이너 하나에 여러 목록이 있어도
-//   dragEl.parentElement 를 "이 드래그의 범위"로 삼아 자동으로 격리된다.)
-// canDrag() (선택): false 를 반환하면 드래그 자체를 시작하지 않는다(예: 보기 모드에서는 순서 변경 불가).
-// 주의: onDrop 안에서만 걸러내면 이미 DOM 이 재배치된 뒤라 화면과 데이터가 어긋난다 — 반드시 시작 시점에 막아야 한다.
-function initDragReorder(container, itemSelector, excludeSelector, onDrop, canDrag){
-  let pressTimer = null, dragEl = null, startY = 0, longPressed = false, grabOffsetY = 0;
-  let swallowNextClick = false;
-
-  container.addEventListener('click', (e) => {
-    if(swallowNextClick){ e.stopPropagation(); e.preventDefault(); swallowNextClick = false; }
-  }, true);
-
-  function cleanup(){
-    clearTimeout(pressTimer); pressTimer = null;
-    if(dragEl){ dragEl.classList.remove('dragging'); dragEl.style.transform = ''; }
-    dragEl = null; longPressed = false;
-    document.removeEventListener('pointermove', onMove);
-    document.removeEventListener('pointerup', onUp);
-  }
-  function onDown(e){
-    if(canDrag && !canDrag()) return;
-    const item = e.target.closest(itemSelector);
-    if(!item || !container.contains(item)) return;
-    if(excludeSelector && e.target.closest(excludeSelector)) return;
-    dragEl = item; startY = e.clientY; longPressed = false;
-    pressTimer = setTimeout(() => {
-      longPressed = true;
-      grabOffsetY = startY - item.getBoundingClientRect().top;   // 카드 안 "어디를 잡았는지" 기억
-      item.classList.add('dragging');
-      item.style.transform = 'scale(1.03)';   // 잡자마자 바로 "들어올린" 느낌을 준다
-    }, 500);
-    document.addEventListener('pointermove', onMove);
-    document.addEventListener('pointerup', onUp);
-  }
-  function onMove(e){
-    if(!dragEl) return;
-    if(!longPressed){
-      if(Math.abs(e.clientY - startY) > 8) cleanup();   // 롱프레스 전 움직임 → 취소(스크롤 등)
-      return;
-    }
-    e.preventDefault();
-    const scope = dragEl.parentElement;
-    const siblings = [...scope.children].filter(el => el !== dragEl && el.matches(itemSelector));
-    const after = siblings.find(el => {
-      const r = el.getBoundingClientRect();
-      return e.clientY < r.top + r.height / 2;
-    });
-    if(after) scope.insertBefore(dragEl, after);
-    else scope.appendChild(dragEl);
-    // 목록 재배치는 "예약 위치"만 잡아줄 뿐, 실제로 손가락을 계속 따라오는 느낌은
-    // transform 으로 낸다 — 안 그러면 재배치 경계를 넘을 때마다 순간이동하듯 툭툭 끊겨 보인다.
-    // (기준점을 재는 동안은 이전 transform 을 잠깐 지워야 한다 — 그대로 두고 재면
-    // 이미 이동된 좌표 위에 또 이동량을 더하게 되어 오차가 누적된다.)
-    dragEl.style.transform = 'none';
-    const naturalTop = dragEl.getBoundingClientRect().top;
-    const desiredTop = e.clientY - grabOffsetY;
-    dragEl.style.transform = `translateY(${desiredTop - naturalTop}px) scale(1.03)`;
-  }
-  function onUp(){
-    const wasLong = longPressed;
-    const scope = dragEl && dragEl.parentElement;
-    if(wasLong && scope){
-      swallowNextClick = true;
-      const orderedEls = [...scope.children].filter(el => el.matches(itemSelector));
-      cleanup();
-      onDrop(orderedEls);
-    } else {
-      cleanup();
-      // 빠른 탭은 click 위임(open-trip 등)이 별도로 처리하므로 여기선 아무 것도 안 함
-    }
-  }
-  function onTouchMove(e){
-    // 드래그(롱프레스) 중에는 페이지 스크롤 방지. pointermove 의 preventDefault 로는
-    // iOS 스크롤이 안 막히므로 non-passive touchmove 에서 직접 막는다.
-    if(longPressed) e.preventDefault();
-  }
-  container.addEventListener('pointerdown', onDown);
-  container.addEventListener('touchmove', onTouchMove, { passive: false });
-}
-
-function initMypageDrag(){
-  initDragReorder(document.getElementById('mpList'), '.mp-card', '.mp-arrows, .mp-del', async (orderedEls) => {
-    const newOrder = orderedEls.map(c => c.dataset.tripId);
-    await saveProfile({ tripOrder: newOrder }).catch(e => console.error('정렬 저장 실패', e));
-    renderMypage();
-  });
-}
 
 function v2ModalOpen(bodyText, actionsHtml){
   document.getElementById('v2ModalBody').textContent = bodyText;
@@ -3352,40 +3254,10 @@ function handleFieldChange(e){
 document.addEventListener('input', handleFieldChange);
 document.addEventListener('change', e => { handleFieldChange(e); handleAuxChange(e); });
 
-function initScheduleDrag(){
-  initDragReorder(document.getElementById('daysContainer'), '.tl-item', '.item-del, .exp-icon, input, select, textarea', (orderedEls) => {
-    const dayCard = orderedEls[0] && orderedEls[0].closest('.day-card');
-    if(!dayCard) return;
-    const d = state.days.find(x => 'day-' + x.id === dayCard.id);
-    if(!d) return;
-    const order = orderedEls.map(el => el.dataset.itemId);
-    d.items = order.map(id => d.items.find(i => i.id === id)).filter(Boolean);
-    save();
-  }, () => currentMode === 'edit');
-}
-function initNotesDrag(){
-  initDragReorder(document.getElementById('notesContainer'), '.note-card', '.item-del, .note-actions, input, textarea, button', (orderedEls) => {
-    const order = orderedEls.map(el => el.dataset.noteId);
-    state.notes = order.map(id => state.notes.find(n => n.id === id)).filter(Boolean);
-    save();
-  }, () => currentMode === 'edit');
-}
-function initLinksDrag(){
-  initDragReorder(document.getElementById('linksContainer'), '.link-card', '.item-del, input', (orderedEls) => {
-    const order = orderedEls.map(el => el.dataset.linkId);
-    state.links = order.map(id => state.links.find(l => l.id === id)).filter(Boolean);
-    save();
-  }, () => currentMode === 'edit');
-}
-
 /* ---------- INIT ---------- */
 applyI18n(document);
 rebuildAll();
 setMode(currentMode);
-initMypageDrag();
-initScheduleDrag();
-initNotesDrag();
-initLinksDrag();
 initFirebase();
 </script>
 </body>
