@@ -33,6 +33,24 @@ test('롱프레스 후 드래그로 순서 변경', async ({ page }) => {
   expect(p.tripOrder).toEqual(['b', 'c', 'a']);
 });
 
+test('드래그 중인 카드는 손가락을 계속 따라간다("집어 든" 느낌 — 재배치 시점마다 순간이동하지 않음)', async ({ page }) => {
+  await setup(page, ['a', 'b', 'c']);
+  const first = page.locator('.mp-card[data-trip-id="a"]');
+  const b1 = await first.boundingBox();
+  await page.mouse.move(b1.x + b1.width / 2, b1.y + b1.height / 2);
+  await page.mouse.down();
+  await page.waitForTimeout(600);
+  await expect(first).toHaveClass(/dragging/);
+  // 손가락을 살짝만 옮겨도(재배치가 안 일어날 만큼) transform 이 그 이동량만큼 즉시 반영돼야 한다
+  await page.mouse.move(b1.x + b1.width / 2, b1.y + 20, { steps: 4 });
+  const transform = await first.evaluate(el => el.style.transform);
+  expect(transform).toContain('translateY');
+  expect(transform).toContain('scale(1.03)');
+  await page.mouse.up();
+  // 놓은 뒤에는 transform 이 원상복구되어 다음 렌더/레이아웃에 영향을 주지 않는다
+  await expect(first).not.toHaveClass(/dragging/);
+});
+
 test('빠른 탭(롱프레스 아님) → 여행 열기', async ({ page }) => {
   await setup(page, ['a', 'b']);
   await page.locator('.mp-card[data-trip-id="b"] .mp-title').click();

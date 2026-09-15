@@ -229,7 +229,7 @@
 
   .tl{padding:4px 16px 2px;}
   .tl-item{border-top:1px solid var(--line); padding:10px 0; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;}
-  .tl-item.dragging{background:var(--card); transform:scale(1.02); box-shadow:0 14px 30px rgba(27,35,64,.22); opacity:.95; position:relative; z-index:1;}
+  .tl-item.dragging{background:var(--card); box-shadow:0 14px 30px rgba(27,35,64,.22); opacity:.95; position:relative; z-index:5;}
   .tl-item:first-child{border-top:none;}
   .tl-row{display:flex; align-items:center; gap:7px;}
   .tl-time-edit{
@@ -301,7 +301,7 @@
     padding:10px 12px; margin-bottom:10px;
     user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;
   }
-  .note-card.dragging{transform:scale(1.03); box-shadow:0 14px 30px rgba(27,35,64,.22); opacity:.95;}
+  .note-card.dragging{box-shadow:0 14px 30px rgba(27,35,64,.22); opacity:.95; position:relative; z-index:5;}
   .note-row{display:flex; align-items:center; gap:8px;}
   .note-title{
     flex:1; min-width:0; border:none; background:transparent; font-size:14px; font-weight:700;
@@ -370,7 +370,7 @@
     gap:10px; margin-bottom:10px;
   }
   .link-card{user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;}
-  .link-card.dragging{transform:scale(1.03); box-shadow:0 14px 30px rgba(27,35,64,.22); opacity:.95; border-radius:14px;}
+  .link-card.dragging{box-shadow:0 14px 30px rgba(27,35,64,.22); opacity:.95; border-radius:14px; position:relative; z-index:5;}
   .link-edit{
     display:flex; flex-direction:column; gap:6px; background:var(--card);
     border:1px solid var(--line); border-radius:14px; padding:10px 12px;
@@ -558,7 +558,7 @@
   .mp-card .mp-arrows button{border:none; background:transparent; color:var(--ink-faint); font-size:11px; line-height:1; cursor:pointer; padding:2px;}
   .mp-card .mp-arrows button:disabled{opacity:.25; cursor:default;}
   .mp-card .mp-del{position:absolute; top:6px; right:6px; width:26px; height:26px; border:none; background:transparent; color:#C9CBD8; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;}
-  .mp-card.dragging{transform:scale(1.03); box-shadow:0 14px 30px rgba(27,35,64,.22); opacity:.95;}
+  .mp-card.dragging{box-shadow:0 14px 30px rgba(27,35,64,.22); opacity:.95; position:relative; z-index:5;}
 
   /* ---------- TOAST ---------- */
   .mini-toast{
@@ -1783,7 +1783,7 @@ async function moveTrip(tripId, dir){
 // canDrag() (선택): false 를 반환하면 드래그 자체를 시작하지 않는다(예: 보기 모드에서는 순서 변경 불가).
 // 주의: onDrop 안에서만 걸러내면 이미 DOM 이 재배치된 뒤라 화면과 데이터가 어긋난다 — 반드시 시작 시점에 막아야 한다.
 function initDragReorder(container, itemSelector, excludeSelector, onDrop, canDrag){
-  let pressTimer = null, dragEl = null, startY = 0, longPressed = false;
+  let pressTimer = null, dragEl = null, startY = 0, longPressed = false, grabOffsetY = 0;
   let swallowNextClick = false;
 
   container.addEventListener('click', (e) => {
@@ -1792,7 +1792,7 @@ function initDragReorder(container, itemSelector, excludeSelector, onDrop, canDr
 
   function cleanup(){
     clearTimeout(pressTimer); pressTimer = null;
-    if(dragEl) dragEl.classList.remove('dragging');
+    if(dragEl){ dragEl.classList.remove('dragging'); dragEl.style.transform = ''; }
     dragEl = null; longPressed = false;
     document.removeEventListener('pointermove', onMove);
     document.removeEventListener('pointerup', onUp);
@@ -1805,7 +1805,9 @@ function initDragReorder(container, itemSelector, excludeSelector, onDrop, canDr
     dragEl = item; startY = e.clientY; longPressed = false;
     pressTimer = setTimeout(() => {
       longPressed = true;
+      grabOffsetY = startY - item.getBoundingClientRect().top;   // 카드 안 "어디를 잡았는지" 기억
       item.classList.add('dragging');
+      item.style.transform = 'scale(1.03)';   // 잡자마자 바로 "들어올린" 느낌을 준다
     }, 500);
     document.addEventListener('pointermove', onMove);
     document.addEventListener('pointerup', onUp);
@@ -1825,6 +1827,14 @@ function initDragReorder(container, itemSelector, excludeSelector, onDrop, canDr
     });
     if(after) scope.insertBefore(dragEl, after);
     else scope.appendChild(dragEl);
+    // 목록 재배치는 "예약 위치"만 잡아줄 뿐, 실제로 손가락을 계속 따라오는 느낌은
+    // transform 으로 낸다 — 안 그러면 재배치 경계를 넘을 때마다 순간이동하듯 툭툭 끊겨 보인다.
+    // (기준점을 재는 동안은 이전 transform 을 잠깐 지워야 한다 — 그대로 두고 재면
+    // 이미 이동된 좌표 위에 또 이동량을 더하게 되어 오차가 누적된다.)
+    dragEl.style.transform = 'none';
+    const naturalTop = dragEl.getBoundingClientRect().top;
+    const desiredTop = e.clientY - grabOffsetY;
+    dragEl.style.transform = `translateY(${desiredTop - naturalTop}px) scale(1.03)`;
   }
   function onUp(){
     const wasLong = longPressed;
