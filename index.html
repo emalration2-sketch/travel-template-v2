@@ -1516,7 +1516,7 @@ const firebaseConfig = {
   appId: "1:767720403435:web:84877d0b03f4cea39b69ae",
   measurementId: "G-6DKS04J40Y"
 };
-const APP_CHECK_SITE_KEY = 'YOUR_RECAPTCHA_V3_SITE_KEY'; // 사용자가 reCAPTCHA v3 사이트 키를 발급하면 교체
+const APP_CHECK_SITE_KEY = '6LezKr4tAAAAAH38ppgW9RJQf_IJTytqOGjjstDI';
 let fbAuth = null, fbDb = null, currentUser = null;
 function initFirebase(){
   if(fbAuth) return;
@@ -1528,10 +1528,12 @@ function initFirebase(){
   }catch(e){ console.error('Firebase 초기화 실패', e); }
   try{ if(firebase.analytics) firebase.analytics(); }catch(e){ console.error('Analytics 초기화 실패', e); }
   // App Check: 아직 모니터링 단계(콘솔에서 각 API 의 "강제" 를 켜기 전까지는 아무 요청도 막지 않고
-  // 로그만 쌓인다). APP_CHECK_SITE_KEY 는 사용자가 reCAPTCHA v3 사이트 키를 발급하면 교체.
+  // 로그만 쌓인다). Firebase 가 reCAPTCHA 클래식 등록을 막고 Fraud Defense(reCAPTCHA Enterprise)
+  // 로 전환했기 때문에 ReCaptchaEnterpriseProvider 로 감싼다. APP_CHECK_SITE_KEY 는
+  // Google Cloud Console > Fraud Defense 에서 발급한 Enterprise 키로 교체.
   try{
-    if(firebase.appCheck && APP_CHECK_SITE_KEY && APP_CHECK_SITE_KEY !== 'YOUR_RECAPTCHA_V3_SITE_KEY'){
-      firebase.appCheck().activate(APP_CHECK_SITE_KEY, true);
+    if(firebase.appCheck && APP_CHECK_SITE_KEY && APP_CHECK_SITE_KEY !== 'YOUR_RECAPTCHA_ENTERPRISE_SITE_KEY'){
+      firebase.appCheck().activate(new firebase.appCheck.ReCaptchaEnterpriseProvider(APP_CHECK_SITE_KEY), true);
     }
   }catch(e){ console.error('App Check 초기화 실패', e); }
 }
