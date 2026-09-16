@@ -1612,10 +1612,12 @@ async function saveProfile(patch){
 }
 /* ===== V2: TRIP STORE ===== */
 let trips = [];            // 마지막 listTrips() 결과 (메타만)
-function tripsCol(){ return fbDb.collection('users').doc(currentUser.uid).collection('trips'); }
+function tripsCol(){ return fbDb.collection('trips'); }
+function tripMetaRef(tripId){ return tripsCol().doc(tripId); }
+function tripContentRef(tripId){ return tripsCol().doc(tripId).collection('content').doc('main'); }
 
 async function listTrips(){
-  const snap = await tripsCol().get();
+  const snap = await tripsCol().where('members', 'array-contains', currentUser.uid).get();
   const out = [];
   snap.forEach(doc => {
     const d = doc.data() || {};
@@ -1626,6 +1628,8 @@ async function listTrips(){
       endDate: d.endDate || '',
       dayCount: d.dayCount || 0,
       updatedAt: d.updatedAt || null,
+      ownerUid: d.ownerUid || '',
+      members: d.members || [],
     });
   });
   return out;
@@ -1633,32 +1637,36 @@ async function listTrips(){
 async function refreshTripList(){ trips = await listTrips(); return trips; }
 
 async function loadTrip(tripId){
-  const snap = await tripsCol().doc(tripId).get();
-  if(!snap.exists) throw new Error('trip 없음: ' + tripId);
-  const st = JSON.parse(snap.data().data);
-  if(!Array.isArray(st.links)) st.links = [];
-  if(!Array.isArray(st.notes)) st.notes = [];
-  if(!Array.isArray(st.travelers)) st.travelers = [t('common.traveler.me')];
-  if(!Array.isArray(st.attachments)) st.attachments = [];
+  const metaSnap = await tripMetaRef(tripId).get();
+  if(!metaSnap.exists) throw new Error('trip 없음: ' + tripId);
+  const contentSnap = await tripContentRef(tripId).get();
+  if(!contentSnap.exists) throw new Error('trip content 없음: ' + tripId);
+  const meta = metaSnap.data();
+  const st = contentDocToTripState(contentSnap.data());
+  st.title = meta.title || '';
   return st;
 }
 
 async function createTrip(){
   const st = defaultState();
   const meta = deriveTripMeta(st);
-  const ref = await tripsCol().add({
-    data: JSON.stringify(st),
+  const tripId = tripsCol().doc().id; // 클라이언트에서 미리 ID 발급 — 메타+콘텐츠 두 문서에 같은 ID 사용
+  const memberNames = {}; memberNames[currentUser.uid] = currentUser.displayName || '';
+  // 메타 먼저 커밋한 뒤 콘텐츠를 쓴다(순차) — Promise.all 로 동시에 보내면 보안 규칙의
+  // get(.../trips/tripId) 이 메타 문서가 아직 커밋되기 전에 평가돼 권한 거부가 날 수 있다.
+  await tripMetaRef(tripId).set({
+    ownerUid: currentUser.uid, members: [currentUser.uid], memberNames,
     title: meta.title, startDate: meta.startDate, endDate: meta.endDate, dayCount: meta.dayCount,
     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
   });
-  const id = ref.path.split('/').pop();
+  await tripContentRef(tripId).set(tripStateToContentDoc(st));
   try{
-    await saveProfile({ tripOrder: profile.tripOrder.concat(id) });
+    await saveProfile({ tripOrder: profile.tripOrder.concat(tripId) });
   }catch(e){
-    try{ await ref.delete(); }catch(_){}   // tripOrder 에 못 넣었으면 보이지 않는 고아 doc 이 됨 — 되돌림
+    try{ await tripMetaRef(tripId).delete(); await tripContentRef(tripId).delete(); }catch(_){}
     throw e;
   }
-  return id;
+  return tripId;
 }
 
 async function saveTrip(tripId, tripState){
@@ -1670,9 +1678,10 @@ async function saveTrip(tripId, tripState){
   }, { merge: true });
 }
 async function deleteTrip(tripId){
-  // 여행 문서 + tripOrder 부터 지운다(빠름). 첨부 하위문서 정리는 그 뒤 best-effort.
-  await tripsCol().doc(tripId).delete();
+  // 메타 먼저(빠름, tripOrder 갱신도 함께) — 첨부/콘텐츠 정리는 best-effort.
+  await tripMetaRef(tripId).delete();
   await saveProfile({ tripOrder: profile.tripOrder.filter(id => id !== tripId) });
+  try{ await tripContentRef(tripId).delete(); }catch(e){ console.error('콘텐츠 삭제 실패(무시)', e); }
   try{
     const attSnap = await tripsCol().doc(tripId).collection('att').get();
     await Promise.all(attSnap.docs.map(d => d.ref.delete()));

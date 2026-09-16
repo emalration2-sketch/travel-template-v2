@@ -70,6 +70,7 @@
   function docRef(path) {
     return {
       path,
+      id: path.split('/').pop(),
       async get() {
         if (offline) throw new Error('offline');
         const d = store[path];
@@ -141,6 +142,23 @@
           .filter((k) => k.startsWith(prefix) && !k.slice(prefix.length).includes('/'))
           .map((k) => ({ id: k.slice(prefix.length), data: () => clone(store[k]), ref: docRef(k) }));
         return { docs, empty: docs.length === 0, forEach: (f) => docs.forEach(f) };
+      },
+      where(field, op, value) {
+        // 지원 연산자: array-contains (이 프로젝트에서 실제로 쓰는 것만 최소 구현)
+        return {
+          async get() {
+            const prefix = path + '/';
+            const docs = Object.keys(store)
+              .filter((k) => k.startsWith(prefix) && !k.slice(prefix.length).includes('/'))
+              .map((k) => ({ id: k.slice(prefix.length), data: () => clone(store[k]), ref: docRef(k) }))
+              .filter((d) => {
+                const v = store[prefix + d.id] && store[prefix + d.id][field];
+                if (op === 'array-contains') return Array.isArray(v) && v.includes(value);
+                throw new Error('firebase-stub: 지원하지 않는 where 연산자: ' + op);
+              });
+            return { docs, empty: docs.length === 0, forEach: (f) => docs.forEach(f) };
+          },
+        };
       },
     };
   }

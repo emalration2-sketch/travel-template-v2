@@ -13,7 +13,7 @@ test('saveTrip 은 data + 메타를 함께 쓴다', async ({ page }) => {
     days: [{ id: 'd1', date: '2026-04-01', label: '', items: [] }, { id: 'd2', date: '2026-04-03', label: '', items: [] }],
     notes: [], links: [],
   }), id);
-  const raw = await page.evaluate((id) => window.__test.dump()['users/u1/trips/' + id], id);
+  const raw = await page.evaluate((id) => window.__test.dump()['trips/' + id], id);
   expect(raw).toMatchObject({ title: '도쿄', startDate: '2026-04-01', endDate: '2026-04-03', dayCount: 2 });
   expect(JSON.parse(raw.data).title).toBe('도쿄');
 });
@@ -23,7 +23,22 @@ test('deleteTrip 은 문서와 tripOrder 에서 제거', async ({ page }) => {
   const a = await page.evaluate(() => createTrip());
   const b = await page.evaluate(() => createTrip());
   await page.evaluate((a) => deleteTrip(a), a);
-  expect(await page.evaluate((a) => window.__test.dump()['users/u1/trips/' + a], a)).toBeUndefined();
+  expect(await page.evaluate((a) => window.__test.dump()['trips/' + a], a)).toBeUndefined();
   const p = await page.evaluate(() => loadProfile());
   expect(p.tripOrder).toEqual([b]);
+});
+
+test('deleteTrip 은 메타 문서와 콘텐츠 문서를 모두 지운다', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__test.signIn());
+  await page.waitForTimeout(50);
+  const after = await page.evaluate(async () => {
+    const id = await createTrip();
+    await deleteTrip(id);
+    const metaSnap = await tripMetaRef(id).get();
+    const contentSnap = await tripContentRef(id).get();
+    return { metaExists: metaSnap.exists, contentExists: contentSnap.exists };
+  });
+  expect(after.metaExists).toBe(false);
+  expect(after.contentExists).toBe(false);
 });
