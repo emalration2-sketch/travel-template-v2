@@ -17,8 +17,8 @@ test('여행 2개 — tripOrder 순서대로 카드, 빈 값 처리', async ({ p
   await signedIn(page);
   await page.evaluate(() => {
     window.__test.seed('users/u1', { avatarId: 'default', tripOrder: ['b', 'a'] });
-    window.__test.seed('users/u1/trips/a', { title: '오사카', startDate: '2026-03-14', endDate: '2026-03-17', dayCount: 4 });
-    window.__test.seed('users/u1/trips/b', { title: '', startDate: '', endDate: '', dayCount: 3 });
+    window.__test.seedTrip('a', { title: '오사카', startDate: '2026-03-14', endDate: '2026-03-17', dayCount: 4 });
+    window.__test.seedTrip('b', { title: '', startDate: '', endDate: '', dayCount: 3 });
   });
   await page.evaluate(async () => { await loadProfile(); await refreshTripList(); renderMypage(); });
   await expect(page.locator('#mpCount')).toHaveText('2 / 5');

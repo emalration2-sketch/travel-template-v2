@@ -81,7 +81,7 @@ test('자료모음 첫 진입 시 att 하위 컬렉션 1회 로드', async ({ pa
     window.__test.seed('users/u1/trips/t1', { data: JSON.stringify({ title:'X', travelers:['나'],
       days:[{id:'d1',date:'',label:'',items:[]}], notes:[], links:[],
       attachments:[{id:'a1',name:'탑승권'}] }), title:'X', dayCount:1 });
-    window.__test.seed('users/u1/trips/t1/att/a1', { name:'탑승권', mime:'image/jpeg', data:'data:image/jpeg;base64,AAAA' });
+    window.__test.seed('trips/t1/att/a1', { name:'탑승권', mime:'image/jpeg', data:'data:image/jpeg;base64,AAAA' });
   });
   await page.evaluate(() => window.__test.signIn({ uid:'u1', displayName:'김진', email:'a@b.com' }));
   await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
@@ -104,13 +104,13 @@ test('이미지 추가 → att 문서 + state.attachments + 여행문서', async
   await expect(page.locator('#attList .att-thumb')).toHaveCount(1);
   await expect(page.locator('#attCount')).toHaveText('1 / 20');
   const dump = await page.evaluate(() => window.__test.dump());
-  const attKey = Object.keys(dump).find(k => k.startsWith('users/u1/trips/t1/att/'));
+  const attKey = Object.keys(dump).find(k => k.startsWith('trips/t1/att/'));
   expect(attKey).toBeTruthy();
   expect(dump[attKey].data).toMatch(/^data:image\/jpeg/);
   expect(dump[attKey].name).toBe('탑승권');
   await page.waitForTimeout(1300);
   const dump2 = await page.evaluate(() => window.__test.dump());
-  expect(JSON.parse(dump2['users/u1/trips/t1'].data).attachments.length).toBe(1);
+  expect(dump2['trips/t1/content/main'].attachments.length).toBe(1);
 });
 
 test('20장이면 추가 버튼 비활성 + 추가 안 됨', async ({ page }) => {
@@ -140,23 +140,23 @@ test('오프라인이면 이미지 추가 실패 + 상태 불변', async ({ page
 
 test('이미지 삭제 — 확인 모달 → att 문서 + state 제거', async ({ page }) => {
   await openMaterials(page, [{id:'a1',name:'탑승권'},{id:'a2',name:'입장권'}]);
-  await page.evaluate(() => window.__test.seed('users/u1/trips/t1/att/a1', { name:'탑승권', data:'data:image/jpeg;base64,AA' }));
+  await page.evaluate(() => window.__test.seed('trips/t1/att/a1', { name:'탑승권', data:'data:image/jpeg;base64,AA' }));
   await page.locator('.att-thumb[data-att-id="a1"] .att-del').click();
   await expect(page.locator('#v2ModalBody')).toContainText('이 이미지를 삭제할까요?');
   await page.locator('#v2Modal').getByText('삭제', { exact:true }).click();
   await expect(page.locator('#attList .att-thumb')).toHaveCount(1);
   expect(await page.evaluate(() => state.attachments.map(a => a.id))).toEqual(['a2']);
-  expect(await page.evaluate(() => window.__test.dump()['users/u1/trips/t1/att/a1'])).toBeUndefined();
+  expect(await page.evaluate(() => window.__test.dump()['trips/t1/att/a1'])).toBeUndefined();
 });
 
 test('이름 수정 → att 문서 + state 갱신', async ({ page }) => {
   await openMaterials(page, [{id:'a1',name:'탑승권'}]);
-  await page.evaluate(() => window.__test.seed('users/u1/trips/t1/att/a1', { name:'탑승권', data:'data:image/jpeg;base64,AA' }));
+  await page.evaluate(() => window.__test.seed('trips/t1/att/a1', { name:'탑승권', data:'data:image/jpeg;base64,AA' }));
   const input = page.locator('.att-thumb[data-att-id="a1"] .att-name');
   await input.fill('대한항공 탑승권');
   await input.dispatchEvent('change');
   expect(await page.evaluate(() => state.attachments[0].name)).toBe('대한항공 탑승권');
-  await expect.poll(() => page.evaluate(() => (window.__test.dump()['users/u1/trips/t1/att/a1']||{}).name)).toBe('대한항공 탑승권');
+  await expect.poll(() => page.evaluate(() => (window.__test.dump()['trips/t1/att/a1']||{}).name)).toBe('대한항공 탑승권');
 });
 
 test('compressImage — 장변 1400 이하, 700KB 이하', async ({ page }) => {

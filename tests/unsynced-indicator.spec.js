@@ -29,6 +29,6 @@ test('오프라인 편집 → 문구 두 개가 번갈아, 온라인 복귀 → 
   await page.dispatchEvent('#inputTitle', 'input');
   await page.waitForTimeout(1300);
   await expect(page.locator('#syncStatus')).toHaveText('');
-  const raw = await page.evaluate(() => window.__test.dump()['users/u1/trips/t1']);
+  const raw = await page.evaluate(() => window.__test.dump()['trips/t1']);
   expect(raw.title).toBe('복구됨');
 });

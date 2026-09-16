@@ -84,7 +84,7 @@ test('마이페이지 카드: user-select none', async ({ page }) => {
   await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
   await page.evaluate(() => {
     window.__test.seed('users/u1', { avatarId:'default', tripOrder:['t1'] });
-    window.__test.seed('users/u1/trips/t1', { title:'A', dayCount:1 });
+    window.__test.seedTrip('t1', { title:'A', dayCount:1 });
   });
   await page.evaluate(async () => { await loadProfile(); await refreshTripList(); renderMypage(); });
   const us = await page.evaluate(() => getComputedStyle(document.querySelector('.mp-card')).userSelect

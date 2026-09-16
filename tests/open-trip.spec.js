@@ -9,7 +9,7 @@ test('카드 탭 → 편집기에 해당 여행 로드', async ({ page }) => {
   await signedIn(page);
   await page.evaluate(() => {
     window.__test.seed('users/u1', { avatarId: 'default', tripOrder: ['t1'] });
-    window.__test.seed('users/u1/trips/t1', {
+    window.__test.seedTrip('t1', {
       data: JSON.stringify({ title: '교토 여행', travelers: ['나'], days: [{ id: 'd1', date: '', label: '', items: [] }], notes: [], links: [] }),
       title: '교토 여행', dayCount: 1,
     });
@@ -25,7 +25,7 @@ test('← 마이페이지 → 목록 복귀', async ({ page }) => {
   await signedIn(page);
   await page.evaluate(() => {
     window.__test.seed('users/u1', { avatarId: 'default', tripOrder: ['t1'] });
-    window.__test.seed('users/u1/trips/t1', { data: JSON.stringify({ title: 'X', travelers:['나'], days:[{id:'d1',date:'',label:'',items:[]}], notes:[], links:[] }), title: 'X', dayCount: 1 });
+    window.__test.seedTrip('t1', { data: JSON.stringify({ title: 'X', travelers:['나'], days:[{id:'d1',date:'',label:'',items:[]}], notes:[], links:[] }), title: 'X', dayCount: 1 });
   });
   await page.evaluate(async () => { await loadProfile(); await refreshTripList(); renderMypage(); });
   await page.locator('.mp-card[data-trip-id="t1"] .mp-title').click();
@@ -37,7 +37,7 @@ test('← 마이페이지 → 오프라인이어도 즉시 복귀 (네트워크 
   await signedIn(page);
   await page.evaluate(() => {
     window.__test.seed('users/u1', { avatarId: 'default', tripOrder: ['t1'] });
-    window.__test.seed('users/u1/trips/t1', { data: JSON.stringify({ title: 'X', travelers:['나'], days:[{id:'d1',date:'',label:'',items:[]}], notes:[], links:[] }), title: 'X', dayCount: 1 });
+    window.__test.seedTrip('t1', { data: JSON.stringify({ title: 'X', travelers:['나'], days:[{id:'d1',date:'',label:'',items:[]}], notes:[], links:[] }), title: 'X', dayCount: 1 });
   });
   await page.evaluate(async () => { await loadProfile(); await refreshTripList(); renderMypage(); });
   await page.locator('.mp-card[data-trip-id="t1"] .mp-title').click();
@@ -53,7 +53,7 @@ test('← 마이페이지: 편집한 제목이 목록 카드에 반영 (재조�
   await signedIn(page);
   await page.evaluate(() => {
     window.__test.seed('users/u1', { avatarId: 'default', tripOrder: ['t1'] });
-    window.__test.seed('users/u1/trips/t1', { data: JSON.stringify({ title: '옛 제목', travelers:['나'], days:[{id:'d1',date:'2026-05-01',label:'',items:[]}], notes:[], links:[] }), title: '옛 제목', startDate:'2026-05-01', dayCount: 1 });
+    window.__test.seedTrip('t1', { data: JSON.stringify({ title: '옛 제목', travelers:['나'], days:[{id:'d1',date:'2026-05-01',label:'',items:[]}], notes:[], links:[] }), title: '옛 제목', startDate:'2026-05-01', dayCount: 1 });
   });
   await page.evaluate(async () => { await loadProfile(); await refreshTripList(); renderMypage(); });
   await page.locator('.mp-card[data-trip-id="t1"] .mp-title').click();

@@ -17,7 +17,7 @@ test('5개면 모달, 생성 안 됨', async ({ page }) => {
   await signedIn(page);
   await page.evaluate(() => {
     window.__test.seed('users/u1', { avatarId: 'default', tripOrder: ['a','b','c','d','e'] });
-    ['a','b','c','d','e'].forEach(id => window.__test.seed('users/u1/trips/' + id, { title: id, dayCount: 1 }));
+    ['a','b','c','d','e'].forEach(id => window.__test.seedTrip(id, { title: id, dayCount: 1 }));
   });
   await page.evaluate(async () => { await loadProfile(); await refreshTripList(); renderMypage(); });
   await page.locator('#mpNewBtn').click();

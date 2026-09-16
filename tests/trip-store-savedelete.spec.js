@@ -5,17 +5,23 @@ async function signedIn(page){
   await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
 }
 
-test('saveTrip 은 data + 메타를 함께 쓴다', async ({ page }) => {
+test('flushCloud 는 메타 문서에 파생 필드(title/startDate/endDate/dayCount)를 병합 저장한다', async ({ page }) => {
+  // 옛 saveTrip(전체 blob 저장)은 Task 5에서 flushCloud(메타 병합 + 콘텐츠 부분 패치)로 완전히 대체되어 삭제됨.
   await signedIn(page);
   const id = await page.evaluate(() => createTrip());
-  await page.evaluate((id) => saveTrip(id, {
-    title: '도쿄', travelers: ['나'],
-    days: [{ id: 'd1', date: '2026-04-01', label: '', items: [] }, { id: 'd2', date: '2026-04-03', label: '', items: [] }],
-    notes: [], links: [],
-  }), id);
-  const raw = await page.evaluate((id) => window.__test.dump()['trips/' + id], id);
+  const raw = await page.evaluate(async (id) => {
+    currentTripId = id;
+    state = await loadTrip(id);
+    state.title = '도쿄';
+    state.days = [
+      { id: 'd1', date: '2026-04-01', label: '', items: [] },
+      { id: 'd2', date: '2026-04-03', label: '', items: [] },
+    ];
+    save();
+    await forceFlush();
+    return window.__test.dump()['trips/' + id];
+  }, id);
   expect(raw).toMatchObject({ title: '도쿄', startDate: '2026-04-01', endDate: '2026-04-03', dayCount: 2 });
-  expect(JSON.parse(raw.data).title).toBe('도쿄');
 });
 
 test('deleteTrip 은 문서와 tripOrder 에서 제거', async ({ page }) => {

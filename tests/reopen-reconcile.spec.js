@@ -16,7 +16,7 @@ test('dirty 로컬 캐시가 있으면 그 버전으로 열고 클라우드에 �
   await page.evaluate(() => openTrip('t1'));
   await expect(page.locator('#inputTitle')).toHaveValue('로컬미저장제목');
   await page.waitForTimeout(300);
-  const raw = await page.evaluate(() => window.__test.dump()['users/u1/trips/t1']);
+  const raw = await page.evaluate(() => window.__test.dump()['trips/t1']);
   expect(raw.title).toBe('로컬미저장제목');
 });
 

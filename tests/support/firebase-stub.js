@@ -186,6 +186,22 @@
     signOut() { return fakeAuth.signOut(); },
     setOffline(v) { offline = !!v; },
     seed(path, obj) { store[path] = clone(obj); persist(); },
+    seedTrip(tripId, oldFields) {
+      store['trips/' + tripId] = clone({
+        ownerUid: 'u1', members: ['u1'], memberNames: { u1: '김진' },
+        title: oldFields.title || '', startDate: oldFields.startDate || '', endDate: oldFields.endDate || '', dayCount: oldFields.dayCount || 0,
+      });
+      if (oldFields.data !== undefined) {
+        const st = JSON.parse(oldFields.data);
+        if (!Array.isArray(st.travelers)) st.travelers = [];
+        if (!Array.isArray(st.days)) st.days = [];
+        if (!Array.isArray(st.notes)) st.notes = [];
+        if (!Array.isArray(st.links)) st.links = [];
+        if (!Array.isArray(st.attachments)) st.attachments = [];
+        store['trips/' + tripId + '/content/main'] = clone(tripStateToContentDoc(st));
+      }
+      persist();
+    },
     dump() { return clone(store); },
     reset() { Object.keys(store).forEach((k) => delete store[k]); persist(); authUser = null; offline = false; pendingUser = null; },
   };

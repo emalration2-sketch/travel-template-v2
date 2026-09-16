@@ -12,9 +12,11 @@ test('deleteTrip 이 att 하위 문서도 삭제', async ({ page }) => {
   await expect(page.locator('section[data-screen="mypage"]')).toBeVisible();
   await page.evaluate(async () => { await loadProfile(); await refreshTripList(); renderMypage(); await deleteTrip('t1'); });
   const dump = await page.evaluate(() => window.__test.dump());
-  expect(dump['users/u1/trips/t1']).toBeUndefined();
-  expect(dump['users/u1/trips/t1/att/a1']).toBeUndefined();
-  expect(dump['users/u1/trips/t2']).toBeDefined();
+  // 로그인 시 마이그레이션이 레거시 경로(users/u1/trips/...)는 이미 전부 지웠으므로,
+  // deleteTrip 이 실제로 정리했는지는 새 최상위 경로(trips/...)로 확인해야 한다.
+  expect(dump['trips/t1']).toBeUndefined();
+  expect(dump['trips/t1/att/a1']).toBeUndefined();
+  expect(dump['trips/t2']).toBeDefined();
 });
 
 test('exportPDF 캡처 전 4개 뷰 임시 노출, 완료 후 원래 탭 복원', async ({ page }) => {

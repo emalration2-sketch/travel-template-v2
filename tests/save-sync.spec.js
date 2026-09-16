@@ -22,9 +22,9 @@ test('제목 편집 → 로컬 즉시, 클라우드는 ~1초 뒤', async ({ page
   expect(cached.dirty).toBe(true);
   // 클라우드 반영 대기
   await page.waitForTimeout(1300);
-  const raw = await page.evaluate(() => window.__test.dump()['users/u1/trips/t1']);
+  // title 은 메타 문서(trips/t1)에만 산다 — 콘텐츠 문서(trips/t1/content/main)엔 title 필드가 없다.
+  const raw = await page.evaluate(() => window.__test.dump()['trips/t1']);
   expect(raw.title).toBe('삿포로');
-  expect(JSON.parse(raw.data).title).toBe('삿포로');
   const c2 = await page.evaluate(() => JSON.parse(localStorage.getItem('ttv2-current-trip')));
   expect(c2.dirty).toBe(false);
 });
