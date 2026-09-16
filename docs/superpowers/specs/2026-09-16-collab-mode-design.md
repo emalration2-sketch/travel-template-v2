@@ -45,15 +45,18 @@
 
 ```
 {
-  days: { [dayId]: { label, date, items: { [itemId]: {time, place, memo, expenses:[...]} } } },
+  dayOrder: string[],           // dayId 순서
+  days: { [dayId]: { label, date, itemOrder: string[], items: { [itemId]: {time, place, memo, expenses:[...]} } } },
+  noteOrder: string[],          // noteId 순서
   notes: { [noteId]: { mode, content, items?, ... } },
+  linkOrder: string[],          // linkId 순서
   links: { [linkId]: { label, url } },
-  travelers: string[],          // 기존과 동일, 배열 유지 (아래 "결정하지 않은 항목" 참고)
+  travelers: string[],          // 기존과 동일, 배열 유지 (아래 "travelers 처리" 참고)
   attachments: [{id, name}],    // 매니페스트만, 바이트는 `att` 서브컬렉션
 }
 ```
 
-`days`/`notes`/`links`는 배열에서 맵으로 바뀐다. 편집기를 열 때만 이 문서를 읽고, `onSnapshot`으로 구독한다.
+`days`/`notes`/`links`는 배열에서 맵으로 바뀐다. 맵은 순서가 없으므로 각 맵마다 별도 순서 배열(`dayOrder`/`itemOrder`/`noteOrder`)을 둔다 — 지금 있는 ▲/▼ 순서 변경 버튼(`moveItem`/`moveNote`)이 이 순서 배열의 인덱스를 스플라이스하는 방식으로 그대로 재사용된다. 순서 배열은 통째로 덮어쓰지만(재정렬은 드물고 배열 자체가 ID 문자열뿐이라 가벼움), 각 항목의 실제 내용(`items.{itemId}`, `notes.{noteId}`)은 여전히 점(dot) 경로로 개별 업데이트한다 — 재정렬과 내용 편집이 동시에 일어나도 서로 다른 필드라 충돌하지 않는다. 편집기를 열 때만 이 문서를 읽고, `onSnapshot`으로 구독한다.
 
 ### 여행 ID와 초대 링크
 
@@ -105,7 +108,7 @@ match /trips/{tripId} {
 
 - 편집기에서 여행을 여는 동안 `trips/{tripId}/content/main`을 `onSnapshot`으로 구독한다.
 - 원격 변경 수신 시 `state`에 병합 후 기존 `renderDays()`/`renderNotes()`/`renderMaterials()`를 그대로 재사용해 다시 그린다.
-- 모든 필드 수정은 전체 `content/main` 문서를 다시 쓰는 대신, **점(dot) 경로로 그 필드 하나만 업데이트**한다. 예: `contentRef.update({'days.d3.items.i7.memo': '새 메모'})`. 항목 추가는 `{'days.d3.items.i9': {...}}`, 삭제는 `{'days.d3.items.i9': firebase.firestore.FieldValue.delete()}`.
+- 모든 필드 수정은 전체 `content/main` 문서를 다시 쓰는 대신, **점(dot) 경로로 그 필드 하나만 업데이트**한다. 예: `contentRef.update({'days.d3.items.i7.memo': '새 메모'})`. 항목 추가는 내용 추가 + 순서 배열 갱신을 한 번의 `update()`에 같이 담는다 — `{'days.d3.items.i9': {...}, 'days.d3.itemOrder': firebase.firestore.FieldValue.arrayUnion('i9')}`(둘 다 원자적으로 적용). 삭제도 마찬가지로 `{'days.d3.items.i9': FieldValue.delete(), 'days.d3.itemOrder': FieldValue.arrayRemove('i9')}`. 순서만 바꾸는 재정렬(▲/▼)은 `itemOrder` 배열 전체를 다시 쓴다.
 - **타이핑 중 원격 갱신 지연:** `document.activeElement`가 편집 필드(`input`/`textarea`)를 가리키는 동안 수신한 원격 스냅샷은 즉시 반영하지 않고 대기시켰다가, 포커스가 빠지는 순간(blur) 적용한다. 여러 번의 원격 갱신이 대기 중이면 마지막 스냅샷만 적용한다.
 - **충돌 시나리오:** 서로 다른 항목을 동시에 고치면 충돌하지 않는다(핵심 목표). 정확히 같은 항목의 같은 필드를 같은 순간 고치는 경우만 나중에 저장한 쪽이 이긴다 — 피해 범위가 필드 하나뿐이라 감내 가능한 수준으로 판단, 별도 "충돌 알림" UI는 만들지 않는다(YAGNI).
 
