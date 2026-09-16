@@ -4,10 +4,10 @@ test('dirty 로컬 캐시가 있으면 그 버전으로 열고 클라우드에 �
   await page.goto('/');
   await page.evaluate(() => {
     window.__test.seed('users/u1', { avatarId: 'default', tripOrder: ['t1'] });
-    window.__test.seed('users/u1/trips/t1', { data: JSON.stringify({ title: '클라우드제목', travelers:['나'], days:[{id:'d1',date:'',label:'',items:[]}], notes:[], links:[] }), title: '클라우드제목', dayCount: 1 });
+    window.__test.seed('users/u1/trips/t1', { data: JSON.stringify({ title: '클라우드제목', travelers:['나'], days:[{id:'d1',date:'',label:'클라우드라벨',items:[{id:'i1',time:'',place:'클라우드장소',memo:'',expenses:[]}]}], notes:[], links:[] }), title: '클라우드제목', dayCount: 1 });
     localStorage.setItem('ttv2-current-trip', JSON.stringify({
       tripId: 't1',
-      data: JSON.stringify({ title: '로컬미저장제목', travelers:['나'], days:[{id:'d1',date:'',label:'',items:[]}], notes:[], links:[] }),
+      data: JSON.stringify({ title: '로컬미저장제목', travelers:['나','동행인'], days:[{id:'d1',date:'',label:'로컬라벨',items:[{id:'i1',time:'',place:'로컬장소',memo:'로컬메모',expenses:[]}]}], notes:[], links:[] }),
       dirty: true, localUpdatedAt: Date.now(),
     }));
   });
@@ -18,6 +18,23 @@ test('dirty 로컬 캐시가 있으면 그 버전으로 열고 클라우드에 �
   await page.waitForTimeout(300);
   const raw = await page.evaluate(() => window.__test.dump()['trips/t1']);
   expect(raw.title).toBe('로컬미저장제목');
+
+  // C3 회귀: 메타(제목)뿐 아니라 복구된 **콘텐츠**도 실제로 클라우드에 올라가야 한다.
+  // (예전에는 flushCloud 가 비어 있는 패치 큐만 보내서 메타만 갱신되고, 그 뒤 캐시를
+  //  clean 으로 표시 + 초기 스냅샷이 옛 원격 값을 덮어써 복구분이 통째로 유실됐다)
+  const content = await page.evaluate(() => window.__test.dump()['trips/t1/content/main']);
+  expect(content.days.d1.label).toBe('로컬라벨');
+  expect(content.days.d1.items.i1.place).toBe('로컬장소');
+  expect(content.days.d1.items.i1.memo).toBe('로컬메모');
+  expect(content.travelers).toEqual(['나', '동행인']);
+
+  // 초기 스냅샷이 복구분을 되돌려놓지도 않았다(메모리 state 도 로컬 버전 유지)
+  const inMemory = await page.evaluate(() => ({
+    label: state.days[0].label,
+    place: state.days[0].items[0].place,
+  }));
+  expect(inMemory.label).toBe('로컬라벨');
+  expect(inMemory.place).toBe('로컬장소');
 });
 
 test('캐시가 다른 여행 것이면 클라우드 버전으로 연다', async ({ page }) => {

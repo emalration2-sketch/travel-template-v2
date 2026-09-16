@@ -44,6 +44,7 @@
   }
 
   const listeners = {}; // { [path]: Set<cb> }
+  const errListeners = {}; // { [path]: Set<errCb> } — onSnapshot 의 두 번째(에러) 콜백
   function notify(path) {
     const set = listeners[path];
     if (!set || !set.size) return;
@@ -101,9 +102,15 @@
         persist();
         notify(path);
       },
-      onSnapshot(cb) {
+      onSnapshot(cb, errCb) {
         if (!listeners[path]) listeners[path] = new Set();
         listeners[path].add(cb);
+        // 실제 SDK 처럼 두 번째 인자(에러 콜백)를 받아둔다. 평상시에는 절대 호출되지 않고,
+        // __test.triggerSnapshotError(path) 로 테스트가 명시적으로 발화시킬 때만 불린다.
+        if (errCb) {
+          if (!errListeners[path]) errListeners[path] = new Set();
+          errListeners[path].add(errCb);
+        }
         // Capture the initial snapshot SYNCHRONOUSLY (value + frozen clone),
         // right now at subscribe time, and only defer the *delivery* of that
         // already-captured value to a microtask. This guarantees:
@@ -125,7 +132,10 @@
           if (!listeners[path] || !listeners[path].has(cb)) return;
           cb({ exists: initialExists, id: initialId, data: () => initialSnapshot });
         });
-        return () => { if (listeners[path]) listeners[path].delete(cb); };
+        return () => {
+          if (listeners[path]) listeners[path].delete(cb);
+          if (errCb && errListeners[path]) errListeners[path].delete(errCb);
+        };
       },
       collection(sub) { return collRef(path + '/' + sub); },
     };
@@ -207,6 +217,15 @@
         store['trips/' + tripId + '/content/main'] = clone(tripStateToContentDoc(st));
       }
       persist();
+    },
+    // 실제 Firestore 의 onSnapshot 에러(권한 거부/네트워크 실패)를 시뮬레이션한다.
+    // 등록된 에러 콜백을 동기적으로 호출하며, 콜백이 몇 개 불렸는지 돌려준다.
+    triggerSnapshotError(path, message) {
+      const set = errListeners[path];
+      if (!set || !set.size) return 0;
+      const n = set.size;
+      Array.from(set).forEach(cb => cb(new Error(message || 'permission-denied')));
+      return n;
     },
     dump() { return clone(store); },
     reset() { Object.keys(store).forEach((k) => delete store[k]); persist(); authUser = null; persistAuth(); offline = false; pendingUser = null; },
