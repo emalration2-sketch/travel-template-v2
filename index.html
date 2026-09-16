@@ -227,9 +227,10 @@
     width:26px; height:26px; border-radius:50%; cursor:pointer; font-size:12px;
   }
 
-  .tl{padding:4px 16px 2px;}
-  .tl-item{border-top:1px solid var(--line); padding:7px 0;}
-  .tl-item:first-child{border-top:none;}
+  .tl{padding:7px 16px 7px;}
+  .tl-item{border-top:1px solid var(--line); padding:7px 0; display:flex; gap:7px;}
+  .tl-item:first-child{border-top-color:transparent;}
+  .tl-content{flex:1; min-width:0;}
   .tl-row{display:flex; align-items:center; gap:7px;}
   .tl-time-edit{
     flex:none; display:flex; align-items:center; gap:4px;
@@ -266,7 +267,7 @@
     width:22px; height:22px; cursor:pointer; font-size:12px;
   }
   .tl-memo{
-    width:100%; margin-top:2px; border:none; border-bottom:1px dashed transparent; background:transparent;
+    display:block; width:100%; margin-top:2px; border:none; border-bottom:1px dashed transparent; background:transparent;
     font-size:12.5px; color:var(--ink-soft); padding:1px 0;
     resize:vertical; min-height:20px;
   }
@@ -554,8 +555,8 @@
   .mp-card .mp-arrows button:disabled{opacity:.25; cursor:default;}
   .mp-card .mp-del{position:absolute; top:6px; right:6px; width:26px; height:26px; border:none; background:transparent; color:#C9CBD8; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;}
   /* 일정 항목/메모/링크 순서 변경 화살표 — 마이페이지 여행 목록의 .mp-arrows 와 같은 패턴 */
-  .row-arrows{display:flex; flex-direction:column; gap:3px; flex:none;}
-  .tl-row .row-arrows{margin-left:-4px;}
+  .row-arrows{display:flex; flex-direction:column; justify-content:space-between; gap:3px; flex:none;}
+  .tl-item>.row-arrows{margin-left:-4px;}
   .row-arrows button{border:none; background:transparent; color:var(--ink-faint); font-size:10px; line-height:1; cursor:pointer; padding:2px;}
   .row-arrows button:disabled{opacity:.25; cursor:default;}
 
@@ -2003,22 +2004,24 @@ function itemHTML(d, it, idx, total){
   const cnt = it.expenses.length;
   const [hh, mm] = (it.time||'').split(':');
   return `<div class="tl-item" data-item-id="${it.id}">
-    <div class="tl-row">
-      <span class="row-arrows edit-only">
-        <button data-action="move-item-up" data-day-id="${d.id}" data-item-id="${it.id}" ${idx===0?'disabled':''}>▲</button>
-        <button data-action="move-item-down" data-day-id="${d.id}" data-item-id="${it.id}" ${idx===total-1?'disabled':''}>▼</button>
-      </span>
-      <div class="tl-time-edit edit-only">
-        <select data-scope="item" data-day-id="${d.id}" data-item-id="${it.id}" data-field="hour">${hourOptions(hh||'')}</select><span class="tl-colon">:</span><select data-scope="item" data-day-id="${d.id}" data-item-id="${it.id}" data-field="minute">${minuteOptions(mm||'')}</select>
+    <span class="row-arrows edit-only">
+      <button data-action="move-item-up" data-day-id="${d.id}" data-item-id="${it.id}" ${idx===0?'disabled':''}>▲</button>
+      <button data-action="move-item-down" data-day-id="${d.id}" data-item-id="${it.id}" ${idx===total-1?'disabled':''}>▼</button>
+    </span>
+    <div class="tl-content">
+      <div class="tl-row">
+        <div class="tl-time-edit edit-only">
+          <select data-scope="item" data-day-id="${d.id}" data-item-id="${it.id}" data-field="hour">${hourOptions(hh||'')}</select><span class="tl-colon">:</span><select data-scope="item" data-day-id="${d.id}" data-item-id="${it.id}" data-field="minute">${minuteOptions(mm||'')}</select>
+        </div>
+        <span class="tl-time-view view-only">${escapeHTML(it.time || '--:--')}</span>
+        <span class="tl-dot"></span>
+        <input type="text" class="tl-place" placeholder="${t('sched.place.ph')}" data-scope="item" data-day-id="${d.id}" data-item-id="${it.id}" data-field="place" value="${escapeAttr(it.place||'')}">
+        <button class="exp-icon${cnt?' has':''}" id="exp-icon-${d.id}-${it.id}" data-action="open-expense" data-day-id="${d.id}" data-item-id="${it.id}" aria-label="${t('sched.expense.aria')}">${expIconInner(cnt)}</button>
+        <button class="item-del edit-only" data-action="delete-item" data-day-id="${d.id}" data-item-id="${it.id}">✕</button>
       </div>
-      <span class="tl-time-view view-only">${escapeHTML(it.time || '--:--')}</span>
-      <span class="tl-dot"></span>
-      <input type="text" class="tl-place" placeholder="${t('sched.place.ph')}" data-scope="item" data-day-id="${d.id}" data-item-id="${it.id}" data-field="place" value="${escapeAttr(it.place||'')}">
-      <button class="exp-icon${cnt?' has':''}" id="exp-icon-${d.id}-${it.id}" data-action="open-expense" data-day-id="${d.id}" data-item-id="${it.id}" aria-label="${t('sched.expense.aria')}">${expIconInner(cnt)}</button>
-      <button class="item-del edit-only" data-action="delete-item" data-day-id="${d.id}" data-item-id="${it.id}">✕</button>
+      <textarea class="tl-memo edit-only" placeholder="${t('sched.memo.ph')}" rows="1" data-scope="item" data-day-id="${d.id}" data-item-id="${it.id}" data-field="memo">${escapeHTML(it.memo||'')}</textarea>
+      <div class="tl-memo-view view-only" id="memo-view-${d.id}-${it.id}">${linkify(it.memo||'')}</div>
     </div>
-    <textarea class="tl-memo edit-only" placeholder="${t('sched.memo.ph')}" rows="1" data-scope="item" data-day-id="${d.id}" data-item-id="${it.id}" data-field="memo">${escapeHTML(it.memo||'')}</textarea>
-    <div class="tl-memo-view view-only" id="memo-view-${d.id}-${it.id}">${linkify(it.memo||'')}</div>
   </div>`;
 }
 function renderDays(){
