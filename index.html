@@ -1076,6 +1076,48 @@ function defaultState(){
     notes:[], links:[], attachments:[]
   };
 }
+
+function clone(v){ return v === undefined ? undefined : JSON.parse(JSON.stringify(v)); }
+
+function tripStateToContentDoc(state){
+  const dayOrder = state.days.map(d => d.id);
+  const days = {};
+  state.days.forEach(d => {
+    days[d.id] = {
+      label: d.label || '', date: d.date || '',
+      itemOrder: d.items.map(i => i.id),
+      items: Object.fromEntries(d.items.map(i => [i.id, {
+        time: i.time || '', place: i.place || '', memo: i.memo || '',
+        expenses: i.expenses || [],
+      }])),
+    };
+  });
+  const noteOrder = state.notes.map(n => n.id);
+  const notes = Object.fromEntries(state.notes.map(n => [n.id, clone(n)]));
+  const linkOrder = state.links.map(l => l.id);
+  const links = Object.fromEntries(state.links.map(l => [l.id, { label: l.label || '', url: l.url || '' }]));
+  return {
+    dayOrder, days, noteOrder, notes, linkOrder, links,
+    travelers: state.travelers.slice(),
+    attachments: (state.attachments || []).slice(),
+  };
+}
+
+function contentDocToTripState(doc){
+  const days = (doc.dayOrder || []).filter(id => doc.days && doc.days[id]).map(id => {
+    const d = doc.days[id];
+    const items = (d.itemOrder || []).filter(iid => d.items && d.items[iid]).map(iid => Object.assign({ id: iid }, d.items[iid]));
+    return { id, label: d.label || '', date: d.date || '', items };
+  });
+  const notes = (doc.noteOrder || []).filter(id => doc.notes && doc.notes[id]).map(id => Object.assign({ id }, doc.notes[id]));
+  const links = (doc.linkOrder || []).filter(id => doc.links && doc.links[id]).map(id => Object.assign({ id }, doc.links[id]));
+  return {
+    travelers: (doc.travelers || []).slice(),
+    days, notes, links,
+    attachments: (doc.attachments || []).slice(),
+  };
+}
+
 /* ===== V2: META ===== */
 function deriveTripMeta(tripState){
   const days = Array.isArray(tripState.days) ? tripState.days : [];
