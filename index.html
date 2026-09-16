@@ -1647,6 +1647,41 @@ async function loadTrip(tripId){
   return st;
 }
 
+async function migrateLegacyTrips(){
+  const legacyCol = fbDb.collection('users').doc(currentUser.uid).collection('trips');
+  let snap;
+  try{ snap = await legacyCol.get(); }catch(e){ console.error('마이그레이션 대상 조회 실패(무시, 다음 로그인에 재시도)', e); return; }
+  for(const doc of snap.docs){
+    const tripId = doc.id;
+    const d = doc.data() || {};
+    try{
+      const metaSnap = await tripMetaRef(tripId).get();
+      if(!metaSnap.exists){
+        const st = JSON.parse(d.data);
+        if(!Array.isArray(st.links)) st.links = [];
+        if(!Array.isArray(st.notes)) st.notes = [];
+        if(!Array.isArray(st.attachments)) st.attachments = [];
+        const memberNames = {}; memberNames[currentUser.uid] = currentUser.displayName || '';
+        await tripMetaRef(tripId).set({
+          ownerUid: currentUser.uid, members: [currentUser.uid], memberNames,
+          title: d.title || '', startDate: d.startDate || '', endDate: d.endDate || '', dayCount: d.dayCount || 0,
+          updatedAt: d.updatedAt || firebase.firestore.FieldValue.serverTimestamp(),
+        });
+        await tripContentRef(tripId).set(tripStateToContentDoc(st));
+        const attSnap = await legacyCol.doc(tripId).collection('att').get();
+        for(const a of attSnap.docs){
+          await tripsCol().doc(tripId).collection('att').doc(a.id).set(a.data());
+        }
+      }
+      // 여기 도달 = 새 구조가 이미 있거나 방금 만들어짐 → 옛 문서 정리
+      const attSnap2 = await legacyCol.doc(tripId).collection('att').get();
+      await Promise.all(attSnap2.docs.map(a => a.ref.delete()));
+      await legacyCol.doc(tripId).delete();
+    }catch(e){
+      console.error('여행 마이그레이션 실패(다음 로그인에 재시도)', tripId, e);
+    }
+  }
+}
 async function createTrip(){
   const st = defaultState();
   const meta = deriveTripMeta(st);
@@ -1981,6 +2016,7 @@ async function handleAuthChange(user){
   if(user){
     try{
       await loadProfile();
+      await migrateLegacyTrips().catch(e => console.error('마이그레이션 전체 실패(무시)', e));
       await refreshTripList();
     }catch(e){
       console.error('프로필/여행 로드 실패', e);
