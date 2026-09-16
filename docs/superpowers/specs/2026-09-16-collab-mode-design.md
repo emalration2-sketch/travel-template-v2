@@ -66,27 +66,35 @@ Firestore 자동 생성 문서 ID(`tripId`)는 약 20자의 고엔트로피 무�
 
 ```
 match /trips/{tripId} {
-  allow read: if request.auth != null && request.auth.uid in resource.data.members;
+  // get(단건 조회) 은 인증만 되어 있으면 누구나 — "추측 불가능한 tripId 를 아는 것" 자체가
+  // 진짜 게이트. list(쿼리) 는 문서 단위로 평가되므로 멤버로 제한 — 그래야 남이 임의의
+  // uid 로 array-contains 쿼리를 던져 다른 사람의 여행 목록을 통째로 훑는 걸 막는다.
+  allow get: if request.auth != null;
+  allow list: if request.auth != null && request.auth.uid in resource.data.members;
 
   // 최초 생성: 생성자 본인이 owner이자 유일한 member일 때만
   allow create: if request.auth != null
     && request.resource.data.ownerUid == request.auth.uid
     && request.resource.data.members == [request.auth.uid];
 
-  // 일반 수정: 이미 멤버인 사람만, ownerUid/members 는 아래 예외 경로로만 변경
-  allow update: if request.auth != null && request.auth.uid in resource.data.members
+  // ownerUid 는 항상 불변. 아래 두 분기는 독립적 — 자진 참여는 "아직 멤버가 아닌"
+  // 사람만 통과해야 하므로 "이미 멤버"를 요구하는 분기와 최상위에서 AND로 묶으면 안 된다
+  // (한 번 이 실수로 자진 참여 자체가 영원히 불가능해지는 버그를 냈었음 — 재발 방지 주석).
+  allow update: if request.auth != null
     && request.resource.data.ownerUid == resource.data.ownerUid
     && (
-      request.resource.data.members == resource.data.members  // 멤버 배열 불변
-      // 자진 참여: 정확히 자기 uid 하나만 추가
-      || request.resource.data.members == resource.data.members.concat([request.auth.uid])
-      // 자진 탈퇴: 정확히 자기 uid 하나만 제거 (owner 본인은 탈퇴 불가 — 별도 처리)
-      || (request.auth.uid != resource.data.ownerUid
-          && request.resource.data.members == resource.data.members.removeAll([request.auth.uid]))
-      // owner의 강제 제거(kick): owner만, ownerUid는 유지되며 member 목록에서 한 명 제거
-      || (request.auth.uid == resource.data.ownerUid
-          && resource.data.members.hasAll(request.resource.data.members)
-          && request.resource.data.members.hasAll([request.auth.uid]))
+      // 이미 멤버: 무변경 / 자진 탈퇴 / owner의 강제 제거(kick)
+      (request.auth.uid in resource.data.members && (
+        request.resource.data.members == resource.data.members
+        || (request.auth.uid != resource.data.ownerUid
+            && request.resource.data.members == resource.data.members.removeAll([request.auth.uid]))
+        || (request.auth.uid == resource.data.ownerUid
+            && resource.data.members.hasAll(request.resource.data.members)
+            && request.resource.data.members.hasAll([request.auth.uid]))
+      ))
+      // 아직 멤버가 아님: 자진 참여만 — 정확히 자기 uid 하나만 추가
+      || (!(request.auth.uid in resource.data.members)
+          && request.resource.data.members == resource.data.members.concat([request.auth.uid]))
     );
 
   allow delete: if request.auth != null && request.auth.uid == resource.data.ownerUid;
@@ -103,6 +111,8 @@ match /trips/{tripId} {
 ```
 
 `users/{userId}/{document=**}` 기존 규칙(프로필용)은 그대로 유지한다.
+
+`content/main`/`att` 는 그대로 "멤버만" 게이트 — 참여 흐름은 메타 문서만 건드리고, `openTrip()`의 콘텐츠 읽기는 자진 참여가 끝난 **이후**에 실행되므로 그 시점엔 이미 실제 멤버라 별도 예외가 필요 없다.
 
 ## 실시간 동기화 & 충돌 처리
 
