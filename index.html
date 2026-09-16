@@ -233,16 +233,16 @@
   .tl-content{flex:1; min-width:0;}
   .tl-row{display:flex; align-items:center; gap:7px;}
   .tl-time-edit{
-    flex:none; display:flex; align-items:center; gap:4px;
+    flex:none; display:flex; align-items:center; gap:2px;
     border-radius:8px; background:var(--paper-2);
-    padding:3px 8px;
+    padding:4px 6px;
   }
   .tl-time-edit select{
     border:none; background:transparent; font-family:'Space Mono',monospace;
-    font-size:15px; font-weight:700; color:var(--ink); padding:1px 2px; appearance:none;
+    font-size:12px; font-weight:700; color:var(--ink); padding:1px 0; appearance:none;
   }
   .tl-time-edit select:disabled{opacity:1; -webkit-text-fill-color:var(--ink); color:var(--ink);}
-  .tl-colon{font-family:'Space Mono',monospace; font-size:15px; font-weight:700; color:var(--ink-faint);}
+  .tl-colon{font-family:'Space Mono',monospace; font-size:12px; font-weight:700; color:var(--ink-faint);}
   .tl-time-view{
     flex:none; font-family:'Space Mono',monospace; font-size:12px; font-weight:700; color:var(--ink);
     min-width:44px; background:var(--paper-2); border-radius:8px; padding:4px 8px;
@@ -556,7 +556,7 @@
   .mp-card .mp-del{position:absolute; top:6px; right:6px; width:26px; height:26px; border:none; background:transparent; color:#C9CBD8; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;}
   /* 일정 항목/메모/링크 순서 변경 화살표 — 마이페이지 여행 목록의 .mp-arrows 와 같은 패턴 */
   .row-arrows{display:flex; flex-direction:column; justify-content:space-between; gap:3px; flex:none;}
-  .tl-item>.row-arrows{margin-left:-4px;}
+  .tl-item>.row-arrows{margin-left:-4px; padding:5px 0;}
   .row-arrows button{border:none; background:transparent; color:var(--ink-faint); font-size:10px; line-height:1; cursor:pointer; padding:2px;}
   .row-arrows button:disabled{opacity:.25; cursor:default;}
 
