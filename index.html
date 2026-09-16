@@ -2098,7 +2098,10 @@ async function flushCloud(){
   const tid = currentTripId;
   if(pendingContentPatchTripId && pendingContentPatchTripId !== tid){
     // 다른 여행을 열어둔 사이 쌓인 패치 — 지금 여행에 잘못 적용하면 데이터가 뒤섞이므로 폐기.
-    // 원래 여행으로 돌아가면 캐시 dirty 플래그 기반 복구 경로(openTrip)가 되살린다.
+    // (실제로는 queuePatch 자체가 태그 변경 시점에 먼저 폐기하므로 이 분기는 거의 도달하지
+    // 않는 이중 안전장치다.) 주의: 폐기된 패치는 복구되지 않는다 — 로컬 캐시는 슬롯 하나뿐이라
+    // openTrip 이 새 여행을 열 때 이전 여행의 dirty 캐시를 덮어써버린다. 유실 위험은 낮음
+    // (queuePatch 쪽 폐기가 대부분의 실제 경로를 먼저 막음) 이지만 완전한 안전망은 아니다.
     pendingContentPatch = {};
     pendingContentPatchTripId = null;
   }
