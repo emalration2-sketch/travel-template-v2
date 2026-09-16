@@ -83,3 +83,33 @@ test('한 필드를 blur 하고 바로 다른 편집 필드로 포커스를 옮�
   // B blur 후에는 가장 최신 값(V2)이 반영되어야 한다 (오래된 V1 로 되돌아가면 안 됨)
   expect(r.placeAfterBBlur).toBe('V2-최신');
 });
+
+test('로그아웃하면(설정 메뉴 경유든 세션 만료든) 열려 있던 여행의 콘텐츠 구독이 해제된다 — handleAuthChange 의 로그아웃 분기가 유일한 choke point', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__test.signIn());
+  await page.waitForTimeout(50);
+  const r = await page.evaluate(async () => {
+    const id = await createTrip();
+    // 여행을 연다 (goBackToMypage 를 거치지 않고 로그아웃할 것이므로 unsubscribe 는 handleAuthChange 에서만 일어나야 한다)
+    currentTripId = id; state = await loadTrip(id);
+    subscribeTripContent(id);
+    const dayId = state.days[0].id, itemId = state.days[0].items[0].id;
+    const placeBefore = state.days.find(d => d.id === dayId).items.find(i => i.id === itemId).place;
+
+    // 설정 UI를 클릭해서 타지 않고, 테스트 헬퍼로 직접 Firebase 인증 상태 변화를 시뮬레이션한다.
+    // (실제로는 설정 화면의 go-settings → logout 버튼도 결국 fbAuth.signOut() 을 호출하고,
+    //  그러면 onAuthStateChanged 가 handleAuthChange(null) 을 부르는 것으로 귀결된다 — 그 choke point 를 직접 테스트한다.)
+    await window.__test.signOut();
+    await new Promise(r => setTimeout(r, 0));
+
+    // 로그아웃 후 같은 여행 콘텐츠 문서에 원격 쓰기가 도착해도, 구독이 끊겨 있어야
+    // applyRemoteContentSnapshot 이 호출되지 않고 state 가 조용히 바뀌지 않아야 한다.
+    await tripContentRef(id).update({ ['days.' + dayId + '.items.' + itemId + '.place']: '로그아웃후원격변경' });
+    await new Promise(r => setTimeout(r, 0));
+    const placeAfter = state.days.find(d => d.id === dayId).items.find(i => i.id === itemId).place;
+    return { placeBefore, placeAfter };
+  });
+  // 구독이 제대로 해제되었다면 로그아웃 후의 원격 쓰기는 state 에 전혀 반영되지 않는다.
+  expect(r.placeAfter).toBe(r.placeBefore);
+  expect(r.placeAfter).not.toBe('로그아웃후원격변경');
+});

@@ -2089,6 +2089,7 @@ async function handleAuthChange(user){
     renderMypage();
     showScreen('mypage');
   } else {
+    unsubscribeTripContent(); // 설정 메뉴 로그아웃/세션 만료 등 모든 경로가 여기로 모이는 choke point — 열려 있던 여행의 콘텐츠 리스너 leak 방지
     showScreen('landing');
   }
 }
