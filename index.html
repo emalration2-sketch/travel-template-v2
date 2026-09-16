@@ -2074,6 +2074,9 @@ let pendingContentPatch = {};
 let pendingContentPatchTripId = null;
 
 function queuePatch(patch){
+  if(pendingContentPatchTripId && pendingContentPatchTripId !== currentTripId){
+    pendingContentPatch = {}; // 다른 여행용으로 남아있던 패치는 폐기(교차 오염 방지)
+  }
   pendingContentPatchTripId = currentTripId;
   Object.assign(pendingContentPatch, patch);
 }

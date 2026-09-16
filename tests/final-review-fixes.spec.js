@@ -133,6 +133,67 @@ test('C2: 같은 여행에 쌓인 패치는 정상적으로 그대로 반영된�
   expect(r.label).toBe('정상라벨');
 });
 
+test('C2: 오프라인으로 flush 실패한 A 의 패치는 B 를 열고 B 를 편집해도 B 에 새지 않는다', async ({ page }) => {
+  // 재리뷰에서 발견: flushCloud 의 불일치 폐기만으로는 부족하다. 모든 mutator 가
+  // queuePatch → save() 순서라, B 에서 편집을 하는 순간 queuePatch 가 큐를 B 로
+  // 재태깅해버려 flushCloud 의 검사가 통과해버린다(A 의 dot-path 가 B 문서에 기록됨).
+  // 그래서 queuePatch 자체에도 여행 변경 시 폐기 로직이 필요하다.
+  await page.goto('/');
+  await page.evaluate(() => window.__test.signIn());
+  await page.waitForTimeout(50);
+  const r = await page.evaluate(async () => {
+    const a = await createTrip();
+    const b = await createTrip();
+    await openTrip(a);
+    const aDayId = state.days[0].id;
+    // 오프라인 상태로 A 를 편집 → flush 실패, 패치가 큐에 A 태그로 남는다
+    window.__test.setOffline(true);
+    queuePatch({ travelers: ['A전용값'], ['days.' + aDayId + '.label']: 'A라벨' });
+    save();
+    await flushCloud();
+    // 온라인 복귀 후 B 를 평범하게 열고(캐시는 A 것이라 복구 경로 아님) 편집한다
+    window.__test.setOffline(false);
+    unsubscribeTripContent();
+    await openTrip(b);
+    const bDayId = state.days[0].id;
+    queuePatch({ ['days.' + bDayId + '.label']: 'B라벨' });
+    save();
+    await forceFlush();
+    const d = window.__test.dump();
+    return { aDayId, bDayId, bContent: d['trips/' + b + '/content/main'] };
+  });
+  expect(r.bContent.travelers).not.toContain('A전용값');
+  expect(r.bContent.days[r.aDayId]).toBeUndefined();
+  expect(r.bContent.days[r.bDayId].label).toBe('B라벨');   // B 자신의 편집은 정상 반영
+});
+
+test('C2: dirty 캐시 복구 경로(C3)로 B 를 열어도 A 의 잔여 패치가 B 에 섞이지 않는다', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__test.signIn());
+  await page.waitForTimeout(50);
+  const r = await page.evaluate(async () => {
+    const a = await createTrip();
+    const b = await createTrip();
+    currentTripId = a;
+    state = await loadTrip(a);
+    const aDayId = state.days[0].id;
+    queuePatch({ travelers: ['A전용값'], ['days.' + aDayId + '.label']: 'A라벨' });
+    // B 의 로컬 캐시를 dirty 로 만들어 openTrip 의 복구 경로를 태운다
+    const stB = await loadTrip(b);
+    stB.title = 'B로컬미저장';
+    localStorage.setItem('ttv2-current-trip', JSON.stringify({
+      tripId: b, data: JSON.stringify(stB), dirty: true, localUpdatedAt: Date.now(),
+    }));
+    await openTrip(b);
+    await forceFlush();
+    const d = window.__test.dump();
+    return { aDayId, bContent: d['trips/' + b + '/content/main'], bMeta: d['trips/' + b] };
+  });
+  expect(r.bContent.travelers).not.toContain('A전용값');
+  expect(r.bContent.days[r.aDayId]).toBeUndefined();
+  expect(r.bMeta.title).toBe('B로컬미저장');   // C3 복구 자체는 그대로 동작
+});
+
 /* ========== I4: 마이그레이션 중단(메타만 성공) 복구 ========== */
 
 test('I4: 메타는 이미 있고 콘텐츠만 없는 중단 상태를 재시도하면 콘텐츠가 복구된다', async ({ page }) => {
