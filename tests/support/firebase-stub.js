@@ -43,8 +43,28 @@
     const set = listeners[path];
     if (!set || !set.size) return;
     const data = store[path];
-    const snap = { exists: !!data, id: path.split('/').pop(), data: () => clone(data) };
-    set.forEach(cb => cb(snap));
+    // Clone eagerly (synchronously, right now, at the moment notify() is
+    // called) so snap.data() always returns the value as of this write,
+    // even if a later write mutates store[path] in place (e.g. update()'s
+    // setDeep) before the caller gets around to calling .data().
+    const snapshot = clone(data);
+    const exists = !!data;
+    const id = path.split('/').pop();
+    // Real Firestore never delivers a listener callback synchronously
+    // within the write call itself — delivery is always asynchronous.
+    // Deferring via a microtask here (instead of calling cb(snap)
+    // synchronously) is also what makes onSnapshot's ordering guarantee
+    // possible: onSnapshot() queues its initial-fire microtask at
+    // subscribe time, and since microtasks run in FIFO order, a write's
+    // notify() queued afterward (even with no `await` in between) is
+    // guaranteed to be delivered after that already-queued initial fire.
+    set.forEach(cb => {
+      Promise.resolve().then(() => {
+        // Skip delivery if the caller unsubscribed before this microtask ran.
+        if (!listeners[path] || !listeners[path].has(cb)) return;
+        cb({ exists, id, data: () => snapshot });
+      });
+    });
   }
 
   function docRef(path) {
@@ -78,9 +98,26 @@
       onSnapshot(cb) {
         if (!listeners[path]) listeners[path] = new Set();
         listeners[path].add(cb);
+        // Capture the initial snapshot SYNCHRONOUSLY (value + frozen clone),
+        // right now at subscribe time, and only defer the *delivery* of that
+        // already-captured value to a microtask. This guarantees:
+        //   (a) ordering: a synchronous write() that happens right after
+        //       onSnapshot() (no await in between) calls notify() which
+        //       queues its own callback invocation in a *later* microtask
+        //       than this one (already-scheduled), so the initial (old)
+        //       value is always delivered before any subsequent (new) one.
+        //   (b) freshness: .data() returns the value as of subscribe time,
+        //       not whatever store[path] mutates into later.
+        const initialData = store[path];
+        const initialExists = !!initialData;
+        const initialId = path.split('/').pop();
+        const initialSnapshot = clone(initialData);
         Promise.resolve().then(() => {
-          const d = store[path];
-          cb({ exists: !!d, id: path.split('/').pop(), data: () => clone(d) });
+          // Re-check the listener is still subscribed: if the caller
+          // unsubscribed synchronously before this microtask ran, do not
+          // fire the stray initial snapshot.
+          if (!listeners[path] || !listeners[path].has(cb)) return;
+          cb({ exists: initialExists, id: initialId, data: () => initialSnapshot });
         });
         return () => { if (listeners[path]) listeners[path].delete(cb); };
       },
