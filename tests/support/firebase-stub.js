@@ -10,28 +10,79 @@
   const stamp = () => ({ __ts: Date.now() });
   const rid = () => 'auto_' + Math.random().toString(36).slice(2, 9);
 
+  const DELETE_SENTINEL = { __fbDelete: true };
+  const isArrayUnion = (v) => v && v.__fbArrayUnion;
+  const isArrayRemove = (v) => v && v.__fbArrayRemove;
+  const isDelete = (v) => v === DELETE_SENTINEL;
+
+  function setDeep(obj, dotPath, value) {
+    const parts = dotPath.split('.');
+    let cur = obj;
+    for (let i = 0; i < parts.length - 1; i++) {
+      const k = parts[i];
+      if (typeof cur[k] !== 'object' || cur[k] === null || Array.isArray(cur[k])) cur[k] = {};
+      cur = cur[k];
+    }
+    const lastKey = parts[parts.length - 1];
+    if (isDelete(value)) {
+      delete cur[lastKey];
+    } else if (isArrayUnion(value)) {
+      const arr = Array.isArray(cur[lastKey]) ? cur[lastKey].slice() : [];
+      value.__fbArrayUnion.forEach(item => { if (!arr.includes(item)) arr.push(item); });
+      cur[lastKey] = arr;
+    } else if (isArrayRemove(value)) {
+      const arr = Array.isArray(cur[lastKey]) ? cur[lastKey].slice() : [];
+      cur[lastKey] = arr.filter(item => !value.__fbArrayRemove.includes(item));
+    } else {
+      cur[lastKey] = clone(value);
+    }
+  }
+
+  const listeners = {}; // { [path]: Set<cb> }
+  function notify(path) {
+    const set = listeners[path];
+    if (!set || !set.size) return;
+    const data = store[path];
+    const snap = { exists: !!data, id: path.split('/').pop(), data: () => clone(data) };
+    set.forEach(cb => cb(snap));
+  }
+
   function docRef(path) {
     return {
       path,
       async get() {
         if (offline) throw new Error('offline');
         const d = store[path];
-        return { exists: !!d, id: path.split('/').pop(), data: () => clone(d) };
+        const snapshot = clone(d);
+        return { exists: !!d, id: path.split('/').pop(), data: () => snapshot };
       },
       async set(v, opts) {
         if (offline) throw new Error('offline');
         store[path] = opts && opts.merge ? Object.assign({}, store[path] || {}, clone(v)) : clone(v);
         persist();
+        notify(path);
       },
       async update(v) {
         if (offline) throw new Error('offline');
-        store[path] = Object.assign({}, store[path] || {}, clone(v));
+        const target = store[path] || (store[path] = {});
+        Object.keys(v).forEach(dotPath => setDeep(target, dotPath, v[dotPath]));
         persist();
+        notify(path);
       },
       async delete() {
         if (offline) throw new Error('offline');
         delete store[path];
         persist();
+        notify(path);
+      },
+      onSnapshot(cb) {
+        if (!listeners[path]) listeners[path] = new Set();
+        listeners[path].add(cb);
+        Promise.resolve().then(() => {
+          const d = store[path];
+          cb({ exists: !!d, id: path.split('/').pop(), data: () => clone(d) });
+        });
+        return () => { if (listeners[path]) listeners[path].delete(cb); };
       },
       collection(sub) { return collRef(path + '/' + sub); },
     };
@@ -68,7 +119,12 @@
   const fakeDb = { collection: (p) => collRef(p), doc: (p) => docRef(p) };
   window.firebase = { initializeApp() {}, auth: () => fakeAuth, firestore: () => fakeDb };
   window.firebase.auth.GoogleAuthProvider = function () {};
-  window.firebase.firestore.FieldValue = { serverTimestamp: stamp };
+  window.firebase.firestore.FieldValue = {
+    serverTimestamp: stamp,
+    delete: () => DELETE_SENTINEL,
+    arrayUnion: (...items) => ({ __fbArrayUnion: items }),
+    arrayRemove: (...items) => ({ __fbArrayRemove: items }),
+  };
 
   window.__test = {
     signIn(user) { pendingUser = user || null; return fakeAuth.signInWithPopup(); },
