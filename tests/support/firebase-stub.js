@@ -5,7 +5,12 @@
   const readSS = () => { try { return JSON.parse(sessionStorage.getItem(SS_KEY)) || {}; } catch (e) { return {}; } };
   const store = readSS();       // { "users/u1": {...}, "users/u1/trips/t1": {...} }
   const persist = () => { try { sessionStorage.setItem(SS_KEY, JSON.stringify(store)); } catch (e) {} };
-  let authUser = null, authCb = null, offline = false, pendingUser = null;
+  // 실제 Firebase Auth 는 기본 persistence 가 LOCAL 이라 풀 페이지 네비게이션(예: 초대 링크 클릭)을
+  // 넘어서도 로그인 세션이 유지된다 — 이 스텁도 같은 sessionStorage write-through 패턴으로 흉내낸다.
+  const AUTH_SS_KEY = '__fb_stub_auth__';
+  const readAuthSS = () => { try { return JSON.parse(sessionStorage.getItem(AUTH_SS_KEY)) || null; } catch (e) { return null; } };
+  const persistAuth = () => { try { if (authUser) sessionStorage.setItem(AUTH_SS_KEY, JSON.stringify(authUser)); else sessionStorage.removeItem(AUTH_SS_KEY); } catch (e) {} };
+  let authUser = readAuthSS(), authCb = null, offline = false, pendingUser = null;
   const clone = (v) => (v === undefined ? undefined : JSON.parse(JSON.stringify(v)));
   const stamp = () => ({ __ts: Date.now() });
   const rid = () => 'auto_' + Math.random().toString(36).slice(2, 9);
@@ -166,10 +171,11 @@
     onAuthStateChanged(cb) { authCb = cb; Promise.resolve().then(() => cb(authUser)); return () => {}; },
     async signInWithPopup() {
       authUser = pendingUser || { uid: 'u1', displayName: '김진', email: 'emalration2@gmail.com', photoURL: '' };
+      persistAuth();
       if (authCb) authCb(authUser);
       return { user: authUser };
     },
-    async signOut() { authUser = null; if (authCb) authCb(null); },
+    async signOut() { authUser = null; persistAuth(); if (authCb) authCb(null); },
   };
   const fakeDb = { collection: (p) => collRef(p), doc: (p) => docRef(p) };
   window.firebase = { initializeApp() {}, auth: () => fakeAuth, firestore: () => fakeDb };
@@ -203,6 +209,6 @@
       persist();
     },
     dump() { return clone(store); },
-    reset() { Object.keys(store).forEach((k) => delete store[k]); persist(); authUser = null; offline = false; pendingUser = null; },
+    reset() { Object.keys(store).forEach((k) => delete store[k]); persist(); authUser = null; persistAuth(); offline = false; pendingUser = null; },
   };
 })();

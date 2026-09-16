@@ -1278,6 +1278,7 @@ const I18N = {
     'alert.tripOpenFail':'여행을 여는 데 실패했어요. 잠시 후 다시 시도해주세요.',
     'alert.loginFail':'로그인에 실패했어요: ','alert.pdfFail':'PDF 생성에 실패했어요. 다시 시도해주세요.',
     'alert.resetConfirm':'정말 초기화할까요? 모든 내용이 삭제됩니다.',
+    'collab.join.notFound':'여행을 찾을 수 없습니다.','collab.join.fail':'여행 참여에 실패했습니다.',
 
     'legal.loading':'문서를 불러오는 중…','legal.error':'문서를 불러오지 못했어요. ','legal.error.gh':'GitHub에서 보기',
 
@@ -1362,6 +1363,7 @@ const I18N = {
     'alert.tripOpenFail':'Couldn’t open the trip. Please try again.',
     'alert.loginFail':'Sign-in failed: ','alert.pdfFail':'Couldn’t create the PDF. Please try again.',
     'alert.resetConfirm':'Reset everything? All content will be deleted.',
+    'collab.join.notFound':'Trip not found.','collab.join.fail':'Failed to join the trip.',
 
     'legal.loading':'Loading…','legal.error':'Couldn’t load the document. ','legal.error.gh':'View on GitHub',
 
@@ -1446,6 +1448,7 @@ const I18N = {
     'alert.tripOpenFail':'旅行を開けませんでした。しばらくしてからもう一度お試しください。',
     'alert.loginFail':'ログインに失敗しました: ','alert.pdfFail':'PDFの作成に失敗しました。もう一度お試しください。',
     'alert.resetConfirm':'本当にリセットしますか？すべての内容が削除されます。',
+    'collab.join.notFound':'旅行が見つかりません。','collab.join.fail':'旅行への参加に失敗しました。',
 
     'legal.loading':'ドキュメントを読み込み中…','legal.error':'ドキュメントを読み込めませんでした。 ','legal.error.gh':'GitHubで見る',
 
@@ -1530,6 +1533,7 @@ const I18N = {
     'alert.tripOpenFail':'打开旅行失败。请稍后重试。',
     'alert.loginFail':'登录失败: ','alert.pdfFail':'生成 PDF 失败。请重试。',
     'alert.resetConfirm':'确定要重置吗？所有内容都将被删除。',
+    'collab.join.notFound':'找不到该行程。','collab.join.fail':'加入行程失败。',
 
     'legal.loading':'正在加载文档…','legal.error':'无法加载文档。 ','legal.error.gh':'在 GitHub 上查看',
 
@@ -1679,6 +1683,28 @@ async function listTrips(){
   return out;
 }
 async function refreshTripList(){ trips = await listTrips(); return trips; }
+
+async function joinTrip(tripId){
+  const metaSnap = await tripMetaRef(tripId).get();
+  if(!metaSnap.exists){ alert(t('collab.join.notFound')); return; }
+  const meta = metaSnap.data();
+  if(!meta.members.includes(currentUser.uid)){
+    const patch = { members: firebase.firestore.FieldValue.arrayUnion(currentUser.uid) };
+    patch['memberNames.' + currentUser.uid] = currentUser.displayName || '';
+    await tripMetaRef(tripId).update(patch);
+    await refreshTripList();
+  }
+  await openTrip(tripId);
+}
+async function handleJoinRedirect(){
+  if(!currentUser) return; // 로그인 전이면 쿼리 파라미터를 지우지 않고 둔다 — 로그인 완료 후 handleAuthChange 가 다시 호출할 때 재시도됨
+  const params = new URLSearchParams(location.search);
+  const tripId = params.get('join');
+  if(!tripId) return;
+  history.replaceState(null, '', location.pathname);
+  try{ await joinTrip(tripId); }
+  catch(e){ console.error('여행 참여 실패', e); alert(t('collab.join.fail')); }
+}
 
 async function loadTrip(tripId){
   const metaSnap = await tripMetaRef(tripId).get();
@@ -2094,6 +2120,7 @@ async function handleAuthChange(user){
     unsubscribeTripContent(); // 설정 메뉴 로그아웃/세션 만료 등 모든 경로가 여기로 모이는 choke point — 열려 있던 여행의 콘텐츠 리스너 leak 방지
     showScreen('landing');
   }
+  await handleJoinRedirect();
 }
 function loginWithGoogle(){
   initFirebase();
