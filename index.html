@@ -1657,7 +1657,9 @@ async function migrateLegacyTrips(){
     try{
       const metaSnap = await tripMetaRef(tripId).get();
       if(!metaSnap.exists){
-        const st = JSON.parse(d.data);
+        // d.data 가 없는(메타 필드만 있는) 레거시 문서도 있을 수 있음 — 빈 콘텐츠로 취급
+        const st = d.data ? JSON.parse(d.data) : { travelers: [], days: [], notes: [], links: [], attachments: [] };
+        if(!Array.isArray(st.travelers)) st.travelers = [];
         if(!Array.isArray(st.links)) st.links = [];
         if(!Array.isArray(st.notes)) st.notes = [];
         if(!Array.isArray(st.attachments)) st.attachments = [];
@@ -1668,12 +1670,16 @@ async function migrateLegacyTrips(){
           updatedAt: d.updatedAt || firebase.firestore.FieldValue.serverTimestamp(),
         });
         await tripContentRef(tripId).set(tripStateToContentDoc(st));
-        const attSnap = await legacyCol.doc(tripId).collection('att').get();
-        for(const a of attSnap.docs){
-          await tripsCol().doc(tripId).collection('att').doc(a.id).set(a.data());
-        }
       }
-      // 여기 도달 = 새 구조가 이미 있거나 방금 만들어짐 → 옛 문서 정리
+      // 첨부 복사는 메타/콘텐츠 존재 여부와 무관하게 매번 시도한다 — 이전 시도에서
+      // 메타+콘텐츠는 성공했지만 첨부 복사 도중 실패했을 경우, 재시도 시 metaSnap.exists
+      // 가 true 라서 이 블록을 건너뛰면 아래 정리 단계에서 옛 첨부가 영구 유실된다.
+      // set() 은 멱등적이라 이미 복사된 첨부를 다시 복사해도 무해하다.
+      const attSnap = await legacyCol.doc(tripId).collection('att').get();
+      for(const a of attSnap.docs){
+        await tripsCol().doc(tripId).collection('att').doc(a.id).set(a.data());
+      }
+      // 여기 도달 = 새 구조가 이미 있거나 방금 만들어짐, 첨부도 모두 복사됨 → 옛 문서 정리
       const attSnap2 = await legacyCol.doc(tripId).collection('att').get();
       await Promise.all(attSnap2.docs.map(a => a.ref.delete()));
       await legacyCol.doc(tripId).delete();
