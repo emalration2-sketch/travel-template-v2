@@ -7,23 +7,31 @@ service cloud.firestore {
     }
 
     match /trips/{tripId} {
-      allow read: if request.auth != null
-        && (resource == null || request.auth.uid in resource.data.members);
+      // get(단건)은 인증만 되어 있으면 누구나 — 추측 불가능한 tripId 를 아는 것 자체가 게이트.
+      // list(쿼리)는 문서 단위 평가라 멤버로 제한(임의 uid로 array-contains 쿼리를 던져
+      // 남의 여행 목록을 훑는 것 방지).
+      allow get: if request.auth != null;
+      allow list: if request.auth != null && request.auth.uid in resource.data.members;
 
       allow create: if request.auth != null
         && request.resource.data.ownerUid == request.auth.uid
         && request.resource.data.members == [request.auth.uid];
 
-      allow update: if request.auth != null && request.auth.uid in resource.data.members
+      // ownerUid 불변은 공통. 두 분기는 독립적 — "이미 멤버" 조건을 최상위에서 AND로 묶으면
+      // 자진 참여(아직 멤버가 아닌 사람만 통과해야 함) 분기가 영원히 도달 불가능해진다.
+      allow update: if request.auth != null
         && request.resource.data.ownerUid == resource.data.ownerUid
         && (
-          request.resource.data.members == resource.data.members
-          || request.resource.data.members == resource.data.members.concat([request.auth.uid])
-          || (request.auth.uid != resource.data.ownerUid
-              && request.resource.data.members == resource.data.members.removeAll([request.auth.uid]))
-          || (request.auth.uid == resource.data.ownerUid
-              && resource.data.members.hasAll(request.resource.data.members)
-              && request.resource.data.members.hasAll([request.auth.uid]))
+          (request.auth.uid in resource.data.members && (
+            request.resource.data.members == resource.data.members
+            || (request.auth.uid != resource.data.ownerUid
+                && request.resource.data.members == resource.data.members.removeAll([request.auth.uid]))
+            || (request.auth.uid == resource.data.ownerUid
+                && resource.data.members.hasAll(request.resource.data.members)
+                && request.resource.data.members.hasAll([request.auth.uid]))
+          ))
+          || (!(request.auth.uid in resource.data.members)
+              && request.resource.data.members == resource.data.members.concat([request.auth.uid]))
         );
 
       allow delete: if request.auth != null && request.auth.uid == resource.data.ownerUid;

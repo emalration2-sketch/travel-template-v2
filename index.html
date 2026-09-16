@@ -1755,14 +1755,16 @@ async function createTrip(){
 }
 
 async function deleteTrip(tripId){
-  // 메타 먼저(빠름, tripOrder 갱신도 함께) — 첨부/콘텐츠 정리는 best-effort.
-  await tripMetaRef(tripId).delete();
-  await saveProfile({ tripOrder: profile.tripOrder.filter(id => id !== tripId) });
+  // 첨부/콘텐츠 정리는 best-effort지만, att/content 규칙이 부모 trips 메타 문서의
+  // members 를 get()으로 참조하므로 메타보다 먼저(존재할 때) 지워야 정리가 통과한다.
+  // 메타 삭제는 tripOrder 갱신과 함께 마지막에.
   try{ await tripContentRef(tripId).delete(); }catch(e){ console.error('콘텐츠 삭제 실패(무시)', e); }
   try{
     const attSnap = await tripsCol().doc(tripId).collection('att').get();
     await Promise.all(attSnap.docs.map(d => d.ref.delete()));
   }catch(e){ console.error('첨부 정리 실패(무시)', e); }
+  await tripMetaRef(tripId).delete();
+  await saveProfile({ tripOrder: profile.tripOrder.filter(id => id !== tripId) });
 }
 
 /* ===== V2: SETTINGS ===== */

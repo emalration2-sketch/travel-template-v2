@@ -48,3 +48,20 @@ test('deleteTrip 은 메타 문서와 콘텐츠 문서를 모두 지운다', asy
   expect(after.metaExists).toBe(false);
   expect(after.contentExists).toBe(false);
 });
+
+test('deleteTrip 은 att 서브컬렉션 첨부 문서도 정리하고, 메타 삭제보다 먼저 지운다(부모 문서가 살아있는 동안 att 규칙 get() 이 통과하도록)', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__test.signIn());
+  await page.waitForTimeout(50);
+  const after = await page.evaluate(async () => {
+    const id = await createTrip();
+    window.__test.seed('trips/' + id + '/att/a1', { name: 'a1.png', bytes: 'AAA' });
+    window.__test.seed('trips/' + id + '/att/a2', { name: 'a2.png', bytes: 'BBB' });
+    await deleteTrip(id);
+    const attSnap = await tripsCol().doc(id).collection('att').get();
+    const metaSnap = await tripMetaRef(id).get();
+    return { attCount: attSnap.docs.length, metaExists: metaSnap.exists };
+  });
+  expect(after.attCount).toBe(0);
+  expect(after.metaExists).toBe(false);
+});
