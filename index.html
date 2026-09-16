@@ -2432,6 +2432,7 @@ function toggleNoteMode(id){
       });
     n.mode = 'checklist';
   }
+  queuePatch({ ['notes.' + n.id]: clone(n) });
   renderNotes(); save();
 }
 function noteAddItem(id){
@@ -2439,6 +2440,7 @@ function noteAddItem(id){
   if(!n) return;
   if(!Array.isArray(n.items)) n.items = [];
   n.items.push({ id: uid(), text: '', done: false });
+  queuePatch({ ['notes.' + n.id]: clone(n) });
   renderNotes(); save();
   const rows = document.querySelectorAll(`.chk-row[data-note-id="${CSS.escape(id)}"] .chk-text`);
   const last = rows[rows.length - 1];
@@ -2448,6 +2450,7 @@ function noteDelItem(noteId, itemId){
   const n = state.notes.find(x => x.id === noteId);
   if(!n) return;
   n.items = noteItemsOf(n).filter(i => i.id !== itemId);
+  queuePatch({ ['notes.' + n.id]: clone(n) });
   renderNotes(); save();
 }
 function noteCheckItem(noteId, itemId, done){
@@ -2456,6 +2459,7 @@ function noteCheckItem(noteId, itemId, done){
   const it = noteItemsOf(n).find(i => i.id === itemId);
   if(!it) return;
   it.done = !!done;
+  queuePatch({ ['notes.' + n.id]: clone(n) });
   renderNotes(); save();
 }
 function toggleNoteDoneSection(id){
@@ -2590,6 +2594,7 @@ async function deleteAttachment(id){
   catch(e){ alert(t('mat.image.deleteFail')); return; }
   delete attachmentsCache[id];
   state.attachments = (state.attachments || []).filter(a => a.id !== id);
+  queuePatch({ attachments: state.attachments });
   save();
   renderMaterials();
 }
@@ -2744,6 +2749,11 @@ function showToast(msg){
 function addDay(){
   const id = uid();
   state.days.push({ id, date:'', label:'', items:[{ id:uid(), time:'', place:'', memo:'', expenses:[] }] });
+  const d = state.days[state.days.length - 1];
+  queuePatch({
+    dayOrder: state.days.map(x => x.id),
+    ['days.' + id]: { label: '', date: '', itemOrder: d.items.map(i => i.id), items: Object.fromEntries(d.items.map(i => [i.id, { time:'', place:'', memo:'', expenses:[] }])) },
+  });
   renderDays(); save();
   flashNew(`#day-${CSS.escape(id)}`);
 }
@@ -2751,18 +2761,27 @@ function deleteDay(id){
   if(state.days.length <= 1){ alert(t('sched.day.deleteLastWarn')); return; }
   if(!confirm(t('sched.day.deleteConfirm'))) return;
   state.days = state.days.filter(d => d.id !== id);
+  queuePatch({ dayOrder: state.days.map(x => x.id), ['days.' + id]: firebase.firestore.FieldValue.delete() });
   renderDays(); save();
 }
 function addItem(dayId){
   const d = state.days.find(d => d.id === dayId); if(!d) return;
   const id = uid();
   d.items.push({ id, time:'', place:'', memo:'', expenses:[] });
+  queuePatch({
+    ['days.' + dayId + '.itemOrder']: d.items.map(i => i.id),
+    ['days.' + dayId + '.items.' + id]: { time:'', place:'', memo:'', expenses:[] },
+  });
   renderDays(); save();
   flashNew(`.tl-item[data-item-id="${CSS.escape(id)}"]`);
 }
 function deleteItem(dayId, itemId){
   const d = state.days.find(d => d.id === dayId); if(!d) return;
   d.items = d.items.filter(i => i.id !== itemId);
+  queuePatch({
+    ['days.' + dayId + '.itemOrder']: d.items.map(i => i.id),
+    ['days.' + dayId + '.items.' + itemId]: firebase.firestore.FieldValue.delete(),
+  });
   renderDays(); save();
 }
 function moveItem(dayId, itemId, dir){
@@ -2772,36 +2791,55 @@ function moveItem(dayId, itemId, dir){
   if(i < 0 || j < 0 || j >= d.items.length) return;
   const [it] = d.items.splice(i, 1);
   d.items.splice(j, 0, it);
+  queuePatch({ ['days.' + dayId + '.itemOrder']: d.items.map(x => x.id) });
   renderDays(); save();
 }
 function addNote(){
   const id = uid();
-  state.notes.push({ id, title:'', content:'' }); renderNotes(); save();
+  state.notes.push({ id, title:'', content:'' });
+  queuePatch({ noteOrder: state.notes.map(n => n.id), ['notes.' + id]: { title:'', content:'' } });
+  renderNotes(); save();
   flashNew(`.note-card[data-note-id="${CSS.escape(id)}"]`);
 }
-function deleteNote(id){ state.notes = state.notes.filter(n => n.id !== id); renderNotes(); save(); }
+function deleteNote(id){
+  state.notes = state.notes.filter(n => n.id !== id);
+  queuePatch({ noteOrder: state.notes.map(n => n.id), ['notes.' + id]: firebase.firestore.FieldValue.delete() });
+  renderNotes(); save();
+}
 function moveNote(noteId, dir){
   const i = state.notes.findIndex(n => n.id === noteId);
   const j = i + dir;
   if(i < 0 || j < 0 || j >= state.notes.length) return;
   const [n] = state.notes.splice(i, 1);
   state.notes.splice(j, 0, n);
+  queuePatch({ noteOrder: state.notes.map(x => x.id) });
   renderNotes(); save();
 }
 function addLink(){
   const id = uid();
-  state.links.push({ id, label:'', url:'' }); renderMaterials(); save();
+  state.links.push({ id, label:'', url:'' });
+  queuePatch({ linkOrder: state.links.map(l => l.id), ['links.' + id]: { label:'', url:'' } });
+  renderMaterials(); save();
   flashNew(`.link-card[data-link-id="${CSS.escape(id)}"]`);
 }
-function deleteLink(id){ state.links = state.links.filter(l => l.id !== id); renderMaterials(); save(); }
+function deleteLink(id){
+  state.links = state.links.filter(l => l.id !== id);
+  queuePatch({ linkOrder: state.links.map(l => l.id), ['links.' + id]: firebase.firestore.FieldValue.delete() });
+  renderMaterials(); save();
+}
 function addTraveler(){
   const inp = document.getElementById('newTravelerInput');
   const v = inp.value.trim(); if(!v) return;
-  state.travelers.push(v); renderTravelers(); save();
+  state.travelers.push(v);
+  queuePatch({ travelers: firebase.firestore.FieldValue.arrayUnion(v) });
+  renderTravelers(); save();
 }
 function deleteTraveler(idxStr){
   const idx = parseInt(idxStr, 10);
-  state.travelers.splice(idx, 1); renderTravelers(); save();
+  const removed = state.travelers[idx];
+  state.travelers.splice(idx, 1);
+  queuePatch({ travelers: firebase.firestore.FieldValue.arrayRemove(removed) });
+  renderTravelers(); save();
 }
 const CURRENCIES = [
   { symbol:'원', label:'KRW' },
@@ -3326,6 +3364,7 @@ function handleFieldChange(e){
         el.value = val;
       }
       d[field] = val;
+      queuePatch({ ['days.' + d.id + '.' + field]: val });
       if(field === 'date'){
         const viewEl = document.querySelector(`.day-date-view[data-day-id="${d.id}"]`) || el.closest('.day-headfields').querySelector('.day-date-view');
         if(viewEl) viewEl.textContent = val;
@@ -3342,10 +3381,12 @@ function handleFieldChange(e){
         const selects = group.querySelectorAll('select');
         const h = selects[0].value, m = selects[1].value;
         it.time = (h && m) ? (h + ':' + m) : '';
+        queuePatch({ ['days.' + el.dataset.dayId + '.items.' + el.dataset.itemId + '.time']: it.time });
         const viewEl = el.closest('.tl-row').querySelector('.tl-time-view');
         if(viewEl) viewEl.textContent = it.time || '--:--';
       } else {
         it[field] = el.value;
+        queuePatch({ ['days.' + el.dataset.dayId + '.items.' + el.dataset.itemId + '.' + field]: el.value });
         if(field === 'memo'){
           const v = document.getElementById('memo-view-' + el.dataset.dayId + '-' + el.dataset.itemId);
           if(v) v.innerHTML = linkify(el.value);
@@ -3356,6 +3397,7 @@ function handleFieldChange(e){
     const n = state.notes.find(n => n.id === el.dataset.noteId);
     if(n){
       n[field] = el.value;
+      queuePatch({ ['notes.' + n.id]: clone(n) });
       if(field === 'content'){
         autoGrowArea(el);
         const v = document.getElementById('note-view-' + el.dataset.noteId);
@@ -3367,6 +3409,7 @@ function handleFieldChange(e){
     const it = n && noteItemsOf(n).find(i => i.id === el.dataset.itemId);
     if(it){
       it.text = el.value;
+      queuePatch({ ['notes.' + n.id]: clone(n) });
       const vv = el.closest('.chk-row') && el.closest('.chk-row').querySelector('.chk-text-view');
       if(vv) vv.textContent = el.value;
     }
@@ -3374,6 +3417,7 @@ function handleFieldChange(e){
     const l = state.links.find(l => l.id === el.dataset.linkId);
     if(l){
       l[field] = el.value;
+      queuePatch({ ['links.' + l.id + '.' + field]: el.value });
       const card = el.closest('.link-card');
       const btnEl = card && card.querySelector('.link-btn');
       if(btnEl){
@@ -3397,6 +3441,7 @@ function handleFieldChange(e){
   } else if(scope === 'att'){
     const a = (state.attachments || []).find(x => x.id === el.dataset.attId);
     if(a) a.name = el.value;
+    queuePatch({ attachments: state.attachments });
     if(e.type === 'change') renameAttachment(el.dataset.attId, el.value);
   }
   saveDebounced();
