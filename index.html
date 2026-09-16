@@ -1118,6 +1118,50 @@ function contentDocToTripState(doc){
   };
 }
 
+let tripContentUnsub = null;
+let pendingRemoteSnapshot = null;
+
+function isEditingField(){
+  const el = document.activeElement;
+  return !!(el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT'));
+}
+function applyRemoteContentSnapshot(doc){
+  if(!doc) return;
+  if(isEditingField()){ pendingRemoteSnapshot = doc; return; }
+  const remote = contentDocToTripState(doc);
+  state.days = remote.days; state.notes = remote.notes; state.links = remote.links;
+  state.travelers = remote.travelers; state.attachments = remote.attachments;
+  rebuildAll();
+}
+function subscribeTripContent(tripId){
+  unsubscribeTripContent();
+  tripContentUnsub = tripContentRef(tripId).onSnapshot(snap => {
+    if(snap.exists) applyRemoteContentSnapshot(snap.data());
+  });
+}
+function unsubscribeTripContent(){
+  if(tripContentUnsub){ tripContentUnsub(); tripContentUnsub = null; }
+  pendingRemoteSnapshot = null;
+}
+document.addEventListener('focusout', e => {
+  const el = e.target;
+  if(!(el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT'))) return;
+  // blur 직후 setTimeout(0) 매크로태스크 시점까지 실행을 늦춘다:
+  //   1) 동기적으로 곧바로 다른 입력 필드로 포커스가 옮겨가는 경우(Tab/클릭) activeElement 전환이
+  //      먼저 끝나 있으므로, applyRemoteContentSnapshot 내부의 isEditingField() 재검사가 새 필드를 보고
+  //      다시 지연시킬 수 있다.
+  //   2) pendingRemoteSnapshot 을 여기서 지역 변수로 캡처해 두지 않고, 실제 실행 시점에 "그때의"
+  //      최신 값을 다시 읽는다 — 그 사이(blur ~ setTimeout 실행) 새로운 원격 갱신이 도착해
+  //      pendingRemoteSnapshot 을 더 최신 값으로 덮어썼을 수 있는데, 캡처해둔 옛 값을 그대로
+  //      적용하면 최신 변경이 옛 값에 덮여 유실되는 버그가 생기기 때문이다.
+  setTimeout(() => {
+    if(!pendingRemoteSnapshot) return;
+    const doc = pendingRemoteSnapshot;
+    pendingRemoteSnapshot = null;
+    applyRemoteContentSnapshot(doc);
+  }, 0);
+});
+
 /* ===== V2: META ===== */
 function deriveTripMeta(tripState){
   const days = Array.isArray(tripState.days) ? tripState.days : [];
@@ -2010,8 +2054,10 @@ async function openTrip(tripId){
   showScreen('editor');
   showEditorTab('schedule');
   if(needsPush) flushCloud();
+  subscribeTripContent(tripId);
 }
 function goBackToMypage(){
+  unsubscribeTripContent();
   // 즉시 이동 — 네트워크를 기다리지 않는다
   stopUnsyncedTicker();             // 숨겨진 #syncStatus 대상 setInterval 정리
   // 편집한 여행의 메타(제목·날짜·일수)만 로컬에서 갱신 → 목록 전체 재조회(여행 5개 전문 다운로드) 생략
