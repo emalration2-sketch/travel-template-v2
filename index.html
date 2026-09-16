@@ -1290,6 +1290,7 @@ const I18N = {
     'collab.members.title':'멤버','collab.members.you':'나','collab.members.kick':'내보내기',
     'collab.members.leave':'여행 나가기','collab.members.leaveConfirm':'이 여행에서 나가시겠어요?',
     'collab.members.kickConfirm':'이 멤버를 내보낼까요?','collab.invite.label':'초대 링크',
+    'collab.members.leaveFail':'여행 나가기에 실패했습니다.','collab.members.kickFail':'멤버 내보내기에 실패했습니다.',
 
     'legal.loading':'문서를 불러오는 중…','legal.error':'문서를 불러오지 못했어요. ','legal.error.gh':'GitHub에서 보기',
 
@@ -1378,6 +1379,7 @@ const I18N = {
     'collab.members.title':'Members','collab.members.you':'you','collab.members.kick':'Remove',
     'collab.members.leave':'Leave trip','collab.members.leaveConfirm':'Leave this trip?',
     'collab.members.kickConfirm':'Remove this member?','collab.invite.label':'Invite link',
+    'collab.members.leaveFail':'Failed to leave the trip.','collab.members.kickFail':'Failed to remove the member.',
 
     'legal.loading':'Loading…','legal.error':'Couldn’t load the document. ','legal.error.gh':'View on GitHub',
 
@@ -1466,6 +1468,7 @@ const I18N = {
     'collab.members.title':'メンバー','collab.members.you':'自分','collab.members.kick':'削除',
     'collab.members.leave':'旅行から抜ける','collab.members.leaveConfirm':'この旅行から抜けますか?',
     'collab.members.kickConfirm':'このメンバーを削除しますか?','collab.invite.label':'招待リンク',
+    'collab.members.leaveFail':'旅行から抜けるのに失敗しました。','collab.members.kickFail':'メンバーの削除に失敗しました。',
 
     'legal.loading':'ドキュメントを読み込み中…','legal.error':'ドキュメントを読み込めませんでした。 ','legal.error.gh':'GitHubで見る',
 
@@ -1554,6 +1557,7 @@ const I18N = {
     'collab.members.title':'成员','collab.members.you':'我','collab.members.kick':'移除',
     'collab.members.leave':'退出行程','collab.members.leaveConfirm':'要退出该行程吗?',
     'collab.members.kickConfirm':'要移除该成员吗?','collab.invite.label':'邀请链接',
+    'collab.members.leaveFail':'退出行程失败。','collab.members.kickFail':'移除成员失败。',
 
     'legal.loading':'正在加载文档…','legal.error':'无法加载文档。 ','legal.error.gh':'在 GitHub 上查看',
 
@@ -1721,6 +1725,7 @@ async function handleJoinRedirect(){
   const params = new URLSearchParams(location.search);
   const tripId = params.get('join');
   if(!tripId) return;
+  if(tripId.includes('/')){ history.replaceState(null, '', location.pathname); return; }
   history.replaceState(null, '', location.pathname);
   try{ await joinTrip(tripId); }
   catch(e){ console.error('여행 참여 실패', e); alert(t('collab.join.fail')); }
@@ -1879,6 +1884,7 @@ function saveAvatar(){
 
 async function openMembersModal(){
   const metaSnap = await tripMetaRef(currentTripId).get();
+  if(!metaSnap.exists){ document.getElementById('v2Modal').hidden = true; alert(t('collab.join.notFound')); return; }
   const meta = metaSnap.data();
   const isOwner = meta.ownerUid === currentUser.uid;
   const inviteUrl = location.origin + location.pathname + '?join=' + currentTripId;
@@ -1900,9 +1906,11 @@ async function openMembersModal(){
 }
 async function leaveTrip(){
   if(!confirm(t('collab.members.leaveConfirm'))) return;
-  const patch = { members: firebase.firestore.FieldValue.arrayRemove(currentUser.uid) };
-  patch['memberNames.' + currentUser.uid] = firebase.firestore.FieldValue.delete();
-  await tripMetaRef(currentTripId).update(patch);
+  try{
+    const patch = { members: firebase.firestore.FieldValue.arrayRemove(currentUser.uid) };
+    patch['memberNames.' + currentUser.uid] = firebase.firestore.FieldValue.delete();
+    await tripMetaRef(currentTripId).update(patch);
+  }catch(e){ console.error('여행 나가기 실패', e); alert(t('collab.members.leaveFail')); return; }
   document.getElementById('v2Modal').hidden = true;
   unsubscribeTripContent();
   currentTripId = null;
@@ -1912,9 +1920,11 @@ async function leaveTrip(){
 }
 async function kickMember(uid){
   if(!confirm(t('collab.members.kickConfirm'))) return;
-  const patch = { members: firebase.firestore.FieldValue.arrayRemove(uid) };
-  patch['memberNames.' + uid] = firebase.firestore.FieldValue.delete();
-  await tripMetaRef(currentTripId).update(patch);
+  try{
+    const patch = { members: firebase.firestore.FieldValue.arrayRemove(uid) };
+    patch['memberNames.' + uid] = firebase.firestore.FieldValue.delete();
+    await tripMetaRef(currentTripId).update(patch);
+  }catch(e){ console.error('멤버 내보내기 실패', e); alert(t('collab.members.kickFail')); return; }
   await openMembersModal(); // 목록 갱신
 }
 
@@ -2072,6 +2082,8 @@ async function confirmDeleteTrip(tripId){
 let flushTimer = null;
 let pendingContentPatch = {};
 let pendingContentPatchTripId = null;
+let pendingTravelerAdds = new Set();
+let pendingTravelerRemoves = new Set();
 
 function queuePatch(patch){
   if(pendingContentPatchTripId && pendingContentPatchTripId !== currentTripId){
@@ -2079,6 +2091,14 @@ function queuePatch(patch){
   }
   pendingContentPatchTripId = currentTripId;
   Object.assign(pendingContentPatch, patch);
+}
+function queueTravelerAdd(name){
+  pendingTravelerRemoves.delete(name); // 같은 디바운스 창 안의 반대 연산은 서로 상쇄
+  pendingTravelerAdds.add(name);
+}
+function queueTravelerRemove(name){
+  pendingTravelerAdds.delete(name);
+  pendingTravelerRemoves.add(name);
 }
 
 function save(){                 // 편집기 전역에서 호출하던 이름 유지
@@ -2107,6 +2127,8 @@ async function flushCloud(){
   }
   const patch = pendingContentPatch;
   pendingContentPatch = {}; pendingContentPatchTripId = null;
+  const travelerAdds = Array.from(pendingTravelerAdds); pendingTravelerAdds.clear();
+  const travelerRemoves = Array.from(pendingTravelerRemoves); pendingTravelerRemoves.clear();
   const meta = deriveTripMeta(state);
   try{
     const writes = [
@@ -2116,6 +2138,8 @@ async function flushCloud(){
       }, { merge: true }),
     ];
     if(Object.keys(patch).length) writes.push(tripContentRef(tid).update(patch));
+    if(travelerAdds.length) writes.push(tripContentRef(tid).update({ travelers: firebase.firestore.FieldValue.arrayUnion(...travelerAdds) }));
+    if(travelerRemoves.length) writes.push(tripContentRef(tid).update({ travelers: firebase.firestore.FieldValue.arrayRemove(...travelerRemoves) }));
     await Promise.all(writes);
     const c = cacheRead();
     if(c && c.tripId === tid) cacheWrite(tid, state, false);
@@ -2123,12 +2147,14 @@ async function flushCloud(){
   }catch(e){
     pendingContentPatch = Object.assign({}, patch, pendingContentPatch); // 실패한 패치를 그 사이 새로 쌓인 패치 아래로 병합(최신이 우선)
     pendingContentPatchTripId = tid;
+    travelerAdds.forEach(v => { if(!pendingTravelerRemoves.has(v)) pendingTravelerAdds.add(v); });
+    travelerRemoves.forEach(v => { if(!pendingTravelerAdds.has(v)) pendingTravelerRemoves.add(v); });
     startUnsyncedTicker();      // Task 16(기존)
   }
 }
 async function forceFlush(){
   const c = cacheRead();
-  if(flushTimer || (c && c.dirty) || Object.keys(pendingContentPatch).length) await flushCloud();
+  if(flushTimer || (c && c.dirty) || Object.keys(pendingContentPatch).length || pendingTravelerAdds.size || pendingTravelerRemoves.size) await flushCloud();
 }
 let unsyncedTimer = null;
 function startUnsyncedTicker(){
@@ -3004,14 +3030,14 @@ function addTraveler(){
   const inp = document.getElementById('newTravelerInput');
   const v = inp.value.trim(); if(!v) return;
   state.travelers.push(v);
-  queuePatch({ travelers: firebase.firestore.FieldValue.arrayUnion(v) });
+  queueTravelerAdd(v);
   renderTravelers(); save();
 }
 function deleteTraveler(idxStr){
   const idx = parseInt(idxStr, 10);
   const removed = state.travelers[idx];
   state.travelers.splice(idx, 1);
-  queuePatch({ travelers: firebase.firestore.FieldValue.arrayRemove(removed) });
+  queueTravelerRemove(removed);
   renderTravelers(); save();
 }
 const CURRENCIES = [

@@ -61,6 +61,94 @@ test('addTraveler/deleteTraveler 는 arrayUnion/arrayRemove 를 쓴다(인덱스
   expect(r.travelers.sort()).toEqual([...r.before, '친구'].sort());
 });
 
+test('같은 디바운스 창 안에서 두 명을 연달아 추가해도 둘 다 살아남는다(회귀: Object.assign 덮어쓰기 버그)', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__test.signIn());
+  await page.waitForTimeout(50);
+  const r = await page.evaluate(async () => {
+    const id = await createTrip();
+    currentTripId = id; state = await loadTrip(id);
+    renderTravelers();
+    const before = state.travelers.slice();
+    // addTraveler() 는 매 호출 뒤 renderTravelers() 로 #newTravelerInput DOM 노드를 교체하므로
+    // 캐시된 참조를 재사용하지 말고 매번 새로 조회한다.
+    document.getElementById('newTravelerInput').value = '철수'; addTraveler();
+    document.getElementById('newTravelerInput').value = '영희'; addTraveler();
+    await forceFlush();
+    const content = (await tripContentRef(id).get()).data();
+    return { travelers: content.travelers, before };
+  });
+  expect(r.travelers.sort()).toEqual([...r.before, '철수', '영희'].sort());
+});
+
+test('같은 디바운스 창 안에서 두 명을 연달아 제거해도 둘 다 사라진다(회귀)', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__test.signIn());
+  await page.waitForTimeout(50);
+  const r = await page.evaluate(async () => {
+    const id = await createTrip();
+    currentTripId = id; state = await loadTrip(id);
+    state.travelers.push('철수', '영희');
+    queuePatch({ travelers: state.travelers.slice() });
+    save();
+    await forceFlush();
+    const beforeContent = (await tripContentRef(id).get()).data();
+    // 두 명을 연달아 삭제 — deleteTraveler 는 인덱스를 받는다
+    const idx1 = state.travelers.indexOf('철수');
+    deleteTraveler(String(idx1));
+    const idx2 = state.travelers.indexOf('영희');
+    deleteTraveler(String(idx2));
+    await forceFlush();
+    const afterContent = (await tripContentRef(id).get()).data();
+    return { beforeTravelers: beforeContent.travelers, afterTravelers: afterContent.travelers };
+  });
+  expect(r.beforeTravelers).toEqual(expect.arrayContaining(['철수', '영희']));
+  expect(r.afterTravelers).not.toContain('철수');
+  expect(r.afterTravelers).not.toContain('영희');
+});
+
+test('같은 창 안에서 한 명 추가 + 다른(기존) 한 명 제거 → 최종 결과가 둘 다 정확히 반영된다', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__test.signIn());
+  await page.waitForTimeout(50);
+  const r = await page.evaluate(async () => {
+    const id = await createTrip();
+    currentTripId = id; state = await loadTrip(id);
+    state.travelers.push('기존멤버');
+    queuePatch({ travelers: state.travelers.slice() });
+    save();
+    await forceFlush();
+    renderTravelers();
+    document.getElementById('newTravelerInput').value = '신규멤버'; addTraveler();
+    const idx = state.travelers.indexOf('기존멤버');
+    deleteTraveler(String(idx));
+    await forceFlush();
+    const content = (await tripContentRef(id).get()).data();
+    return content.travelers;
+  });
+  expect(r).toContain('신규멤버');
+  expect(r).not.toContain('기존멤버');
+});
+
+test('flushCloud 실패 후 재시도 시 대기 중이던 traveler 추가가 유실되지 않는다', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__test.signIn());
+  await page.waitForTimeout(50);
+  const r = await page.evaluate(async () => {
+    const id = await createTrip();
+    currentTripId = id; state = await loadTrip(id);
+    window.__test.setOffline(true);
+    renderTravelers();
+    document.getElementById('newTravelerInput').value = '오프라인멤버'; addTraveler();
+    await forceFlush().catch(() => {}); // 실패 예상
+    window.__test.setOffline(false);
+    await forceFlush();
+    const content = (await tripContentRef(id).get()).data();
+    return content.travelers;
+  });
+  expect(r).toContain('오프라인멤버');
+});
+
 test('handleFieldChange: 일정 항목 place 수정이 정확한 dot-path 로 큐잉된다', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__test.signIn());
