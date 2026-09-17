@@ -42,7 +42,7 @@ service cloud.firestore {
         allow update: if request.auth != null
           && request.auth.uid in get(/databases/$(database)/documents/trips/$(tripId)).data.members
           && (request.auth.uid == get(/databases/$(database)/documents/trips/$(tripId)).data.ownerUid
-              || get(/databases/$(database)/documents/trips/$(tripId)).data.locked != true);
+              || get(/databases/$(database)/documents/trips/$(tripId)).data.get('locked', false) != true);
         allow delete: if request.auth != null
           && request.auth.uid == get(/databases/$(database)/documents/trips/$(tripId)).data.ownerUid;
       }
