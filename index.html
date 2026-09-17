@@ -1779,12 +1779,16 @@ async function joinTrip(tripId){
     await tripMetaRef(tripId).update(patch);
     await refreshTripList();
     try{
+      // joinLogged 마커를 기록 추가보다 먼저 세운다 — 두 쓰기가 원자적이지 않으므로, 중간에
+      // 끊기면(오프라인/탭 종료) 마커만 서고 기록은 못 남을 수 있는데, 이건 조용히 기록 하나
+      // 빠지는 정도라 무해하다. 순서를 반대로 하면 기록만 남고 마커가 안 서서, 이후 소급 백필이
+      // 이미 실시간으로 남긴 기록을 못 보고 중복으로 또 남기는(원래 고치려던 버그) 결과가 된다.
+      await tripMetaRef(tripId).update({ ['joinLogged.' + currentUser.uid]: true });
       const logId = uid();
       await tripContentRef(tripId).update({
         ['memberLog.' + logId]: { type: 'join', uid: currentUser.uid, name: currentUser.displayName || '' },
         memberLogOrder: firebase.firestore.FieldValue.arrayUnion(logId),
       });
-      await tripMetaRef(tripId).update({ ['joinLogged.' + currentUser.uid]: true });
     }catch(e){ console.error('참여 기록 추가 실패(무시)', e); }
   }
   await openTrip(tripId);
@@ -1882,8 +1886,11 @@ async function backfillMemberLogOnce(){
           loggedPatch['joinLogged.' + memberUid] = true;
         }
         logPatch.memberLogOrder = firebase.firestore.FieldValue.arrayUnion(...logIds);
-        await tripContentRef(trip.id).update(logPatch);
+        // joinLogged 마커를 기록 추가보다 먼저 세운다 — joinTrip() 과 같은 이유(위 주석 참고):
+        // 중간에 끊기면 마커만 서고 기록이 못 남는 게, 순서를 반대로 해서 다음 실행이 마커 없는
+        // 기록을 또 남겨 중복시키는 것보다 안전하다.
         await tripMetaRef(trip.id).update(loggedPatch);
+        await tripContentRef(trip.id).update(logPatch);
       }
       await tripMetaRef(trip.id).update({ memberLogBackfilled: true });
     }catch(e){ console.error('멤버 로그 소급 적용 실패(무시)', trip.id, e); }
