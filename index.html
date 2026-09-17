@@ -1830,6 +1830,30 @@ async function migrateLegacyTrips(){
     }
   }
 }
+async function backfillJoinNotesOnce(){
+  for(const trip of trips){
+    if(trip.ownerUid !== currentUser.uid) continue; // 오너만 자기 소유 여행에 대해 실행 — 동시 실행/중복 방지
+    try{
+      const metaSnap = await tripMetaRef(trip.id).get();
+      if(!metaSnap.exists || metaSnap.data().joinNotesBackfilled) continue;
+      const meta = metaSnap.data();
+      const members = (meta.members || []).filter(uid => uid !== meta.ownerUid);
+      if(members.length){
+        const memberNames = meta.memberNames || {};
+        const notesPatch = {};
+        const noteIds = [];
+        for(const memberUid of members){
+          const noteId = uid();
+          noteIds.push(noteId);
+          notesPatch['notes.' + noteId] = { mode: 'text', content: t('collab.join.noteText', { name: memberNames[memberUid] || memberUid }) };
+        }
+        notesPatch.noteOrder = firebase.firestore.FieldValue.arrayUnion(...noteIds);
+        await tripContentRef(trip.id).update(notesPatch);
+      }
+      await tripMetaRef(trip.id).update({ joinNotesBackfilled: true });
+    }catch(e){ console.error('참여 기록 소급 적용 실패(무시)', trip.id, e); }
+  }
+}
 async function createTrip(){
   const st = defaultState();
   const meta = deriveTripMeta(st);
@@ -2294,6 +2318,7 @@ async function handleAuthChange(user){
       await loadProfile();
       await migrateLegacyTrips().catch(e => console.error('마이그레이션 전체 실패(무시)', e));
       await refreshTripList();
+      await backfillJoinNotesOnce().catch(e => console.error('참여 기록 소급 적용 전체 실패(무시)', e));
     }catch(e){
       console.error('프로필/여행 로드 실패', e);
       document.getElementById('mpCount').textContent = '– / 5';
