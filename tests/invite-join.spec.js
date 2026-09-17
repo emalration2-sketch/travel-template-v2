@@ -50,3 +50,37 @@ test('이미 멤버인 사람이 자기 여행 조인 링크로 다시 접속하
   const members = await page.evaluate((tid) => tripMetaRef(tid).get().then(s => s.data().members), tripId);
   expect(members).toEqual(['u1']);
 });
+
+test('처음 참여하는 멤버는 메모 탭에 "참여했습니다" 노트가 한 번 추가된다', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__test.signIn());
+  await page.waitForTimeout(50);
+  const tripId = await page.evaluate(() => createTrip());
+  await page.evaluate(() => window.__test.signOut());
+  await page.evaluate(() => window.__test.signIn({ uid: 'u2', displayName: '초대받은사람', email: 'u2@example.com' }));
+  await page.goto('/?join=' + tripId);
+  await page.waitForTimeout(50);
+  const content = await page.evaluate((tid) => tripContentRef(tid).get().then(s => s.data()), tripId);
+  const noteIds = Object.keys(content.notes || {});
+  expect(noteIds.length).toBe(1);
+  const note = content.notes[noteIds[0]];
+  expect(note.content).toContain('초대받은사람');
+  expect(content.noteOrder).toContain(noteIds[0]);
+});
+
+test('이미 멤버인 사람이 다시 조인 링크로 접속해도 노트가 추가되지 않는다', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__test.signIn());
+  await page.waitForTimeout(50);
+  const tripId = await page.evaluate(() => createTrip());
+  await page.goto('/?join=' + tripId);
+  await page.waitForTimeout(50);
+  const contentBefore = await page.evaluate((tid) => tripContentRef(tid).get().then(s => s.data()), tripId);
+  const countBefore = Object.keys(contentBefore.notes || {}).length;
+  // 이미 멤버인 u1 이 같은 조인 링크로 다시 접속
+  await page.goto('/?join=' + tripId);
+  await page.waitForTimeout(50);
+  const contentAfter = await page.evaluate((tid) => tripContentRef(tid).get().then(s => s.data()), tripId);
+  const countAfter = Object.keys(contentAfter.notes || {}).length;
+  expect(countAfter).toBe(countBefore);
+});
