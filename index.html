@@ -1289,7 +1289,7 @@ const I18N = {
     'collab.join.notFound':'여행을 찾을 수 없습니다.','collab.join.fail':'여행 참여에 실패했습니다.',
     'collab.members.title':'멤버','collab.members.you':'나','collab.members.kick':'내보내기',
     'collab.members.leave':'여행 나가기','collab.members.leaveConfirm':'이 여행에서 나가시겠어요?',
-    'collab.members.kickConfirm':'이 멤버를 내보낼까요?','collab.invite.label':'초대 링크',
+    'collab.members.kickConfirm':'이 멤버를 내보낼까요? (초대 링크를 다시 받으면 재참여할 수 있어요)','collab.invite.label':'초대 링크','collab.invite.caveat':'이 링크를 아는 사람은 언제든 참여할 수 있어요.',
     'collab.members.leaveFail':'여행 나가기에 실패했습니다.','collab.members.kickFail':'멤버 내보내기에 실패했습니다.',
 
     'legal.loading':'문서를 불러오는 중…','legal.error':'문서를 불러오지 못했어요. ','legal.error.gh':'GitHub에서 보기',
@@ -1378,7 +1378,7 @@ const I18N = {
     'collab.join.notFound':'Trip not found.','collab.join.fail':'Failed to join the trip.',
     'collab.members.title':'Members','collab.members.you':'you','collab.members.kick':'Remove',
     'collab.members.leave':'Leave trip','collab.members.leaveConfirm':'Leave this trip?',
-    'collab.members.kickConfirm':'Remove this member?','collab.invite.label':'Invite link',
+    'collab.members.kickConfirm':'Remove this member? (They can rejoin if they get the invite link again)','collab.invite.label':'Invite link','collab.invite.caveat':'Anyone with this link can join at any time.',
     'collab.members.leaveFail':'Failed to leave the trip.','collab.members.kickFail':'Failed to remove the member.',
 
     'legal.loading':'Loading…','legal.error':'Couldn’t load the document. ','legal.error.gh':'View on GitHub',
@@ -1467,7 +1467,7 @@ const I18N = {
     'collab.join.notFound':'旅行が見つかりません。','collab.join.fail':'旅行への参加に失敗しました。',
     'collab.members.title':'メンバー','collab.members.you':'自分','collab.members.kick':'削除',
     'collab.members.leave':'旅行から抜ける','collab.members.leaveConfirm':'この旅行から抜けますか?',
-    'collab.members.kickConfirm':'このメンバーを削除しますか?','collab.invite.label':'招待リンク',
+    'collab.members.kickConfirm':'このメンバーを削除しますか?(招待リンクを再度受け取れば再参加できます)','collab.invite.label':'招待リンク','collab.invite.caveat':'このリンクを知っている人はいつでも参加できます。',
     'collab.members.leaveFail':'旅行から抜けるのに失敗しました。','collab.members.kickFail':'メンバーの削除に失敗しました。',
 
     'legal.loading':'ドキュメントを読み込み中…','legal.error':'ドキュメントを読み込めませんでした。 ','legal.error.gh':'GitHubで見る',
@@ -1556,7 +1556,7 @@ const I18N = {
     'collab.join.notFound':'找不到该行程。','collab.join.fail':'加入行程失败。',
     'collab.members.title':'成员','collab.members.you':'我','collab.members.kick':'移除',
     'collab.members.leave':'退出行程','collab.members.leaveConfirm':'要退出该行程吗?',
-    'collab.members.kickConfirm':'要移除该成员吗?','collab.invite.label':'邀请链接',
+    'collab.members.kickConfirm':'要移除该成员吗?(对方如果再次获得邀请链接仍可重新加入)','collab.invite.label':'邀请链接','collab.invite.caveat':'知道此链接的任何人都可以随时加入。',
     'collab.members.leaveFail':'退出行程失败。','collab.members.kickFail':'移除成员失败。',
 
     'legal.loading':'正在加载文档…','legal.error':'无法加载文档。 ','legal.error.gh':'在 GitHub 上查看',
@@ -1899,7 +1899,8 @@ async function openMembersModal(){
     `<div style="font-weight:700;font-size:13px;margin-bottom:8px">${t('collab.members.title')}</div>` +
     `<div class="member-list">${rows}</div>` +
     `<div style="margin-top:12px;font-size:12px;color:var(--ink-soft)">${t('collab.invite.label')}</div>` +
-    `<input readonly value="${escapeAttr(inviteUrl)}" onclick="this.select()" style="width:100%;margin-top:4px">`;
+    `<input readonly value="${escapeAttr(inviteUrl)}" onclick="this.select()" style="width:100%;margin-top:4px">` +
+    `<div style="margin-top:4px;font-size:11px;color:var(--ink-faint)">${t('collab.invite.caveat')}</div>`;
   document.getElementById('v2ModalActions').innerHTML =
     `<button class="v2-btn-ghost" data-action="v2modal-close">${t('common.close')}</button>${leaveBtn}`;
   document.getElementById('v2Modal').hidden = false;
