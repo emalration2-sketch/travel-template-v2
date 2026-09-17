@@ -51,7 +51,7 @@ test('이미 멤버인 사람이 자기 여행 조인 링크로 다시 접속하
   expect(members).toEqual(['u1']);
 });
 
-test('처음 참여하는 멤버는 메모 탭에 "참여했습니다" 노트가 한 번 추가된다', async ({ page }) => {
+test('처음 참여하는 멤버는 멤버 활동 기록에 참여 항목이 한 번 추가되고, joinLogged 마커가 설정된다', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__test.signIn());
   await page.waitForTimeout(50);
@@ -60,15 +60,24 @@ test('처음 참여하는 멤버는 메모 탭에 "참여했습니다" 노트가
   await page.evaluate(() => window.__test.signIn({ uid: 'u2', displayName: '초대받은사람', email: 'u2@example.com' }));
   await page.goto('/?join=' + tripId);
   await page.waitForTimeout(50);
-  const content = await page.evaluate((tid) => tripContentRef(tid).get().then(s => s.data()), tripId);
-  const noteIds = Object.keys(content.notes || {});
-  expect(noteIds.length).toBe(1);
-  const note = content.notes[noteIds[0]];
-  expect(note.content).toContain('초대받은사람');
-  expect(content.noteOrder).toContain(noteIds[0]);
+  const result = await page.evaluate(async (tid) => {
+    const content = (await tripContentRef(tid).get()).data();
+    const meta = (await tripMetaRef(tid).get()).data();
+    return { content, meta };
+  }, tripId);
+  const logIds = Object.keys(result.content.memberLog || {});
+  expect(logIds.length).toBe(1);
+  const entry = result.content.memberLog[logIds[0]];
+  expect(entry.type).toBe('join');
+  expect(entry.uid).toBe('u2');
+  expect(entry.name).toBe('초대받은사람');
+  expect(result.content.memberLogOrder).toContain(logIds[0]);
+  expect(result.meta.joinLogged && result.meta.joinLogged.u2).toBe(true);
+  // 기존 notes 는 더 이상 참여 기록에 쓰이지 않는다
+  expect(Object.keys(result.content.notes || {}).length).toBe(0);
 });
 
-test('이미 멤버인 사람이 다시 조인 링크로 접속해도 노트가 추가되지 않는다', async ({ page }) => {
+test('이미 멤버인 사람이 다시 조인 링크로 접속해도 멤버 활동 기록이 추가되지 않는다', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__test.signIn());
   await page.waitForTimeout(50);
@@ -76,11 +85,30 @@ test('이미 멤버인 사람이 다시 조인 링크로 접속해도 노트가 
   await page.goto('/?join=' + tripId);
   await page.waitForTimeout(50);
   const contentBefore = await page.evaluate((tid) => tripContentRef(tid).get().then(s => s.data()), tripId);
-  const countBefore = Object.keys(contentBefore.notes || {}).length;
+  const countBefore = Object.keys(contentBefore.memberLog || {}).length;
   // 이미 멤버인 u1 이 같은 조인 링크로 다시 접속
   await page.goto('/?join=' + tripId);
   await page.waitForTimeout(50);
   const contentAfter = await page.evaluate((tid) => tripContentRef(tid).get().then(s => s.data()), tripId);
-  const countAfter = Object.keys(contentAfter.notes || {}).length;
+  const countAfter = Object.keys(contentAfter.memberLog || {}).length;
   expect(countAfter).toBe(countBefore);
+});
+
+test('회귀방지: 실시간 참여(joinTrip) 직후 소급 백필(backfillMemberLogOnce)이 돌아도 참여 기록이 중복되지 않는다', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__test.signIn()); // u1 = 오너
+  await page.waitForTimeout(50);
+  const tripId = await page.evaluate(() => createTrip());
+  await page.evaluate(() => window.__test.signOut());
+  await page.evaluate(() => window.__test.signIn({ uid: 'u2', displayName: '초대받은사람', email: 'u2@example.com' }));
+  await page.goto('/?join=' + tripId); // u2 가 실시간으로 참여 → memberLog 1건 + joinLogged.u2=true
+  await page.waitForTimeout(50);
+  await page.evaluate(() => window.__test.signOut());
+  await page.evaluate(() => window.__test.signIn()); // 다시 오너(u1)로 로그인
+  await page.waitForTimeout(50);
+  await page.evaluate(() => refreshTripList());
+  await page.evaluate(() => backfillMemberLogOnce()); // 오너가 백필을 (다시) 돌려도 u2 는 이미 joinLogged 라 건너뛰어야 함
+  const content = await page.evaluate((tid) => tripContentRef(tid).get().then(s => s.data()), tripId);
+  const logIds = Object.keys(content.memberLog || {});
+  expect(logIds.length).toBe(1); // 실시간 참여로 생긴 1건뿐, 백필로 추가되지 않음
 });

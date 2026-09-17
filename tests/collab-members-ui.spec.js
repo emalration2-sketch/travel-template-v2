@@ -103,7 +103,7 @@ test('kickMember 가 실패하면(오프라인) 알림을 띄우고 멤버 목�
   expect(dialogMessages.some(m => m.includes('실패'))).toBe(true);
 });
 
-test('owner 는 다른 멤버를 내보낼(kick) 수 있다', async ({ page }) => {
+test('owner 는 다른 멤버를 내보낼(kick) 수 있다 — 확인 대화상자 2번 모두 수락해야 진행된다', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__test.signIn());
   await page.waitForTimeout(50);
@@ -114,15 +114,41 @@ test('owner 는 다른 멤버를 내보낼(kick) 수 있다', async ({ page }) =
   }), tripId);
   await page.evaluate((tid) => openTrip(tid), tripId);
   await page.click('#tripMembersBtn');
-  page.once('dialog', d => d.accept());
+  let dialogCount = 0;
+  page.on('dialog', d => { dialogCount++; d.accept(); });
   await page.click('[data-action="kick-member"][data-uid="u2"]');
   await page.waitForTimeout(50);
+  expect(dialogCount).toBe(2); // 2단계 확인
   const meta = await page.evaluate((tid) => tripMetaRef(tid).get().then(s => s.data()), tripId);
   expect(meta.members).not.toContain('u2');
   expect('u2' in meta.memberNames).toBe(false);
 });
 
-test('owner 가 멤버를 내보내면 노트 탭에 "내보냈습니다" 노트가 하나 새로 추가된다', async ({ page }) => {
+test('내보내기 2번째 확인을 취소하면 멤버가 내보내지지 않는다', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__test.signIn());
+  await page.waitForTimeout(50);
+  const tripId = await page.evaluate(() => createTrip());
+  await page.evaluate((tid) => tripMetaRef(tid).update({
+    members: firebase.firestore.FieldValue.arrayUnion('u2'),
+    ['memberNames.u2']: '멤버2',
+  }), tripId);
+  await page.evaluate((tid) => openTrip(tid), tripId);
+  await page.click('#tripMembersBtn');
+  let dialogCount = 0;
+  page.on('dialog', d => {
+    dialogCount++;
+    if(dialogCount === 1) d.accept(); else d.dismiss(); // 1차 확인은 수락, 2차 확인은 취소
+  });
+  await page.click('[data-action="kick-member"][data-uid="u2"]');
+  await page.waitForTimeout(50);
+  expect(dialogCount).toBe(2);
+  const meta = await page.evaluate((tid) => tripMetaRef(tid).get().then(s => s.data()), tripId);
+  expect(meta.members).toContain('u2'); // 취소했으므로 그대로 남아있어야 함
+  expect('u2' in meta.memberNames).toBe(true);
+});
+
+test('owner 가 멤버를 내보내면 멤버 활동 기록에 kick 항목이 하나 새로 추가된다(notes 에는 쓰지 않는다)', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__test.signIn());
   await page.waitForTimeout(50);
@@ -134,19 +160,21 @@ test('owner 가 멤버를 내보내면 노트 탭에 "내보냈습니다" 노트
   await page.evaluate((tid) => openTrip(tid), tripId);
   await page.click('#tripMembersBtn');
   const contentBefore = await page.evaluate((tid) => tripContentRef(tid).get().then(s => s.data()), tripId);
-  const noteIdsBefore = Object.keys(contentBefore.notes || {});
-  page.once('dialog', d => d.accept());
+  const logIdsBefore = Object.keys(contentBefore.memberLog || {});
+  page.on('dialog', d => d.accept());
   await page.click('[data-action="kick-member"][data-uid="u2"]');
   await page.waitForTimeout(50);
   const content = await page.evaluate((tid) => tripContentRef(tid).get().then(s => s.data()), tripId);
-  const noteIdsAfter = Object.keys(content.notes || {});
-  expect(noteIdsAfter.length).toBe(noteIdsBefore.length + 1);
-  const newNoteId = noteIdsAfter.find(id => !noteIdsBefore.includes(id));
-  expect(content.notes[newNoteId].content).toContain('멤버2');
-  expect(content.noteOrder).toContain(newNoteId);
+  const logIdsAfter = Object.keys(content.memberLog || {});
+  expect(logIdsAfter.length).toBe(logIdsBefore.length + 1);
+  const newLogId = logIdsAfter.find(id => !logIdsBefore.includes(id));
+  expect(content.memberLog[newLogId].type).toBe('kick');
+  expect(content.memberLog[newLogId].name).toBe('멤버2');
+  expect(content.memberLogOrder).toContain(newLogId);
+  expect(Object.keys(content.notes || {}).length).toBe(0);
 });
 
-test('내보내기 노트 추가 시 uid() 전역 생성기가 정상 호출된다(파라미터 섀도잉 회귀 방지) — 새 노트 id 는 kick 된 uid 와 다르다', async ({ page }) => {
+test('내보내기 기록 추가 시 uid() 전역 생성기가 정상 호출된다(파라미터 섀도잉 회귀 방지) — 새 기록 id 는 kick 된 uid 와 다르다', async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => window.__test.signIn());
   await page.waitForTimeout(50);
@@ -157,11 +185,42 @@ test('내보내기 노트 추가 시 uid() 전역 생성기가 정상 호출된�
   }), tripId);
   await page.evaluate((tid) => openTrip(tid), tripId);
   await page.click('#tripMembersBtn');
-  page.once('dialog', d => d.accept());
+  page.on('dialog', d => d.accept());
   await page.click('[data-action="kick-member"][data-uid="u2"]');
   await page.waitForTimeout(50);
   const content = await page.evaluate((tid) => tripContentRef(tid).get().then(s => s.data()), tripId);
-  const noteIds = Object.keys(content.notes || {});
-  expect(noteIds.length).toBe(1);
-  expect(noteIds[0]).not.toBe('u2'); // uid() 가 섀도잉으로 인해 던졌다면 애초에 노트 자체가 생기지 않으므로, 이 값 검증까지 도달했다는 것 자체가 정상 동작의 증거
+  const logIds = Object.keys(content.memberLog || {});
+  expect(logIds.length).toBe(1);
+  expect(logIds[0]).not.toBe('u2'); // uid() 가 섀도잉으로 인해 던졌다면 애초에 기록 자체가 생기지 않으므로, 이 값 검증까지 도달했다는 것 자체가 정상 동작의 증거
+});
+
+test('멤버 활동 기록은 오너에게만 삭제 버튼이 보이고, 삭제하면 목록에서 제거된다(비오너에게는 삭제 버튼이 없다)', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__test.signIn()); // u1 = 오너
+  await page.waitForTimeout(50);
+  const tripId = await page.evaluate(() => createTrip());
+  await page.evaluate(() => window.__test.signOut());
+  await page.evaluate(() => window.__test.signIn({ uid: 'u2', displayName: '멤버2', email: 'u2@example.com' }));
+  await page.goto('/?join=' + tripId); // u2 참여 → memberLog 1건 생성
+  await page.waitForTimeout(50);
+
+  // 비오너(u2) 화면에는 삭제 버튼이 없어야 한다
+  await page.click('[data-action="set-mode"][data-mode="edit"]');
+  await page.evaluate(() => showEditorTab('notes'));
+  let delCount = await page.locator('[data-action="delete-member-log"]').count();
+  expect(delCount).toBe(0);
+
+  // 오너(u1)로 다시 로그인하면 삭제 버튼이 보이고, 클릭하면 기록이 사라진다
+  await page.evaluate(() => window.__test.signOut());
+  await page.evaluate(() => window.__test.signIn());
+  await page.waitForTimeout(50);
+  await page.evaluate((tid) => openTrip(tid), tripId);
+  await page.click('[data-action="set-mode"][data-mode="edit"]');
+  await page.evaluate(() => showEditorTab('notes'));
+  delCount = await page.locator('[data-action="delete-member-log"]').count();
+  expect(delCount).toBe(1);
+  await page.click('[data-action="delete-member-log"]');
+  await page.evaluate(() => forceFlush());
+  const content = await page.evaluate((tid) => tripContentRef(tid).get().then(s => s.data()), tripId);
+  expect(Object.keys(content.memberLog || {}).length).toBe(0);
 });
