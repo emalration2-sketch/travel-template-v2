@@ -121,3 +121,47 @@ test('owner 는 다른 멤버를 내보낼(kick) 수 있다', async ({ page }) =
   expect(meta.members).not.toContain('u2');
   expect('u2' in meta.memberNames).toBe(false);
 });
+
+test('owner 가 멤버를 내보내면 노트 탭에 "내보냈습니다" 노트가 하나 새로 추가된다', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__test.signIn());
+  await page.waitForTimeout(50);
+  const tripId = await page.evaluate(() => createTrip());
+  await page.evaluate((tid) => tripMetaRef(tid).update({
+    members: firebase.firestore.FieldValue.arrayUnion('u2'),
+    ['memberNames.u2']: '멤버2',
+  }), tripId);
+  await page.evaluate((tid) => openTrip(tid), tripId);
+  await page.click('#tripMembersBtn');
+  const contentBefore = await page.evaluate((tid) => tripContentRef(tid).get().then(s => s.data()), tripId);
+  const noteIdsBefore = Object.keys(contentBefore.notes || {});
+  page.once('dialog', d => d.accept());
+  await page.click('[data-action="kick-member"][data-uid="u2"]');
+  await page.waitForTimeout(50);
+  const content = await page.evaluate((tid) => tripContentRef(tid).get().then(s => s.data()), tripId);
+  const noteIdsAfter = Object.keys(content.notes || {});
+  expect(noteIdsAfter.length).toBe(noteIdsBefore.length + 1);
+  const newNoteId = noteIdsAfter.find(id => !noteIdsBefore.includes(id));
+  expect(content.notes[newNoteId].content).toContain('멤버2');
+  expect(content.noteOrder).toContain(newNoteId);
+});
+
+test('내보내기 노트 추가 시 uid() 전역 생성기가 정상 호출된다(파라미터 섀도잉 회귀 방지) — 새 노트 id 는 kick 된 uid 와 다르다', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => window.__test.signIn());
+  await page.waitForTimeout(50);
+  const tripId = await page.evaluate(() => createTrip());
+  await page.evaluate((tid) => tripMetaRef(tid).update({
+    members: firebase.firestore.FieldValue.arrayUnion('u2'),
+    ['memberNames.u2']: '멤버2',
+  }), tripId);
+  await page.evaluate((tid) => openTrip(tid), tripId);
+  await page.click('#tripMembersBtn');
+  page.once('dialog', d => d.accept());
+  await page.click('[data-action="kick-member"][data-uid="u2"]');
+  await page.waitForTimeout(50);
+  const content = await page.evaluate((tid) => tripContentRef(tid).get().then(s => s.data()), tripId);
+  const noteIds = Object.keys(content.notes || {});
+  expect(noteIds.length).toBe(1);
+  expect(noteIds[0]).not.toBe('u2'); // uid() 가 섀도잉으로 인해 던졌다면 애초에 노트 자체가 생기지 않으므로, 이 값 검증까지 도달했다는 것 자체가 정상 동작의 증거
+});

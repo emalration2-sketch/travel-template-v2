@@ -1315,6 +1315,7 @@ const I18N = {
     'collab.members.kickConfirm':'이 멤버를 내보낼까요? (초대 링크를 다시 받으면 재참여할 수 있어요)','collab.invite.label':'초대 링크','collab.invite.caveat':'이 링크를 아는 사람은 언제든 참여할 수 있어요.',
     'collab.lock.label':'여행 잠금','collab.lock.lock':'잠그기','collab.lock.unlock':'잠금 해제','collab.lock.lockedNotice':'오너가 이 여행을 잠갔어요. 보기만 가능해요.','collab.lock.toggleFail':'잠금 상태 변경에 실패했습니다.','collab.lock.forcedView':'오너가 여행을 잠갔어요 — 보기 모드로 전환됩니다.',
     'collab.members.leaveFail':'여행 나가기에 실패했습니다.','collab.members.kickFail':'멤버 내보내기에 실패했습니다.',
+    'collab.members.kickNoteText':'{name}님을 내보냈습니다',
 
     'legal.loading':'문서를 불러오는 중…','legal.error':'문서를 불러오지 못했어요. ','legal.error.gh':'GitHub에서 보기',
 
@@ -1406,6 +1407,7 @@ const I18N = {
     'collab.members.kickConfirm':'Remove this member? (They can rejoin if they get the invite link again)','collab.invite.label':'Invite link','collab.invite.caveat':'Anyone with this link can join at any time.',
     'collab.lock.label':'Lock trip','collab.lock.lock':'Lock','collab.lock.unlock':'Unlock','collab.lock.lockedNotice':'The owner locked this trip. View only.','collab.lock.toggleFail':'Failed to change the lock state.','collab.lock.forcedView':'The owner locked the trip — switching to view mode.',
     'collab.members.leaveFail':'Failed to leave the trip.','collab.members.kickFail':'Failed to remove the member.',
+    'collab.members.kickNoteText':'{name} was removed from the trip',
 
     'legal.loading':'Loading…','legal.error':'Couldn’t load the document. ','legal.error.gh':'View on GitHub',
 
@@ -1497,6 +1499,7 @@ const I18N = {
     'collab.members.kickConfirm':'このメンバーを削除しますか?(招待リンクを再度受け取れば再参加できます)','collab.invite.label':'招待リンク','collab.invite.caveat':'このリンクを知っている人はいつでも参加できます。',
     'collab.lock.label':'旅行のロック','collab.lock.lock':'ロックする','collab.lock.unlock':'ロック解除','collab.lock.lockedNotice':'オーナーがこの旅行をロックしました。閲覧のみ可能です。','collab.lock.toggleFail':'ロック状態の変更に失敗しました。','collab.lock.forcedView':'オーナーが旅行をロックしました — 閲覧モードに切り替わります。',
     'collab.members.leaveFail':'旅行から抜けるのに失敗しました。','collab.members.kickFail':'メンバーの削除に失敗しました。',
+    'collab.members.kickNoteText':'{name}さんを削除しました',
 
     'legal.loading':'ドキュメントを読み込み中…','legal.error':'ドキュメントを読み込めませんでした。 ','legal.error.gh':'GitHubで見る',
 
@@ -1588,6 +1591,7 @@ const I18N = {
     'collab.members.kickConfirm':'要移除该成员吗?(对方如果再次获得邀请链接仍可重新加入)','collab.invite.label':'邀请链接','collab.invite.caveat':'知道此链接的任何人都可以随时加入。',
     'collab.lock.label':'锁定行程','collab.lock.lock':'锁定','collab.lock.unlock':'解除锁定','collab.lock.lockedNotice':'所有者已锁定此行程,仅可查看。','collab.lock.toggleFail':'更改锁定状态失败。','collab.lock.forcedView':'所有者已锁定行程 — 切换为查看模式。',
     'collab.members.leaveFail':'退出行程失败。','collab.members.kickFail':'移除成员失败。',
+    'collab.members.kickNoteText':'已将{name}移出行程',
 
     'legal.loading':'正在加载文档…','legal.error':'无法加载文档。 ','legal.error.gh':'在 GitHub 上查看',
 
@@ -1928,7 +1932,7 @@ async function openMembersModal(){
   const rows = meta.members.map(uid => {
     const name = (meta.memberNames && meta.memberNames[uid]) || uid;
     const isSelf = uid === currentUser.uid;
-    const kickBtn = (isOwner && !isSelf) ? `<button data-action="kick-member" data-uid="${escapeAttr(uid)}">${t('collab.members.kick')}</button>` : '';
+    const kickBtn = (isOwner && !isSelf) ? `<button data-action="kick-member" data-uid="${escapeAttr(uid)}" data-name="${escapeAttr(name)}">${t('collab.members.kick')}</button>` : '';
     return `<div class="member-row"><span>${escapeHTML(name)}${isSelf ? ' (' + t('collab.members.you') + ')' : ''}</span>${kickBtn}</div>`;
   }).join('');
   const leaveBtn = isOwner ? '' : `<button data-action="leave-trip" class="v2-btn-ghost">${t('collab.members.leave')}</button>`;
@@ -1971,12 +1975,19 @@ async function leaveTrip(){
   renderMypage();
   showScreen('mypage');
 }
-async function kickMember(uid){
+async function kickMember(targetUid, targetName){
   if(!confirm(t('collab.members.kickConfirm'))) return;
   try{
-    const patch = { members: firebase.firestore.FieldValue.arrayRemove(uid) };
-    patch['memberNames.' + uid] = firebase.firestore.FieldValue.delete();
+    const patch = { members: firebase.firestore.FieldValue.arrayRemove(targetUid) };
+    patch['memberNames.' + targetUid] = firebase.firestore.FieldValue.delete();
     await tripMetaRef(currentTripId).update(patch);
+    try{
+      const noteId = uid();
+      await tripContentRef(currentTripId).update({
+        ['notes.' + noteId]: { mode: 'text', content: t('collab.members.kickNoteText', { name: targetName || targetUid }) },
+        noteOrder: firebase.firestore.FieldValue.arrayUnion(noteId),
+      });
+    }catch(e){ console.error('내보내기 기록 노트 추가 실패(무시)', e); }
   }catch(e){ console.error('멤버 내보내기 실패', e); alert(t('collab.members.kickFail')); return; }
   await openMembersModal(); // 목록 갱신
 }
@@ -3549,7 +3560,7 @@ document.addEventListener('click', e => {
   else if(a === 'note-add-item') noteAddItem(btn.dataset.noteId);
   else if(a === 'open-members') openMembersModal();
   else if(a === 'leave-trip') leaveTrip();
-  else if(a === 'kick-member') kickMember(btn.dataset.uid);
+  else if(a === 'kick-member') kickMember(btn.dataset.uid, btn.dataset.name);
   else if(a === 'toggle-lock') toggleTripLock();
   else if(a === 'note-del-item') noteDelItem(btn.dataset.noteId, btn.dataset.itemId);
   else if(a === 'note-toggle-done') toggleNoteDoneSection(btn.dataset.noteId);
