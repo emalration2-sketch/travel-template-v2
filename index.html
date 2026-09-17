@@ -1953,10 +1953,10 @@ async function openMembersModal(){
   const meta = metaSnap.data();
   const isOwner = meta.ownerUid === currentUser.uid;
   const inviteUrl = location.origin + location.pathname + '?join=' + currentTripId;
-  const rows = meta.members.map(uid => {
-    const name = (meta.memberNames && meta.memberNames[uid]) || uid;
-    const isSelf = uid === currentUser.uid;
-    const kickBtn = (isOwner && !isSelf) ? `<button data-action="kick-member" data-uid="${escapeAttr(uid)}" data-name="${escapeAttr(name)}">${t('collab.members.kick')}</button>` : '';
+  const rows = meta.members.map(memberUid => {
+    const name = (meta.memberNames && meta.memberNames[memberUid]) || memberUid;
+    const isSelf = memberUid === currentUser.uid;
+    const kickBtn = (isOwner && !isSelf) ? `<button data-action="kick-member" data-uid="${escapeAttr(memberUid)}" data-name="${escapeAttr(name)}">${t('collab.members.kick')}</button>` : '';
     return `<div class="member-row"><span>${escapeHTML(name)}${isSelf ? ' (' + t('collab.members.you') + ')' : ''}</span>${kickBtn}</div>`;
   }).join('');
   const leaveBtn = isOwner ? '' : `<button data-action="leave-trip" class="v2-btn-ghost">${t('collab.members.leave')}</button>`;
