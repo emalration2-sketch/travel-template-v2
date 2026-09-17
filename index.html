@@ -1837,7 +1837,7 @@ async function backfillJoinNotesOnce(){
       const metaSnap = await tripMetaRef(trip.id).get();
       if(!metaSnap.exists || metaSnap.data().joinNotesBackfilled) continue;
       const meta = metaSnap.data();
-      const members = (meta.members || []).filter(uid => uid !== meta.ownerUid);
+      const members = (meta.members || []).filter(memberUid => memberUid !== meta.ownerUid);
       if(members.length){
         const memberNames = meta.memberNames || {};
         const notesPatch = {};
